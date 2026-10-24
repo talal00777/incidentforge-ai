@@ -20,7 +20,9 @@ def readiness(request):
     if request.method != "GET":
         return JsonResponse({"detail": "Method not allowed"}, status=405)
     ready = dependencies_ready()
-    return JsonResponse({"status": "ready" if ready else "unavailable"}, status=200 if ready else 503)
+    return JsonResponse(
+        {"status": "ready" if ready else "unavailable"}, status=200 if ready else 503
+    )
 
 
 class SystemInfoSerializer(serializers.Serializer):

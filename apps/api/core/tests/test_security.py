@@ -7,10 +7,7 @@ from django.test import Client
 
 from core.logging import JsonFormatter
 
-
-UUID_RE = re.compile(
-    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-)
+UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 
 
 def test_request_id_is_generated_by_server():
@@ -31,8 +28,13 @@ def test_json_formatter_does_not_include_custom_secret_fields():
     import logging
 
     record = logging.LogRecord(
-        name="incidentforge", level=logging.INFO, pathname="", lineno=1,
-        msg="health probe", args=(), exc_info=None
+        name="incidentforge",
+        level=logging.INFO,
+        pathname="",
+        lineno=1,
+        msg="health probe",
+        args=(),
+        exc_info=None,
     )
     record.api_key = "should-never-be-logged"
     result = json.loads(JsonFormatter().format(record))

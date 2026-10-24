@@ -22,6 +22,7 @@ def test_openapi_schema_is_served():
 
 
 def test_default_permission_requires_authentication():
-    assert "rest_framework.permissions.IsAuthenticated" in settings.REST_FRAMEWORK[
-        "DEFAULT_PERMISSION_CLASSES"
-    ]
+    assert (
+        "rest_framework.permissions.IsAuthenticated"
+        in settings.REST_FRAMEWORK["DEFAULT_PERMISSION_CLASSES"]
+    )
