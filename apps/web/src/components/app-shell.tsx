@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { primaryNavigation, secondaryNavigation, type NavigationItem } from "@/lib/navigation";
 import { ProductIcon } from "@/components/product-icon";
 
@@ -28,7 +29,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="app-shell">
       <aside className="sidebar" aria-label="Primary navigation">
-        <a href="/" className="brand" aria-label="IncidentForge home">
+        <Link href="/" className="brand" aria-label="IncidentForge home">
           <Image
             src="/incidentforge-mark.svg"
             alt=""
@@ -38,7 +39,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             priority
           />
           <span>IncidentForge</span>
-        </a>
+        </Link>
         <nav className="side-nav" aria-label="Workspace sections">
           <NavigationGroup label="Workspace" items={primaryNavigation} />
           <NavigationGroup label="Preferences" items={secondaryNavigation} />
