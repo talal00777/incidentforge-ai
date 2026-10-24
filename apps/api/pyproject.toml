@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "incidentforge-api"
+version = "0.1.0"
+description = "IncidentForge application API and background workers"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "Django>=5.2.8,<5.3",
+  "djangorestframework>=3.16,<3.17",
+  "drf-spectacular>=0.28,<0.30",
+  "dj-database-url>=2.3,<3.0",
+  "psycopg[binary]>=3.2,<3.4",
+  "celery[redis]>=5.5,<5.7",
+  "redis>=5.2,<7",
+  "gunicorn>=23,<25",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3,<10",
+  "pytest-django>=4.10,<5",
+  "pytest-cov>=6,<8",
+  "ruff>=0.11,<1",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["config*", "core*"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["test_*.py"]
+testpaths = ["core/tests"]
+addopts = "--strict-markers --disable-warnings"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+exclude = [".venv", "migrations"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B", "UP", "S"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"core/tests/*" = ["S105", "S106"]

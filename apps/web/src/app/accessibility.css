@@ -1,0 +1,149 @@
+/* Accessibility enhancements for the IncidentForge workspace.
+ * This stylesheet intentionally layers over globals.css without replacing
+ * the application's branding, logo, or layout definitions.
+ */
+:root {
+  --a11y-text-secondary: #526278;
+  --a11y-text-subtle: #4b5c72;
+  --a11y-focus-ring: #1556a9;
+  --a11y-sidebar-focus: #f9de86;
+}
+
+/* Skip navigation becomes visible only when a keyboard user focuses it. */
+.skip-link {
+  position: fixed;
+  top: -6rem;
+  left: 1rem;
+  z-index: 1000;
+  display: inline-block;
+  padding: .75rem 1rem;
+  border: 2px solid var(--a11y-focus-ring);
+  border-radius: .4rem;
+  background: #fff;
+  color: #123d75;
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: underline;
+}
+.skip-link:focus-visible { top: 1rem; }
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Visible focus is independent of hover and is legible in either theme. */
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--a11y-focus-ring);
+  outline-offset: 3px;
+}
+.sidebar :where(a, button):focus-visible {
+  outline-color: var(--a11y-sidebar-focus);
+  outline-offset: 3px;
+}
+
+/* Raise low-contrast text and small control labels in the M0 dashboard. */
+.page-subtitle,
+.panel-header p,
+.metric-card h2,
+.metric-description,
+.empty-state p,
+.incident-table th,
+.chart-placeholder,
+.health-details dt,
+.breadcrumb,
+.workspace-label {
+  color: var(--a11y-text-secondary);
+}
+.metric-description,
+.empty-state p,
+.panel-header p,
+.chart-placeholder,
+.incident-table th,
+.health-details,
+.page-subtitle,
+.breadcrumb,
+.metric-card h2,
+.action-card,
+.search-control,
+.button,
+.nav-item {
+  font-size: .875rem;
+}
+
+/* Disabled placeholders are perceivable, but remain non-functional. */
+.button:disabled,
+.action-card:disabled,
+.search-control:disabled {
+  color: var(--a11y-text-subtle);
+  border-color: #c5d0de;
+  background: #f2f5f9;
+  opacity: 1;
+}
+.button-primary:disabled {
+  background: #edf1f8;
+  border-color: #c5d0de;
+  color: #475c77;
+}
+.nav-item:disabled { opacity: 1; color: #aebcd0; }
+.nav-item.is-active { color: #fff; }
+
+/* Comfortable pointer targets for available and future actions. */
+.nav-item,
+.search-control,
+.icon-button,
+.button,
+.action-card {
+  min-height: 44px;
+}
+.icon-button { min-width: 44px; align-items: center; justify-content: center; }
+.brand { min-height: 44px; }
+
+/* Keep the information hierarchy usable at increased text zoom. */
+.page-heading, .panel-header, .header-actions { flex-wrap: wrap; }
+.workspace-content, .panel, .metric-card, .app-main { min-width: 0; }
+.incident-table { min-width: 570px; } /* Data tables may scroll horizontally. */
+.table-scroll { overflow-x: auto; scrollbar-width: auto; }
+
+@media (max-width: 740px) {
+  /* Wrapping rather than clipped tabs keeps navigation discoverable. */
+  .side-nav, .nav-group { flex-wrap: wrap; }
+  .side-nav { overflow-x: visible; }
+  .nav-item { min-height: 44px; }
+  .app-header { height: auto; min-height: 60px; }
+  .page-heading { gap: 1rem; }
+}
+
+@media (max-width: 360px) {
+  .workspace-content { padding-left: .75rem; padding-right: .75rem; }
+  .app-header { padding-left: .75rem; padding-right: .75rem; }
+  .panel-header { flex-direction: column; align-items: flex-start; }
+  .metric-grid, .lower-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+@media (forced-colors: active) {
+  :where(a, button, input, select, textarea, summary):focus-visible {
+    outline: 2px solid Highlight;
+  }
+  .health-pill { border: 1px solid CanvasText; }
+  .button:disabled, .nav-item:disabled, .action-card:disabled {
+    color: GrayText;
+    border: 1px solid GrayText;
+  }
+}

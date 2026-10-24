@@ -1,0 +1,8 @@
+{
+  "version": "v1",
+  "required_operations": [
+    {"path": "/api/v1/system", "method": "get", "status": "200"}
+  ],
+  "system_response_properties": ["name", "api_version", "milestone", "capabilities"],
+  "allowed_paths": ["/api/v1/system"]
+}
