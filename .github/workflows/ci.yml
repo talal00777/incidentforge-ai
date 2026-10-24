@@ -90,6 +90,25 @@ jobs:
       - uses: actions/checkout@v4
       - name: Load development environment
         run: cp .env.example .env
+      - name: Validate database hostname
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from urllib.parse import urlparse
+
+          entries = dict(
+              line.split("=", 1)
+              for line in Path(".env").read_text().splitlines()
+              if line and not line.startswith("#") and "=" in line
+          )
+
+          hostname = urlparse(entries["DATABASE_URL"]).hostname
+
+          if hostname != "postgres":
+              raise SystemExit(
+                  f"Invalid database hostname: {hostname!r}; expected 'postgres'"
+              )
+          PY
       - name: Validate Compose configuration
         run: docker compose config --quiet
       - name: Start foundation services
