@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 import { primaryNavigation, secondaryNavigation } from "./navigation";
 
 describe("workspace navigation", () => {
-  it("only exposes routes that exist in the foundation", () => {
+  it("exposes only implemented workspace routes", () => {
     const enabled = [...primaryNavigation, ...secondaryNavigation].filter((item) => item.href);
-    expect(enabled).toEqual([{ label: "Overview", icon: "overview", href: "/" }]);
+    expect(enabled).toEqual([
+      { label: "Overview", icon: "overview", href: "/" },
+      { label: "Incidents", icon: "incidents", href: "/incidents" },
+    ]);
   });
 
   it("does not duplicate navigation labels", () => {

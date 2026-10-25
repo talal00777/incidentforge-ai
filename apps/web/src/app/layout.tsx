@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./accessibility.css";
+import "./m1.css";
 
 export const metadata: Metadata = {
   title: "IncidentForge | Incident Overview",

@@ -1,0 +1,18 @@
+Metadata-Version: 2.4
+Name: incidentforge-api
+Version: 0.1.0
+Summary: IncidentForge application API and background workers
+Requires-Python: <3.14,>=3.12
+Requires-Dist: Django<5.3,>=5.2.8
+Requires-Dist: djangorestframework<3.17,>=3.16
+Requires-Dist: drf-spectacular<0.30,>=0.28
+Requires-Dist: dj-database-url<3.0,>=2.3
+Requires-Dist: psycopg[binary]<3.4,>=3.2
+Requires-Dist: celery[redis]<5.7,>=5.5
+Requires-Dist: redis<7,>=5.2
+Requires-Dist: gunicorn<25,>=23
+Provides-Extra: dev
+Requires-Dist: pytest<10,>=8.3; extra == "dev"
+Requires-Dist: pytest-django<5,>=4.10; extra == "dev"
+Requires-Dist: pytest-cov<8,>=6; extra == "dev"
+Requires-Dist: ruff<1,>=0.11; extra == "dev"

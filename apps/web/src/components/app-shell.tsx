@@ -1,3 +1,6 @@
+"use client";
+import { usePathname } from "next/navigation";
+
 import type { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -5,15 +8,16 @@ import { primaryNavigation, secondaryNavigation, type NavigationItem } from "@/l
 import { ProductIcon } from "@/components/product-icon";
 
 function NavigationGroup({ items, label }: { items: readonly NavigationItem[]; label: string }) {
+  const pathname = usePathname();
   return (
     <div className="nav-group" role="group" aria-label={label}>
       <p className="nav-heading">{label}</p>
       {items.map((item) =>
         item.href ? (
-          <a key={item.label} className="nav-item is-active" href={item.href} aria-current="page">
+          <Link key={item.label} className={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/")) ? "nav-item is-active" : "nav-item"} href={item.href} aria-current={pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/")) ? "page" : undefined}>
             <ProductIcon name={item.icon} />
             <span>{item.label}</span>
-          </a>
+          </Link>
         ) : (
           <button key={item.label} type="button" className="nav-item" disabled>
             <ProductIcon name={item.icon} />

@@ -1,0 +1,30 @@
+.m1-auth-screen { min-height: 100vh; display: grid; place-items: center; padding: 2rem; }
+.m1-auth-card { background: var(--surface, #fff); width: min(100%, 440px); border: 1px solid var(--border, #dce3ec); border-radius: 12px; padding: 2rem; }
+.m1-auth-brand { display: inline-block; font-weight: 750; color: var(--primary, #315eb8); margin-bottom: 1.5rem; }
+.m1-auth-card h1 { margin-bottom: .5rem; }
+.m1-subtitle { margin: 0 0 1.5rem; color: var(--muted, #526278); }
+.m1-form { display: grid; gap: .6rem; }
+.m1-form label, .m1-filter { font-weight: 600; font-size: .875rem; }
+.m1-form :is(input, select, textarea), .m1-filter select { display: block; width: 100%; padding: .7rem .8rem; border: 1px solid #8797ad; border-radius: 7px; color: var(--ink, #1a293d); background: #fff; font: inherit; }
+.m1-form :is(input, select, textarea):focus-visible, .m1-filter select:focus-visible { outline: 3px solid #1556a9; outline-offset: 2px; }
+.m1-form textarea { resize: vertical; }
+.m1-form button[type="submit"] { justify-self: start; margin-top: .7rem; }
+.m1-form-panel { padding: 1.5rem; max-width: 800px; }
+.m1-form-panel h2 { margin-top: 0; }
+.m1-footnote { margin-top: 1.5rem; }
+.m1-footnote a, .m1-prompt a:not(.button), .m1-table-link { color: #204e9b; text-decoration: underline; text-underline-offset: .15rem; }
+.m1-hint { color: #526278; font-size: .875rem; }
+.m1-error { padding: .75rem 1rem; color: #8b1e20; background: #fff2f2; border: 1px solid #dba4a4; border-radius: 7px; }
+.m1-actions, .m1-toolbar, .m1-account { display: flex; align-items: center; flex-wrap: wrap; gap: .8rem; }
+.m1-toolbar { justify-content: space-between; margin-bottom: 1rem; }
+.m1-account-email { color: #445670; overflow-wrap: anywhere; }
+.m1-table td { padding: .8rem 1.25rem; border-bottom: 1px solid var(--border, #dce3ec); }
+.m1-table tr:hover td { background: #f8fafc; }
+.m1-empty, .m1-prompt { padding: 2rem; }
+.m1-pagination { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 1rem; padding: 1rem; }
+.m1-pagination button { min-height: 44px; padding: .4rem .8rem; background: #fff; border: 1px solid #8699b2; border-radius: 7px; }
+.m1-pagination button:disabled { color: #58677b; background: #f1f3f6; border-color: #c2cbd8; }
+.m1-filter { display: grid; gap: .4rem; }
+.m1-danger { background: #fff; border: 1px solid #9b2828; color: #8b1e20; }
+.m1-danger:hover { background: #fff2f2; }
+@media (max-width: 680px) { .m1-auth-card { padding: 1.25rem; } .m1-form-panel { padding: 1rem; } .m1-toolbar { align-items: stretch; } }

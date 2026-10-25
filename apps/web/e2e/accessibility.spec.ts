@@ -19,5 +19,5 @@ test("skip link works by keyboard and future actions remain disabled", async ({ 
   await expect(skipLink).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/#main-content$/);
-  await expect(page.getByRole("button", { name: "New incident" })).toBeDisabled();
+  await expect(page.getByRole("link", { name: "New incident" })).toHaveAttribute("href", "/incidents/new");
 });

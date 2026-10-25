@@ -28,12 +28,12 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["config*", "core*"]
+include = ["config*", "core*", "accounts*", "incidents*"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py"]
-testpaths = ["core/tests"]
+testpaths = ["core/tests", "accounts/tests", "incidents/tests"]
 addopts = "--strict-markers --disable-warnings"
 
 [tool.ruff]
@@ -47,3 +47,5 @@ ignore = ["S101"]
 
 [tool.ruff.lint.per-file-ignores]
 "core/tests/*" = ["S105", "S106"]
+"accounts/tests/*" = ["S105", "S106"]
+"incidents/tests/*" = ["S105", "S106"]

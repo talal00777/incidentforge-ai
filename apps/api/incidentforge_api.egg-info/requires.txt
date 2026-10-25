@@ -1,0 +1,14 @@
+Django<5.3,>=5.2.8
+djangorestframework<3.17,>=3.16
+drf-spectacular<0.30,>=0.28
+dj-database-url<3.0,>=2.3
+psycopg[binary]<3.4,>=3.2
+celery[redis]<5.7,>=5.5
+redis<7,>=5.2
+gunicorn<25,>=23
+
+[dev]
+pytest<10,>=8.3
+pytest-django<5,>=4.10
+pytest-cov<8,>=6
+ruff<1,>=0.11

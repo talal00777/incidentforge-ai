@@ -51,6 +51,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     "core",
+    "accounts",
+    "incidents",
 ]
 
 MIDDLEWARE = [
@@ -87,12 +89,14 @@ DATABASES = {
     "default": dj_database_url.parse(DATABASE_URL, conn_max_age=60, conn_health_checks=True)
 }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+AUTH_USER_MODEL = "accounts.User"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework.authentication.SessionAuthentication"],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
+    "DEFAULT_THROTTLE_RATES": {"login": "10/min", "registration": "5/hour"},
 }
 SPECTACULAR_SETTINGS = {
     "TITLE": "IncidentForge API",
@@ -100,6 +104,10 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "0.1.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
+}
+
+CACHES = {
+    "default": {"BACKEND": "django.core.cache.backends.redis.RedisCache", "LOCATION": REDIS_URL}
 }
 
 CELERY_BROKER_URL = REDIS_URL
@@ -125,6 +133,15 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = False
 if env_bool("DJANGO_TRUST_PROXY"):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 12},
+    },
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
 STATIC_URL = "static/"
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"

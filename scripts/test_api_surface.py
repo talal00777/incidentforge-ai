@@ -11,8 +11,8 @@ POLICY = json.loads((ROOT / "contracts/api-surface.json").read_text(encoding="ut
 
 
 def sample_schema():
-    return {
-        "paths": {"/api/v1/system": {"get": {"responses": {"200": {}}}}},
+    schema = {
+        "paths": {},
         "components": {
             "schemas": {
                 "SystemInfo": {
@@ -23,7 +23,11 @@ def sample_schema():
                 }
             }
         },
-    }
+    for operation in POLICY["required_operations"]:
+        schema["paths"].setdefault(operation["path"], {})[operation["method"]] = {
+            "responses": {operation["status"]: {}}
+        }
+    return schema
 
 
 class APISurfaceTests(unittest.TestCase):
