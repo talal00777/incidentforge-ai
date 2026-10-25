@@ -23,6 +23,7 @@ def sample_schema():
                 }
             }
         },
+    }
     for operation in POLICY["required_operations"]:
         schema["paths"].setdefault(operation["path"], {})[operation["method"]] = {
             "responses": {operation["status"]: {}}
