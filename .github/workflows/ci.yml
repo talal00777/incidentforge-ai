@@ -115,10 +115,39 @@ jobs:
         run: docker compose up --build -d --wait --wait-timeout 240
       - name: Assert services and HTTP endpoints
         run: |
-          curl --fail --show-error --retry 8 --retry-delay 3 http://127.0.0.1:8000/health/ready
-          curl --fail --show-error http://127.0.0.1:8000/api/v1/system
-          curl --fail --show-error --retry 8 --retry-delay 3 http://127.0.0.1:3000/ > /dev/null
-          test "$(docker compose ps --services --status running | wc -l)" -eq 5
+          curl --fail --show-error --retry 8 --retry-delay 3 \
+            http://127.0.0.1:8000/health/ready
+
+          curl --fail --show-error \
+            http://127.0.0.1:8000/api/v1/system
+
+          curl --fail --show-error --retry 8 --retry-delay 3 \
+            http://127.0.0.1:3000/ > /dev/null
+
+          running_services="$(docker compose ps --services --status running)"
+
+          for service in postgres redis api web worker beat; do
+            if ! grep -Fxq "$service" <<< "$running_services"; then
+              echo "::error::Required service '$service' is not running"
+              docker compose ps -a
+              exit 1
+            fi
+          done
+
+          init_container="$(docker compose ps -a -q evidence-init)"
+
+          if [ -z "$init_container" ]; then
+            echo "::error::Evidence initialization container is missing"
+            exit 1
+          fi
+
+          init_exit_code="$(docker inspect \
+            --format '{{.State.ExitCode}}' "$init_container")"
+
+          if [ "$init_exit_code" -ne 0 ]; then
+            echo "::error::Evidence initialization failed"
+            exit 1
+          fi
       - name: Collect logs on failure
         if: failure()
         run: |
