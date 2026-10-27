@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import pagination, status
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
@@ -9,6 +11,13 @@ from rest_framework.views import APIView
 
 from incidents.models import Incident
 from ingestion.models import IngestionJob, LogEvent, LogSource
+from ingestion.serializers import (
+    IngestionJobStatusSerializer,
+    PaginatedEventsSerializer,
+    SourceSummarySerializer,
+    UploadAcceptedSerializer,
+    UploadRequestSerializer,
+)
 from ingestion.storage import path_for, store
 from ingestion.tasks import process_ingestion
 
@@ -25,6 +34,10 @@ class OwnedIncidentView(APIView):
 class UploadView(OwnedIncidentView):
     parser_classes = [MultiPartParser]
 
+    @extend_schema(
+        request=UploadRequestSerializer,
+        responses={202: UploadAcceptedSerializer},
+    )
     def post(self, request, incident_id):
         incident = self.incident(incident_id)
         files = request.FILES.getlist("files")
@@ -79,6 +92,7 @@ class UploadView(OwnedIncidentView):
 
 
 class SourcesView(OwnedIncidentView):
+    @extend_schema(request=None, responses={200: SourceSummarySerializer(many=True)})
     def get(self, request, incident_id):
         incident = self.incident(incident_id)
         return Response(
@@ -101,6 +115,7 @@ class SourcesView(OwnedIncidentView):
 
 
 class JobsView(OwnedIncidentView):
+    @extend_schema(request=None, responses={200: IngestionJobStatusSerializer})
     def get(self, request, incident_id, job_id):
         incident = self.incident(incident_id)
         item = get_object_or_404(IngestionJob, id=job_id, incident=incident)
@@ -122,6 +137,15 @@ class EventPagination(pagination.PageNumberPagination):
 
 
 class EventsView(OwnedIncidentView):
+    @extend_schema(
+        request=None,
+        parameters=[
+            OpenApiParameter("page", OpenApiTypes.INT, required=False),
+            OpenApiParameter("page_size", OpenApiTypes.INT, required=False),
+            OpenApiParameter("severity", OpenApiTypes.STR, required=False),
+        ],
+        responses={200: PaginatedEventsSerializer},
+    )
     def get(self, request, incident_id):
         incident = self.incident(incident_id)
         events = LogEvent.objects.filter(incident=incident).order_by("-observed_at", "-id")

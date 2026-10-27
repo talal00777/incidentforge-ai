@@ -1,81 +1,105 @@
 {
-    "version":  "v1",
-    "required_operations":  [
-                                {
-                                    "path":  "/api/v1/system",
-                                    "method":  "get",
-                                    "status":  "200"
-                                },
-                                {
-                                    "path":  "/api/v1/auth/csrf",
-                                    "status":  "200",
-                                    "method":  "get"
-                                },
-                                {
-                                    "path":  "/api/v1/auth/register",
-                                    "status":  "201",
-                                    "method":  "post"
-                                },
-                                {
-                                    "path":  "/api/v1/auth/login",
-                                    "status":  "200",
-                                    "method":  "post"
-                                },
-                                {
-                                    "path":  "/api/v1/auth/logout",
-                                    "status":  "204",
-                                    "method":  "post"
-                                },
-                                {
-                                    "path":  "/api/v1/auth/me",
-                                    "status":  "200",
-                                    "method":  "get"
-                                },
-                                {
-                                    "path":  "/api/v1/auth/me",
-                                    "status":  "200",
-                                    "method":  "patch"
-                                },
-                                {
-                                    "path":  "/api/v1/incidents",
-                                    "status":  "200",
-                                    "method":  "get"
-                                },
-                                {
-                                    "path":  "/api/v1/incidents",
-                                    "status":  "201",
-                                    "method":  "post"
-                                },
-                                {
-                                    "path":  "/api/v1/incidents/{id}",
-                                    "status":  "200",
-                                    "method":  "get"
-                                },
-                                {
-                                    "path":  "/api/v1/incidents/{id}",
-                                    "status":  "200",
-                                    "method":  "patch"
-                                },
-                                {
-                                    "path":  "/api/v1/incidents/{id}",
-                                    "status":  "204",
-                                    "method":  "delete"
-                                }
-                            ],
-    "system_response_properties":  [
-                                       "name",
-                                       "api_version",
-                                       "milestone",
-                                       "capabilities"
-                                   ],
-    "allowed_paths":  [
-                          "/api/v1/system",
-                          "/api/v1/auth/csrf",
-                          "/api/v1/auth/register",
-                          "/api/v1/auth/login",
-                          "/api/v1/auth/logout",
-                          "/api/v1/auth/me",
-                          "/api/v1/incidents",
-                          "/api/v1/incidents/{id}"
-                      ]
+  "version": "v1",
+  "required_operations": [
+    {
+      "path": "/api/v1/system",
+      "method": "get",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/auth/csrf",
+      "status": "200",
+      "method": "get"
+    },
+    {
+      "path": "/api/v1/auth/register",
+      "status": "201",
+      "method": "post"
+    },
+    {
+      "path": "/api/v1/auth/login",
+      "status": "200",
+      "method": "post"
+    },
+    {
+      "path": "/api/v1/auth/logout",
+      "status": "204",
+      "method": "post"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": "200",
+      "method": "get"
+    },
+    {
+      "path": "/api/v1/auth/me",
+      "status": "200",
+      "method": "patch"
+    },
+    {
+      "path": "/api/v1/incidents",
+      "status": "200",
+      "method": "get"
+    },
+    {
+      "path": "/api/v1/incidents",
+      "status": "201",
+      "method": "post"
+    },
+    {
+      "path": "/api/v1/incidents/{id}",
+      "status": "200",
+      "method": "get"
+    },
+    {
+      "path": "/api/v1/incidents/{id}",
+      "status": "200",
+      "method": "patch"
+    },
+    {
+      "path": "/api/v1/incidents/{id}",
+      "status": "204",
+      "method": "delete"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/uploads",
+      "method": "post",
+      "status": "202"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/sources",
+      "method": "get",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/events",
+      "method": "get",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/jobs/{job_id}",
+      "method": "get",
+      "status": "200"
+    }
+  ],
+  "system_response_properties": [
+    "name",
+    "api_version",
+    "milestone",
+    "capabilities"
+  ],
+  "allowed_paths": [
+    "/api/v1/system",
+    "/api/v1/auth/csrf",
+    "/api/v1/auth/register",
+    "/api/v1/auth/login",
+    "/api/v1/auth/logout",
+    "/api/v1/auth/me",
+    "/api/v1/incidents",
+    "/api/v1/incidents/{id}",
+    "/api/v1/incidents/{incident_id}/uploads",
+    "/api/v1/incidents/{incident_id}/sources",
+    "/api/v1/incidents/{incident_id}/events",
+    "/api/v1/incidents/{incident_id}/jobs/{job_id}"
+  ]
 }
