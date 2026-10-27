@@ -27,6 +27,16 @@ services:
       retries: 12
     networks: [internal]
 
+  evidence-init:
+    build:
+      context: ./apps/api
+    user: "0:0"
+    restart: "no"
+    command: ["sh", "-c", "install -d -o incidentforge -g incidentforge -m 0700 /srv/evidence"]
+    volumes:
+      - evidence_store:/srv/evidence
+    networks: [internal]
+
   api:
     build:
       context: ./apps/api
@@ -48,6 +58,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      evidence-init:
+        condition: service_completed_successfully
     networks: [internal]
 
   worker:
@@ -60,6 +72,19 @@ services:
       - evidence_store:/srv/evidence
     depends_on:
       api:
+        condition: service_healthy
+    networks: [internal]
+
+  beat:
+    build:
+      context: ./apps/api
+    restart: unless-stopped
+    env_file: .env
+    command: ["celery", "-A", "config", "beat", "--loglevel=INFO", "--schedule=/tmp/incidentforge-celerybeat-schedule"]
+    depends_on:
+      api:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks: [internal]
 

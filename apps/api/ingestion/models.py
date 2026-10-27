@@ -18,6 +18,8 @@ class IngestionJob(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     state = models.CharField(max_length=12, choices=State.choices, default=State.QUEUED)
     attempts = models.PositiveSmallIntegerField(default=0)
+    claim_token = models.UUIDField(null=True, blank=True)
+    lease_until = models.DateTimeField(null=True, blank=True)
     accepted = models.PositiveIntegerField(default=0)
     rejected = models.PositiveIntegerField(default=0)
     error_code = models.CharField(max_length=64, blank=True)
