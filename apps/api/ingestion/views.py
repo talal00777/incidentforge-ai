@@ -56,8 +56,10 @@ class UploadView(OwnedIncidentView):
             return Response({"detail": "Upload between 1 and 5 files."}, status=400)
         for upload in files:
             filename = upload.name.lower()
-            if not filename.endswith((".log", ".txt", ".jsonl")):
-                return Response({"detail": "Allowed file types: .log, .txt, .jsonl."}, status=400)
+            if not filename.endswith((".log", ".txt", ".jsonl", ".json")):
+                return Response(
+                    {"detail": "Allowed file types: .log, .txt, .jsonl, .json."}, status=400
+                )
             if upload.size > settings.INGESTION_MAX_FILE_BYTES or upload.size == 0:
                 return Response(
                     {"detail": "File exceeds the configured size limit or is empty."}, status=400

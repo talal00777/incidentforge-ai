@@ -11,7 +11,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from ingestion.models import IngestionJob, LogEvent, LogSource
-from ingestion.parser import parse_line
+from ingestion.parser import VERSION, iter_records
 from ingestion.storage import path_for
 
 logger = logging.getLogger(__name__)
@@ -104,6 +104,16 @@ def _process_source(job_id, token, source, incident_id):
     if source.state == LogSource.State.COMPLETE:
         return
     _verify_source(job_id, token, source)
+    if source.parser_version != VERSION:
+        with transaction.atomic():
+            _owned_job(job_id, token)
+            locked = LogSource.objects.select_for_update().get(pk=source.pk)
+            if locked.state == LogSource.State.COMPLETE:
+                return
+            LogEvent.objects.filter(source=locked).exclude(parser_version=VERSION).delete()
+            locked.parser_version = VERSION
+            locked.save(update_fields=["parser_version"])
+        source.parser_version = VERSION
     other_count = LogEvent.objects.filter(incident_id=incident_id).exclude(source=source).count()
     capacity = max(0, settings.INGESTION_MAX_EVENTS_PER_INCIDENT - other_count)
     accepted_in_stream = 0
@@ -111,8 +121,7 @@ def _process_source(job_id, token, source, incident_id):
     warnings = Counter()
     batch = []
     with path_for(source.object_key).open("rb") as handle:
-        for line_number, line in enumerate(handle, 1):
-            event, warning = parse_line(line, line_number)
+        for record_number, (event, warning) in enumerate(iter_records(handle), 1):
             if warning:
                 rejected += 1
                 warnings[warning] += 1
@@ -121,6 +130,9 @@ def _process_source(job_id, token, source, incident_id):
                 warnings["incident_event_limit"] += 1
             else:
                 accepted_in_stream += 1
+                quality = event["timestamp_quality"]
+                if quality != "explicit":
+                    warnings[f"timestamp_{quality}"] += 1
                 batch.append(
                     LogEvent(
                         incident_id=incident_id,
@@ -129,7 +141,7 @@ def _process_source(job_id, token, source, incident_id):
                         **event,
                     )
                 )
-            if line_number % BATCH_SIZE == 0:
+            if record_number % BATCH_SIZE == 0:
                 _heartbeat(job_id, token, batch)
                 batch.clear()
     _heartbeat(job_id, token, batch)

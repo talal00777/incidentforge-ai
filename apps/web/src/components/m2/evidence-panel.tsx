@@ -80,10 +80,10 @@ export function EvidencePanel({ incidentId }: { incidentId: string }) {
   return (
     <section className="m2-panel" aria-labelledby="evidence-heading">
       <h2 id="evidence-heading">Log evidence</h2>
-      <p>Upload UTF-8 .log, .txt or .jsonl files. Up to five files, 25 MiB each. Personal data and secrets may occur in logs; use sanitized test data.</p>
+      <p>Upload UTF-8 .log, .txt, .jsonl or .json files. Up to five files, 25 MiB each. Personal data and secrets may occur in logs; use sanitized test data.</p>
       <form onSubmit={upload}>
         <label htmlFor="log-files">Log files</label>
-        <input id="log-files" type="file" multiple accept=".log,.txt,.jsonl" onChange={event => setFiles(Array.from(event.currentTarget.files || []))} />
+        <input id="log-files" type="file" multiple accept=".log,.txt,.jsonl,.json" onChange={event => setFiles(Array.from(event.currentTarget.files || []))} />
         <button type="submit" disabled={busy || files.length === 0 || files.length > 5}>{busy ? "Uploading…" : "Upload evidence"}</button>
       </form>
       <p role="status" aria-live="polite">{message}</p>

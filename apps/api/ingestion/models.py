@@ -44,7 +44,7 @@ class LogSource(models.Model):
     object_key = models.CharField(max_length=150, unique=True)
     sha256 = models.CharField(max_length=64)
     byte_size = models.PositiveIntegerField()
-    parser_version = models.CharField(max_length=32, default="m2.1")
+    parser_version = models.CharField(max_length=32, default="m2.2")
     state = models.CharField(max_length=12, choices=State.choices, default=State.QUEUED)
     accepted = models.PositiveIntegerField(default=0)
     rejected = models.PositiveIntegerField(default=0)
@@ -69,7 +69,7 @@ class LogEvent(models.Model):
     trace_id = models.CharField(max_length=128, blank=True)
     redacted_message = models.TextField(max_length=4096)
     fingerprint = models.CharField(max_length=64)
-    parser_version = models.CharField(max_length=32, default="m2.1")
+    parser_version = models.CharField(max_length=32, default="m2.2")
 
     class Meta:
         constraints = [
