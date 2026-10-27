@@ -1,0 +1,7 @@
+.m2-panel { display: grid; gap: 1rem; max-width: 100%; }
+.m2-panel form { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 0.75rem; }
+.m2-panel input[type=file] { max-width: 100%; }
+.m2-panel table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
+.m2-panel th, .m2-panel td { padding: .7rem; border-bottom: 1px solid #d7dfe3; text-align: left; vertical-align: top; }
+.m2-panel td { overflow-wrap: anywhere; }
+.m2-panel button { min-height: 44px; }

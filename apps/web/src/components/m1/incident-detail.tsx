@@ -100,7 +100,7 @@ export function IncidentDetail() {
         <option value="open">Open</option><option value="investigating">Investigating</option><option value="resolved">Resolved</option><option value="archived">Archived</option>
       </select>
       {error && <p className="m1-error" role="alert">{error}</p>}
-      <div className="m1-actions"><button className="button button-primary" type="submit" disabled={busy}>Save changes</button><button className="button m1-danger" type="button" onClick={remove} disabled={busy}>Delete incident</button><Link className="button button-outline" href="/incidents">Back</Link></div>
+      <div className="m1-actions"><button className="button button-primary" type="submit" disabled={busy}>Save changes</button><button className="button m1-danger" type="button" onClick={remove} disabled={busy}>Delete incident</button><Link className="button button-outline" href={`/incidents/${encodeURIComponent(params.id)}/sources`}>Evidence &amp; sources</Link><Link className="button button-outline" href="/incidents">Back</Link></div>
     </form>
   </section>;
 }

@@ -28,12 +28,12 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["config*", "core*", "accounts*", "incidents*"]
+include = ["config*", "core*", "accounts*", "incidents*", "ingestion*"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py"]
-testpaths = ["core/tests", "accounts/tests", "incidents/tests"]
+testpaths = ["core/tests", "accounts/tests", "incidents/tests", "ingestion/tests"]
 addopts = "--strict-markers --disable-warnings"
 
 [tool.ruff]

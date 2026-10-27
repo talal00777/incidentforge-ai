@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "core",
     "accounts",
     "incidents",
+    "ingestion",
 ]
 
 MIDDLEWARE = [
@@ -142,6 +143,11 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+INGESTION_STORAGE_ROOT = os.getenv("INGESTION_STORAGE_ROOT", "/srv/evidence")
+INGESTION_MAX_FILE_BYTES = 25 * 1024 * 1024
+INGESTION_MAX_FILES = 5
+INGESTION_MAX_EVENTS_PER_INCIDENT = 100_000
+
 STATIC_URL = "static/"
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"

@@ -12,6 +12,12 @@ test("register, create, update and delete an owned incident", async ({ page }) =
   await page.getByLabel("Service").fill("checkout-api");
   await page.getByRole("button", { name: "Create incident" }).click();
   await expect(page).toHaveURL(/\/incidents\/[0-9a-f-]+$/);
+  await page.getByRole("link", { name: "Evidence & sources" }).click();
+  await expect(page).toHaveURL(/\/incidents\/[0-9a-f-]+\/sources$/);
+  await expect(page.getByRole("heading", { name: "Incident evidence" })).toBeVisible();
+  await expect(page.getByLabel("Log files")).toBeVisible();
+  await page.goBack();
+  await expect(page.getByRole("heading", { name: "Incident details" })).toBeVisible();
   await page.getByLabel("Status").selectOption("investigating");
   await page.getByRole("button", { name: "Save changes" }).click();
   await expect(page.getByLabel("Status")).toHaveValue("investigating");
