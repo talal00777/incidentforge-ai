@@ -13,6 +13,7 @@ from rest_framework.views import APIView
 
 from incidents.models import Incident
 from ingestion.models import IngestionJob, LogEvent, LogSource
+from ingestion.security import UploadRejected, validate_upload
 from ingestion.serializers import (
     IngestionJobStatusSerializer,
     PaginatedEventsSerializer,
@@ -54,20 +55,12 @@ class UploadView(OwnedIncidentView):
         files = request.FILES.getlist("files")
         if not 1 <= len(files) <= settings.INGESTION_MAX_FILES:
             return Response({"detail": "Upload between 1 and 5 files."}, status=400)
-        for upload in files:
-            filename = upload.name.lower()
-            if not filename.endswith((".log", ".txt", ".jsonl", ".json")):
-                return Response(
-                    {"detail": "Allowed file types: .log, .txt, .jsonl, .json."}, status=400
-                )
-            if upload.size > settings.INGESTION_MAX_FILE_BYTES or upload.size == 0:
-                return Response(
-                    {"detail": "File exceeds the configured size limit or is empty."}, status=400
-                )
-            sample = upload.read(min(4096, upload.size))
-            upload.seek(0)
-            if b"\x00" in sample:
-                return Response({"detail": "Binary content is not accepted."}, status=400)
+        validated_names = []
+        try:
+            for upload in files:
+                validated_names.append(validate_upload(upload))
+        except UploadRejected as exc:
+            return Response({"code": exc.code, "detail": str(exc)}, status=400)
         with transaction.atomic():
             Incident.objects.select_for_update().get(pk=incident.pk)
             active = IngestionJob.objects.filter(
@@ -78,13 +71,13 @@ class UploadView(OwnedIncidentView):
             job = IngestionJob.objects.create(incident=incident, owner=request.user)
             keys = []
             try:
-                for upload in files:
+                for upload, filename in zip(files, validated_names, strict=True):
                     key, sha, size = store(upload)
                     keys.append(key)
                     LogSource.objects.create(
                         incident=incident,
                         job=job,
-                        filename=upload.name[:255],
+                        filename=filename,
                         object_key=key,
                         sha256=sha,
                         byte_size=size,

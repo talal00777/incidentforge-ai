@@ -7,6 +7,8 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from typing import BinaryIO
 
+from ingestion.security import redact_message
+
 VERSION = "m2.2"
 MAX_LINE_BYTES = 64 * 1024
 MAX_RECORD_BYTES = 64 * 1024
@@ -24,18 +26,10 @@ TRACE_CONTINUATION = re.compile(
     r"|at\s+|\.{3}\s+\d+\s+more|[\w.]+(?:Error|Exception):)",
     re.I,
 )
-SECRETS = [
-    re.compile(r"(?i)\b(authorization\s*:\s*bearer\s+)[^\s,;]+"),
-    re.compile(r"(?i)\b(password|api[_-]?key|secret|token)\s*[:=]\s*([^\s,;]+)"),
-    re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"),
-]
 
 
 def redact(message: str) -> str:
-    text = message[:MAX_MESSAGE]
-    text = SECRETS[0].sub(r"\1[REDACTED]", text)
-    text = SECRETS[1].sub(r"\1=[REDACTED]", text)
-    return SECRETS[2].sub("[REDACTED_EMAIL]", text)
+    return redact_message(message)
 
 
 def parse_timestamp(value: object) -> tuple[datetime | None, str]:
@@ -86,8 +80,8 @@ def _parse_mapping(data: object, start: int, end: int) -> tuple[dict | None, str
         return None, "invalid_message"
     occurred, quality = parse_timestamp(data.get("timestamp", data.get("time")))
     severity = str(data.get("level", data.get("severity", ""))).upper()[:16]
-    service = str(data.get("service", ""))[:120]
-    trace = str(data.get("trace_id", ""))[:128]
+    service = redact(str(data.get("service", "")))[:120]
+    trace = redact(str(data.get("trace_id", "")))[:128]
     return _event(start, end, occurred, quality, severity, service, trace, message), None
 
 
