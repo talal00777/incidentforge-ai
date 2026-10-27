@@ -2,7 +2,10 @@ from ingestion.parser import parse_line, parse_timestamp, redact
 
 
 def test_explicit_timestamp_and_redaction():
-    event, warning = parse_line(b'{"timestamp":"2026-10-24T10:00:00Z","level":"error","message":"password=private@example.org"}', 1)
+    event, warning = parse_line(
+        b'{"timestamp":"2026-10-24T10:00:00Z","level":"error","message":"password=private@example.org"}',
+        1,
+    )
     assert warning is None
     assert event["timestamp_quality"] == "explicit"
     assert event["occurred_at"].tzinfo is not None

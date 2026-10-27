@@ -1,12 +1,14 @@
 import hashlib
 import json
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 VERSION = "m2.1"
 MAX_LINE_BYTES = 64 * 1024
 MAX_MESSAGE = 4096
-TIME_PREFIX = re.compile(r"^(?P<date>\d{4}-\d\d-\d\d[T ]\d\d:\d\d:\d\d(?:[.,]\d+)?(?:Z|[+-]\d\d:?\d\d)?)\s+(?P<body>.*)$")
+TIME_PREFIX = re.compile(
+    r"^(?P<date>\d{4}-\d\d-\d\d[T ]\d\d:\d\d:\d\d(?:[.,]\d+)?(?:Z|[+-]\d\d:?\d\d)?)\s+(?P<body>.*)$"
+)
 SEVERITIES = re.compile(r"\b(DEBUG|INFO|NOTICE|WARN|WARNING|ERROR|FATAL|CRITICAL)\b", re.I)
 SECRETS = [
     re.compile(r"(?i)\b(authorization\s*:\s*bearer\s+)[^\s,;]+"),
@@ -32,7 +34,7 @@ def parse_timestamp(value):
         return None, "invalid"
     if parsed.tzinfo is None:
         return None, "unknown_timezone"
-    return parsed.astimezone(timezone.utc), "explicit"
+    return parsed.astimezone(UTC), "explicit"
 
 
 def parse_line(line, number):

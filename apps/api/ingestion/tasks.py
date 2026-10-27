@@ -24,7 +24,11 @@ def process_ingestion(self, job_id):
         job.started_at = timezone.now()
         job.save(update_fields=["state", "attempts", "started_at"])
     try:
-        remaining = max(0, settings.INGESTION_MAX_EVENTS_PER_INCIDENT - LogEvent.objects.filter(incident_id=job.incident_id).count())
+        remaining = max(
+            0,
+            settings.INGESTION_MAX_EVENTS_PER_INCIDENT
+            - LogEvent.objects.filter(incident_id=job.incident_id).count(),
+        )
         total_accepted = 0
         total_rejected = 0
         for source in job.sources.all().order_by("created_at"):
@@ -50,7 +54,14 @@ def process_ingestion(self, job_id):
                         rejected += 1
                         warnings["incident_event_limit"] += 1
                         continue
-                    batch.append(LogEvent(incident_id=job.incident_id, source=source, observed_at=timezone.now(), **event))
+                    batch.append(
+                        LogEvent(
+                            incident_id=job.incident_id,
+                            source=source,
+                            observed_at=timezone.now(),
+                            **event,
+                        )
+                    )
                     accepted += 1
                     if len(batch) == 500:
                         LogEvent.objects.bulk_create(batch, ignore_conflicts=True)
@@ -60,7 +71,9 @@ def process_ingestion(self, job_id):
             source.state = LogSource.State.COMPLETE
             source.accepted = LogEvent.objects.filter(source=source).count()
             source.rejected = rejected
-            source.warnings = [{"code": code, "count": count} for code, count in sorted(warnings.items())]
+            source.warnings = [
+                {"code": code, "count": count} for code, count in sorted(warnings.items())
+            ]
             source.save(update_fields=["state", "accepted", "rejected", "warnings"])
             remaining -= source.accepted
             total_accepted += source.accepted

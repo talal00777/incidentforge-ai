@@ -18,10 +18,22 @@ urlpatterns = [
     path("api/v1/auth/me", CurrentUserView.as_view(), name="auth-me"),
     path("api/v1/incidents", IncidentListCreateView.as_view(), name="incident-list"),
     path("api/v1/incidents/<uuid:id>", IncidentDetailView.as_view(), name="incident-detail"),
-    path("api/v1/incidents/<uuid:incident_id>/uploads", UploadView.as_view(), name="ingestion-upload"),
-    path("api/v1/incidents/<uuid:incident_id>/sources", SourcesView.as_view(), name="ingestion-sources"),
-    path("api/v1/incidents/<uuid:incident_id>/events", EventsView.as_view(), name="ingestion-events"),
-    path("api/v1/incidents/<uuid:incident_id>/jobs/<uuid:job_id>", JobsView.as_view(), name="ingestion-job"),
+    path(
+        "api/v1/incidents/<uuid:incident_id>/uploads", UploadView.as_view(), name="ingestion-upload"
+    ),
+    path(
+        "api/v1/incidents/<uuid:incident_id>/sources",
+        SourcesView.as_view(),
+        name="ingestion-sources",
+    ),
+    path(
+        "api/v1/incidents/<uuid:incident_id>/events", EventsView.as_view(), name="ingestion-events"
+    ),
+    path(
+        "api/v1/incidents/<uuid:incident_id>/jobs/<uuid:job_id>",
+        JobsView.as_view(),
+        name="ingestion-job",
+    ),
     path("api/v1/openapi/", SpectacularAPIView.as_view(), name="openapi-schema"),
     path("api/v1/docs/", SpectacularSwaggerView.as_view(url_name="openapi-schema")),
     path("django-admin/", admin.site.urls),

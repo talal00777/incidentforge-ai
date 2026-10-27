@@ -70,8 +70,15 @@ class LogEvent(models.Model):
     parser_version = models.CharField(max_length=32, default="m2.1")
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=["source", "line_start", "line_end", "parser_version"], name="ing_event_idempotence")]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["source", "line_start", "line_end", "parser_version"],
+                name="ing_event_idempotence",
+            )
+        ]
         indexes = [
             models.Index(fields=["incident", "occurred_at"], name="ing_evt_time_idx"),
-            models.Index(fields=["incident", "severity", "occurred_at"], name="ing_evt_severity_idx"),
+            models.Index(
+                fields=["incident", "severity", "occurred_at"], name="ing_evt_severity_idx"
+            ),
         ]
