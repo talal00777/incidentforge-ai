@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -20,6 +22,15 @@ from ingestion.serializers import (
 )
 from ingestion.storage import path_for, store
 from ingestion.tasks import process_ingestion
+
+logger = logging.getLogger(__name__)
+
+
+def enqueue_ingestion(job_id):
+    try:
+        process_ingestion.delay(job_id)
+    except Exception:
+        logger.warning("Unable to enqueue ingestion job %s; reconciliation will retry", job_id)
 
 
 class OwnedIncidentView(APIView):
@@ -80,7 +91,7 @@ class UploadView(OwnedIncidentView):
                 for key in keys:
                     path_for(key).unlink(missing_ok=True)
                 raise
-            transaction.on_commit(lambda: process_ingestion.delay(str(job.id)))
+            transaction.on_commit(lambda: enqueue_ingestion(str(job.id)))
         return Response(
             {
                 "job_id": str(job.id),
