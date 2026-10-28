@@ -80,6 +80,11 @@
       "path": "/api/v1/incidents/{incident_id}/jobs/{job_id}",
       "method": "get",
       "status": "200"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/analysis",
+      "method": "get",
+      "status": "200"
     }
   ],
   "system_response_properties": [
@@ -100,6 +105,7 @@
     "/api/v1/incidents/{incident_id}/uploads",
     "/api/v1/incidents/{incident_id}/sources",
     "/api/v1/incidents/{incident_id}/events",
-    "/api/v1/incidents/{incident_id}/jobs/{job_id}"
+    "/api/v1/incidents/{incident_id}/jobs/{job_id}",
+    "/api/v1/incidents/{incident_id}/analysis"
   ]
 }

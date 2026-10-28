@@ -42,6 +42,7 @@ if not REDIS_URL:
     raise ImproperlyConfigured("REDIS_URL must be configured")
 
 INSTALLED_APPS = [
+    "analytics",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",

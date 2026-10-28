@@ -3,11 +3,17 @@ from django.urls import path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from accounts.views import CsrfView, CurrentUserView, LoginView, LogoutView, RegisterView
+from analytics.views import IncidentAnalysisView
 from core.views import SystemInfoView, liveness, readiness
 from incidents.views import IncidentDetailView, IncidentListCreateView
 from ingestion.views import EventsView, JobsView, SourcesView, UploadView
 
 urlpatterns = [
+    path(
+        "api/v1/incidents/<uuid:incident_id>/analysis",
+        IncidentAnalysisView.as_view(),
+        name="incident-analysis",
+    ),
     path("health/live", liveness, name="health-live"),
     path("health/ready", readiness, name="health-ready"),
     path("api/v1/system", SystemInfoView.as_view(), name="system-info"),

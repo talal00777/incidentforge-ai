@@ -90,6 +90,7 @@ export function EvidencePanel({ incidentId }: { incidentId: string }) {
       {job && <p>Job: {job.state} — {job.accepted} accepted, {job.rejected} rejected <button type="button" onClick={() => void checkJob()}>Refresh job</button></p>}
       <h3>Sources</h3>
       {sources.length === 0 ? <p>No sources uploaded.</p> : <ul>{sources.map(source => <li key={source.id}>{source.filename} — {source.state} — {source.accepted} accepted, {source.rejected} rejected — SHA-256: <code>{source.sha256.slice(0, 16)}…</code>{source.warnings.length > 0 && <span> — {source.warnings.map(w => `${w.code} (${w.count})`).join(", ")}</span>}</li>)}</ul>}
+      <p><a href={`/incidents/${incidentId}/analysis`}>Incident analysis</a></p>
       <h3>Normalized events</h3>
       {events.length === 0 ? <p>No parsed events.</p> : <table><caption>Most recently observed log records</caption><thead><tr><th scope="col">Timestamp</th><th scope="col">Severity</th><th scope="col">Redacted message</th><th scope="col">Source line</th></tr></thead><tbody>{events.map(record => <tr key={record.id}><td>{record.occurred_at || `Unknown (${record.timestamp_quality})`}</td><td>{record.severity || "—"}</td><td>{record.message}</td><td>{record.line_start}</td></tr>)}</tbody></table>}
     </section>
