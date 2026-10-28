@@ -56,9 +56,7 @@ class Command(BaseCommand):
                 after = UUID(after)
             except ValueError as exc:
                 raise CommandError("Invalid after-incident-id UUID") from exc
-        candidates = Incident.objects.filter(
-            deleted_at__isnull=False, deleted_at__lte=cutoff
-        )
+        candidates = Incident.objects.filter(deleted_at__isnull=False, deleted_at__lte=cutoff)
         if after is not None:
             candidates = candidates.filter(id__gt=after)
         candidate_ids = list(

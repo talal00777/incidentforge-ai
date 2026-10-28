@@ -74,7 +74,10 @@ def test_historical_redaction_is_explicit_idempotent_and_does_not_modify_raw(tmp
 
         output = StringIO()
         call_command(
-            "redact_stored_evidence", "--execute", "--incident-id", str(incident.id),
+            "redact_stored_evidence",
+            "--execute",
+            "--incident-id",
+            str(incident.id),
             stdout=output,
         )
         assert "changed_events=1" in output.getvalue()
@@ -83,9 +86,10 @@ def test_historical_redaction_is_explicit_idempotent_and_does_not_modify_raw(tmp
         for secret in ("sensitive-token", "service-secret", "trace-secret"):
             assert secret not in (event.redacted_message + event.service + event.trace_id)
         assert "older-secret" not in source.filename
-        assert event.fingerprint == hashlib.sha256(
-            ("ERROR:" + event.redacted_message).encode()
-        ).hexdigest()
+        assert (
+            event.fingerprint
+            == hashlib.sha256(("ERROR:" + event.redacted_message).encode()).hexdigest()
+        )
         assert path_for(source.object_key).read_bytes() == original_raw
 
         output = StringIO()
@@ -112,7 +116,9 @@ def test_retention_dry_run_then_purge_preserves_tombstone_and_audit(tmp_path):
         owner, old = owner_and_incident(deleted_days=45)
         _, source, event = evidence(owner, old)
         IncidentAuditEvent.objects.create(
-            incident=old, actor=owner, action=IncidentAuditEvent.Action.DELETED,
+            incident=old,
+            actor=owner,
+            action=IncidentAuditEvent.Action.DELETED,
         )
         raw = path_for(source.object_key)
         output = StringIO()
@@ -196,6 +202,7 @@ def test_retention_refuses_symlink_object(tmp_path):
             path_for(source.object_key).unlink()
             outside.unlink()
 
+
 @pytest.mark.django_db
 def test_historical_redaction_supports_bounded_cursor_scans(tmp_path):
     with override_settings(INGESTION_STORAGE_ROOT=str(tmp_path)):
@@ -204,8 +211,15 @@ def test_historical_redaction_supports_bounded_cursor_scans(tmp_path):
         _, source2, event2 = evidence(owner, incident)
         output = StringIO()
         call_command(
-            "redact_stored_evidence", "--execute", "--max-events", "1",
-            "--max-sources", "1", "--incident-id", str(incident.id), stdout=output,
+            "redact_stored_evidence",
+            "--execute",
+            "--max-events",
+            "1",
+            "--max-sources",
+            "1",
+            "--incident-id",
+            str(incident.id),
+            stdout=output,
         )
         assert "scanned_events=1" in output.getvalue()
         assert "scanned_sources=1" in output.getvalue()
@@ -213,10 +227,18 @@ def test_historical_redaction_supports_bounded_cursor_scans(tmp_path):
 
         output = StringIO()
         call_command(
-            "redact_stored_evidence", "--execute", "--max-events", "1",
-            "--max-sources", "1", "--incident-id", str(incident.id),
-            "--after-event-id", str(min(event1.pk, event2.pk)),
-            "--after-source-id", str(min(source1.pk, source2.pk)),
+            "redact_stored_evidence",
+            "--execute",
+            "--max-events",
+            "1",
+            "--max-sources",
+            "1",
+            "--incident-id",
+            str(incident.id),
+            "--after-event-id",
+            str(min(event1.pk, event2.pk)),
+            "--after-source-id",
+            str(min(source1.pk, source2.pk)),
             stdout=output,
         )
         assert "scanned_events=1" in output.getvalue()
