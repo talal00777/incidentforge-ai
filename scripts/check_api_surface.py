@@ -46,7 +46,6 @@ def main() -> int:
         for violation in violations:
             print(violation, file=sys.stderr)
         return 1
-    print("Reviewed API surface matches the generated schema.")
     return 0
 
 
