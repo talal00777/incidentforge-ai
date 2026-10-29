@@ -95,6 +95,26 @@
       "path": "/api/v1/incidents/{incident_id}/relationships",
       "method": "get",
       "status": "200"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/evidence/preview",
+      "method": "post",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/evidence/snapshots",
+      "method": "get",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/evidence/snapshots",
+      "method": "post",
+      "status": "201"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/evidence/snapshots/{snapshot_id}",
+      "method": "get",
+      "status": "200"
     }
   ],
   "system_response_properties": [
@@ -118,6 +138,9 @@
     "/api/v1/incidents/{incident_id}/jobs/{job_id}",
     "/api/v1/incidents/{incident_id}/analysis",
     "/api/v1/incidents/{incident_id}/analysis/charts/{chart_type}",
-    "/api/v1/incidents/{incident_id}/relationships"
+    "/api/v1/incidents/{incident_id}/relationships",
+    "/api/v1/incidents/{incident_id}/evidence/preview",
+    "/api/v1/incidents/{incident_id}/evidence/snapshots",
+    "/api/v1/incidents/{incident_id}/evidence/snapshots/{snapshot_id}"
   ]
 }

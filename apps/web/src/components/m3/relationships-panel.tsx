@@ -120,6 +120,7 @@ export function RelationshipsPanel({ incidentId }: { incidentId: string }) {
             <button type="button" aria-pressed={zone === "utc"} onClick={() => setZone("utc")}>UTC</button>
             <button type="button" aria-pressed={zone === "local"} onClick={() => setZone("local")}>Local</button>
           </div>
+          <Link className={styles.back} href={`/incidents/${encodeURIComponent(incidentId)}/evidence-snapshots`}>Evidence selection</Link>
           <Link className={styles.back} href={`/incidents/${encodeURIComponent(incidentId)}/analysis`}>Incident analysis</Link>
         </div>
       </header>

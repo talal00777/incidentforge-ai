@@ -7,10 +7,30 @@ from analytics.charts import IncidentChartView
 from analytics.correlation_views import IncidentRelationshipsView
 from analytics.views import IncidentAnalysisView
 from core.views import SystemInfoView, liveness, readiness
+from evidence.views import (
+    EvidencePreviewView,
+    EvidenceSnapshotDetailView,
+    EvidenceSnapshotListCreateView,
+)
 from incidents.views import IncidentDetailView, IncidentListCreateView
 from ingestion.views import EventsView, JobsView, SourcesView, UploadView
 
 urlpatterns = [
+    path(
+        "api/v1/incidents/<uuid:incident_id>/evidence/preview",
+        EvidencePreviewView.as_view(),
+        name="evidence-preview",
+    ),
+    path(
+        "api/v1/incidents/<uuid:incident_id>/evidence/snapshots",
+        EvidenceSnapshotListCreateView.as_view(),
+        name="evidence-snapshots",
+    ),
+    path(
+        "api/v1/incidents/<uuid:incident_id>/evidence/snapshots/<uuid:snapshot_id>",
+        EvidenceSnapshotDetailView.as_view(),
+        name="evidence-snapshot",
+    ),
     path(
         "api/v1/incidents/<uuid:incident_id>/relationships",
         IncidentRelationshipsView.as_view(),
