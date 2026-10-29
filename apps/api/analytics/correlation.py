@@ -104,11 +104,11 @@ def correlate(events: list[CorrelationEvent]) -> dict:
     groups = []
     transitions = defaultdict(lambda: {"count": 0, "event_ids": []})
     transition_pairs = set()
-    for index, ((kind, identifier), group) in enumerate(ranked, 1):
+    for index, ((kind, _identifier), group) in enumerate(ranked, 1):
         key = f"{kind}-{index}"
         timed = [event for event in group if event.occurred_at is not None]
         services = sorted({event.service for event in group if event.service})
-        for first, second in zip(timed, timed[1:]):
+        for first, second in zip(timed, timed[1:], strict=False):
             if first.service and second.service and first.service != second.service:
                 edge = (first.service, second.service)
                 pair = (first.id, second.id)

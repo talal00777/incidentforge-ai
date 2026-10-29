@@ -1,10 +1,10 @@
-from analytics.correlation_views import IncidentRelationshipsView
-from analytics.charts import IncidentChartView
 from django.contrib import admin
 from django.urls import path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from accounts.views import CsrfView, CurrentUserView, LoginView, LogoutView, RegisterView
+from analytics.charts import IncidentChartView
+from analytics.correlation_views import IncidentRelationshipsView
 from analytics.views import IncidentAnalysisView
 from core.views import SystemInfoView, liveness, readiness
 from incidents.views import IncidentDetailView, IncidentListCreateView
@@ -16,7 +16,11 @@ urlpatterns = [
         IncidentRelationshipsView.as_view(),
         name="incident-relationships",
     ),
-    path("api/v1/incidents/<uuid:incident_id>/analysis/charts/<slug:chart_type>", IncidentChartView.as_view(), name="incident-chart"),
+    path(
+        "api/v1/incidents/<uuid:incident_id>/analysis/charts/<slug:chart_type>",
+        IncidentChartView.as_view(),
+        name="incident-chart",
+    ),
     path(
         "api/v1/incidents/<uuid:incident_id>/analysis",
         IncidentAnalysisView.as_view(),
