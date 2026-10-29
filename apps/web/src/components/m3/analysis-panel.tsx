@@ -1,70 +1,134 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { apiGet, describeApiFailure } from "@/lib/api-client";
 
-type Bucket = { start: string; total: number; errors: number };
-type Breakdown = { severity: string; count: number };
-type Service = { service: string; count: number };
-type Group = { fingerprint: string; count: number; event_ids: string[] };
-type Analysis = {
-  algorithm_version: string;
-  input_sha256: string;
-  total_events: number;
-  error_events: number;
-  missing_event_time: number;
-  severity_counts: Breakdown[];
-  service_counts: Service[];
-  fingerprint_groups: Group[];
-  timeline: Bucket[];
-  anomaly: { status: string; reason?: string; buckets: string[] };
-  limitations: string[];
-};
+import { AnalysisCharts } from "@/components/m3/analysis-charts";
+import { apiGet, describeApiFailure } from "@/lib/api-client";
+import { eventTimeLabel, type IncidentAnalysis } from "@/lib/analysis-display";
+
+import styles from "./incident-analysis.module.css";
+
+type Timezone = "utc" | "local";
 
 export function AnalysisPanel({ incidentId }: { incidentId: string }) {
-  const [data, setData] = useState<Analysis | null>(null);
+  const [data, setData] = useState<IncidentAnalysis | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [bucket, setBucket] = useState("5");
+  const [zone, setZone] = useState<Timezone>("utc");
 
   useEffect(() => {
     let active = true;
-    apiGet<Analysis>(`incidents/${encodeURIComponent(incidentId)}/analysis?bucket_minutes=${bucket}`)
-      .then(result => { if (active) { setData(result); setError(""); } })
-      .catch(failure => { if (active) { setData(null); setError(describeApiFailure(failure)); } })
-      .finally(() => { if (active) setLoading(false); });
+    apiGet<IncidentAnalysis>(`incidents/${encodeURIComponent(incidentId)}/analysis?bucket_minutes=${bucket}`)
+      .then((result) => {
+        if (active) {
+          setData(result);
+          setError("");
+        }
+      })
+      .catch((failure) => {
+        if (active) {
+          setData(null);
+          setError(describeApiFailure(failure));
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
     return () => { active = false; };
   }, [incidentId, bucket]);
 
+  const recurring = data?.fingerprint_groups.filter((group) => group.count > 1).length ?? 0;
+  const metrics = data ? [
+    { name: "Total events", value: data.total_events, tone: "" },
+    { name: "Error-level", value: data.error_events, tone: styles.errorTone },
+    { name: "Recurring patterns", value: recurring, tone: styles.patternTone },
+    { name: "Unknown time", value: data.missing_event_time, tone: styles.unknownTone },
+  ] : [];
+
   return (
-    <section className="panel" aria-labelledby="analysis-heading">
-      <h2 id="analysis-heading">Incident analysis</h2>
-      <p>Deterministic aggregates from normalized evidence. Counts are log event counts, not request failure rates.</p>
-      <label htmlFor="analysis-bucket">Timeline bucket</label>{" "}
-      <select id="analysis-bucket" value={bucket} onChange={event => { setLoading(true); setBucket(event.target.value); }}>
-        <option value="1">1 minute</option><option value="5">5 minutes</option>
-        <option value="15">15 minutes</option><option value="60">60 minutes</option>
-      </select>
-      {loading && <p role="status">Loading analysis…</p>}
-      {error && <p role="alert">{error}</p>}
-      {data && !loading && <>
-        <p><strong>{data.total_events}</strong> events · <strong>{data.error_events}</strong> error-level events · {data.missing_event_time} without occurrence timestamps</p>
-        <h3>Timeline</h3>
-        {data.timeline.length === 0 ? <p>No events have explicit occurrence timestamps.</p> :
-          <table><caption>Event counts per {bucket}-minute time bucket (UTC)</caption><thead><tr><th scope="col">Window start (UTC)</th><th scope="col">Events</th><th scope="col">Errors</th></tr></thead><tbody>
-            {data.timeline.map(item => <tr key={item.start}><td><time dateTime={item.start}>{item.start}</time></td><td>{item.total}</td><td>{item.errors}</td></tr>)}
-          </tbody></table>}
-        <h3>Severity breakdown</h3>
-        <table><caption>Event counts by severity</caption><thead><tr><th scope="col">Severity</th><th scope="col">Events</th></tr></thead><tbody>{data.severity_counts.map(item => <tr key={item.severity}><td>{item.severity}</td><td>{item.count}</td></tr>)}</tbody></table>
-        <h3>Services</h3>
-        <ul>{data.service_counts.map(item => <li key={item.service}>{item.service}: {item.count}</li>)}</ul>
-        <h3>Top normalized fingerprints</h3>
-        <ul>{data.fingerprint_groups.map(item => <li key={item.fingerprint}><code>{item.fingerprint.slice(0, 16)}</code> · {item.count} events · {item.event_ids.length} sample event IDs</li>)}</ul>
-        <h3>Burst detection</h3>
-        <p>{data.anomaly.status === "insufficient_data" ? `Insufficient data: ${data.anomaly.reason}` : `${data.anomaly.buckets.length} unusually busy time buckets flagged by heuristic analysis.`}</p>
-        {data.limitations.map(item => <p key={item}>{item}</p>)}
-        <p><small>Algorithm {data.algorithm_version} · Input SHA-256 <code>{data.input_sha256.slice(0, 16)}…</code></small></p>
-      </>}
-    </section>
+    <div className={styles.root} aria-busy={loading}>
+      <header className={styles.pageHeader}>
+        <div className={styles.headingBlock}>
+          <h1 className={styles.pageTitle}>Incident analysis</h1>
+        </div>
+        <div className={styles.headerActions}>
+          <div className={styles.controlSet}>
+            <label className={styles.intervalLabel} htmlFor="analysis-bucket">
+              <span>Interval</span>
+              <select
+                id="analysis-bucket"
+                className={styles.intervalSelect}
+                value={bucket}
+                onChange={(event) => { setLoading(true); setBucket(event.target.value); }}
+              >
+                <option value="1">1 minute</option>
+                <option value="5">5 minutes</option>
+                <option value="15">15 minutes</option>
+                <option value="60">1 hour</option>
+              </select>
+            </label>
+            <div className={styles.zoneToggle} role="group" aria-label="Chart timezone">
+              <button type="button" aria-pressed={zone === "utc"} className={zone === "utc" ? styles.zoneSelected : ""} onClick={() => setZone("utc")}>UTC</button>
+              <button type="button" aria-pressed={zone === "local"} className={zone === "local" ? styles.zoneSelected : ""} onClick={() => setZone("local")}>Local</button>
+            </div>
+          </div>
+          <Link className={styles.backLink} href={`/incidents/${encodeURIComponent(incidentId)}/sources`}>
+            <span aria-hidden="true">←</span><span>Evidence &amp; sources</span>
+          </Link>
+        </div>
+      </header>
+
+      {loading && <div className={styles.loading} role="status">Loading analysis…</div>}
+      {error && <div className={styles.alert} role="alert">{error}</div>}
+
+      {data && !loading && (
+        <>
+          <section className={styles.metrics} aria-label="Incident totals">
+            {metrics.map((metric) => (
+              <div className={`${styles.metric} ${metric.tone}`} key={metric.name}>
+                <span className={styles.metricLabel}>{metric.name}</span>
+                <strong className={styles.metricValue}>{metric.value.toLocaleString()}</strong>
+              </div>
+            ))}
+          </section>
+
+          <AnalysisCharts data={data} bucket={bucket} zone={zone} />
+
+          <section className={styles.detailsCard} aria-labelledby="analysis-data-heading">
+            <div className={styles.detailsHeading}>
+              <h2 id="analysis-data-heading">Data tables</h2>
+            </div>
+            <div className={styles.detailsList}>
+              <details className={styles.detail}>
+                <summary>Timeline <span>{data.timeline.length.toLocaleString()} windows</span></summary>
+                <div className={styles.tableWrap}><table className={styles.table}><caption>Events per UTC interval</caption><thead><tr><th scope="col">UTC window</th><th scope="col">Events</th><th scope="col">Errors</th></tr></thead><tbody>
+                  {data.timeline.map((item) => <tr key={item.start}><td><time dateTime={item.start}>{eventTimeLabel(item.start, "utc")}</time></td><td>{item.total}</td><td>{item.errors}</td></tr>)}
+                </tbody></table></div>
+              </details>
+              <details className={styles.detail}>
+                <summary>Severity <span>{data.severity_counts.length} levels</span></summary>
+                <div className={styles.tableWrap}><table className={styles.table}><caption>Events by severity</caption><thead><tr><th scope="col">Severity</th><th scope="col">Events</th></tr></thead><tbody>
+                  {data.severity_counts.map((item) => <tr key={item.severity}><td>{item.severity || "UNKNOWN"}</td><td>{item.count}</td></tr>)}
+                </tbody></table></div>
+              </details>
+              <details className={styles.detail}>
+                <summary>Services <span>{data.service_counts.length} shown</span></summary>
+                <div className={styles.tableWrap}><table className={styles.table}><caption>Service event counts</caption><thead><tr><th scope="col">Service</th><th scope="col">Events</th><th scope="col">Error-level</th></tr></thead><tbody>
+                  {data.service_counts.map((item) => <tr key={item.service}><td>{item.service || "Unknown service"}</td><td>{item.count}</td><td>{item.error_events}</td></tr>)}
+                </tbody></table></div>
+              </details>
+              <details className={styles.detail}>
+                <summary>Fingerprints <span>{data.fingerprint_groups.length} groups</span></summary>
+                <div className={styles.tableWrap}><table className={styles.table}><caption>Normalized fingerprint counts</caption><thead><tr><th scope="col">Fingerprint</th><th scope="col">Events</th><th scope="col">Examples</th></tr></thead><tbody>
+                  {data.fingerprint_groups.map((item) => <tr key={item.fingerprint}><td><code title={item.fingerprint}>{item.fingerprint.slice(0, 12)}…</code></td><td>{item.count}</td><td>{item.event_ids.length}</td></tr>)}
+                </tbody></table></div>
+              </details>
+            </div>
+          </section>
+        </>
+      )}
+    </div>
   );
 }
