@@ -13,8 +13,7 @@ def event(number, *, trace="", message="event", service="checkout", minute=0, ti
         line_start=number,
         line_end=number,
         occurred_at=(
-            datetime(2026, 10, 27, 8, tzinfo=UTC) + timedelta(minutes=minute)
-            if timed else None
+            datetime(2026, 10, 27, 8, tzinfo=UTC) + timedelta(minutes=minute) if timed else None
         ),
         timestamp_quality="explicit" if timed else "unknown_timezone",
         severity="ERROR",
@@ -28,12 +27,18 @@ def test_explicit_trace_and_request_correlation_and_transitions():
     rows = [
         event(1, trace="trace-12345678", message="request_id=req-12345678", service="gateway"),
         event(
-            2, trace="trace-12345678", message="request_id=req-12345678",
-            service="checkout", minute=1,
+            2,
+            trace="trace-12345678",
+            message="request_id=req-12345678",
+            service="checkout",
+            minute=1,
         ),
         event(
-            3, trace="another-123456", message="request_id=other-123456",
-            service="billing", minute=2,
+            3,
+            trace="another-123456",
+            message="request_id=other-123456",
+            service="billing",
+            minute=2,
         ),
     ]
     a = correlate(rows)
@@ -42,8 +47,10 @@ def test_explicit_trace_and_request_correlation_and_transitions():
     assert a["groups"][0]["events"][0]["line_start"] == 1
     assert a["transitions"] == [
         {
-            "from_service": "gateway", "to_service": "checkout",
-            "count": 1, "event_ids": ["e-1", "e-2"],
+            "from_service": "gateway",
+            "to_service": "checkout",
+            "count": 1,
+            "event_ids": ["e-1", "e-2"],
         }
     ]
     assert all("req-12345678" not in str(g["key"]) for g in a["groups"])
@@ -99,15 +106,27 @@ def test_relationships_owner_scope_and_evidence_links():
     incident = Incident.objects.create(owner=owner, title="Correlation audit")
     job = IngestionJob.objects.create(incident=incident, owner=owner)
     source = LogSource.objects.create(
-        incident=incident, job=job, filename="synthetic.log", object_key=f"test-{uuid4()}",
-        sha256="0" * 64, byte_size=1,
+        incident=incident,
+        job=job,
+        filename="synthetic.log",
+        object_key=f"test-{uuid4()}",
+        sha256="0" * 64,
+        byte_size=1,
     )
     for idx, svc in enumerate(("gateway", "checkout"), 1):
         LogEvent.objects.create(
-            incident=incident, source=source, line_start=idx, line_end=idx,
+            incident=incident,
+            source=source,
+            line_start=idx,
+            line_end=idx,
             occurred_at=datetime(2026, 10, 27, 8, idx, tzinfo=UTC),
-            observed_at=timezone.now(), timestamp_quality="explicit", severity="ERROR",
-            service=svc, trace_id="trace-123456", redacted_message="failure", fingerprint="f" * 64,
+            observed_at=timezone.now(),
+            timestamp_quality="explicit",
+            severity="ERROR",
+            service=svc,
+            trace_id="trace-123456",
+            redacted_message="failure",
+            fingerprint="f" * 64,
         )
     url = f"/api/v1/incidents/{incident.pk}/relationships"
     client = Client()
