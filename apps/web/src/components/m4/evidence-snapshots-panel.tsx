@@ -109,12 +109,34 @@ export function EvidenceSnapshotsPanel({ incidentId }: { incidentId: string }) {
   }, [basePath]);
 
   useEffect(() => {
-    let active = true;
-    Promise.all([loadEvents(1), loadSnapshots()])
-      .catch((failure) => { if (active) setError(describeApiFailure(failure)); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [loadEvents, loadSnapshots]);
+  let active = true;
+
+  Promise.all([
+    apiGet<EventPage>(
+      `incidents/${encodeURIComponent(incidentId)}/events?page_size=50&page=1`
+    ),
+    apiGet<SnapshotSummary[]>(`${basePath}/snapshots`),
+  ])
+    .then(([eventResult, snapshotResult]) => {
+      if (!active) return;
+
+      setEvents(eventResult.results);
+      setEventPage(1);
+      setTotalEvents(eventResult.count);
+      setNextPage(eventResult.next !== null);
+      setSnapshots(snapshotResult);
+    })
+    .catch((failure) => {
+      if (active) setError(describeApiFailure(failure));
+    })
+    .finally(() => {
+      if (active) setLoading(false);
+    });
+
+  return () => {
+    active = false;
+  };
+}, [incidentId, basePath]);
 
   function toggle(id: string) {
     setSelected((current) => toggleEvidenceSelection(current, id));
