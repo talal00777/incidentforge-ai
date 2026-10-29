@@ -16,6 +16,8 @@ dependencies = [
   "celery[redis]>=5.5,<5.7",
   "redis>=5.2,<7",
   "gunicorn>=23,<25",
+  "matplotlib>=3.9,<3.12",
+  "seaborn>=0.13,<0.14",
 ]
 
 [project.optional-dependencies]
@@ -28,12 +30,12 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["config*", "core*", "accounts*", "incidents*", "ingestion*"]
+include = ["config*", "core*", "accounts*", "incidents*", "ingestion*", "analytics*"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py"]
-testpaths = ["core/tests", "accounts/tests", "incidents/tests", "ingestion/tests"]
+testpaths = ["core/tests", "accounts/tests", "incidents/tests", "ingestion/tests", "analytics/tests"]
 addopts = "--strict-markers --disable-warnings"
 
 [tool.ruff]
@@ -46,6 +48,17 @@ select = ["E4", "E7", "E9", "F", "I", "B", "UP", "S"]
 ignore = ["S101"]
 
 [tool.ruff.lint.per-file-ignores]
+"analytics/tests/*" = ["S105", "S106"]
 "core/tests/*" = ["S105", "S106"]
 "accounts/tests/*" = ["S105", "S106"]
 "incidents/tests/*" = ["S105", "S106"]
+
+[tool.ruff.lint.isort]
+known-first-party = [
+    "accounts",
+    "analytics",
+    "config",
+    "core",
+    "incidents",
+    "ingestion",
+]
