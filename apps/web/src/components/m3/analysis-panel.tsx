@@ -74,6 +74,7 @@ export function AnalysisPanel({ incidentId }: { incidentId: string }) {
               <button type="button" aria-pressed={zone === "local"} className={zone === "local" ? styles.zoneSelected : ""} onClick={() => setZone("local")}>Local</button>
             </div>
           </div>
+          <Link className={styles.backLink} href={`/incidents/${encodeURIComponent(incidentId)}/relationships`}>Relationships</Link>
           <Link className={styles.backLink} href={`/incidents/${encodeURIComponent(incidentId)}/sources`}>
             <span aria-hidden="true">←</span><span>Evidence &amp; sources</span>
           </Link>
