@@ -115,6 +115,26 @@
       "path": "/api/v1/incidents/{incident_id}/evidence/snapshots/{snapshot_id}",
       "method": "get",
       "status": "200"
+    },
+    {
+      "path": "/api/v1/investigation/providers",
+      "method": "get",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/investigations",
+      "method": "get",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/investigations",
+      "method": "post",
+      "status": "201"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/investigations/{report_id}",
+      "method": "get",
+      "status": "200"
     }
   ],
   "system_response_properties": [
@@ -141,6 +161,9 @@
     "/api/v1/incidents/{incident_id}/relationships",
     "/api/v1/incidents/{incident_id}/evidence/preview",
     "/api/v1/incidents/{incident_id}/evidence/snapshots",
-    "/api/v1/incidents/{incident_id}/evidence/snapshots/{snapshot_id}"
+    "/api/v1/incidents/{incident_id}/evidence/snapshots/{snapshot_id}",
+    "/api/v1/investigation/providers",
+    "/api/v1/incidents/{incident_id}/investigations",
+    "/api/v1/incidents/{incident_id}/investigations/{report_id}"
   ]
 }

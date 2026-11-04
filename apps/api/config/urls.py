@@ -14,8 +14,26 @@ from evidence.views import (
 )
 from incidents.views import IncidentDetailView, IncidentListCreateView
 from ingestion.views import EventsView, JobsView, SourcesView, UploadView
+from investigations.views import (
+    InvestigationDetailView,
+    InvestigationListCreateView,
+    ProviderListView,
+)
 
 urlpatterns = [
+    path(
+        "api/v1/investigation/providers", ProviderListView.as_view(), name="investigation-providers"
+    ),
+    path(
+        "api/v1/incidents/<uuid:incident_id>/investigations",
+        InvestigationListCreateView.as_view(),
+        name="investigation-list",
+    ),
+    path(
+        "api/v1/incidents/<uuid:incident_id>/investigations/<uuid:report_id>",
+        InvestigationDetailView.as_view(),
+        name="investigation-detail",
+    ),
     path(
         "api/v1/incidents/<uuid:incident_id>/evidence/preview",
         EvidencePreviewView.as_view(),

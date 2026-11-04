@@ -30,12 +30,12 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["config*", "core*", "accounts*", "incidents*", "ingestion*", "analytics*", "evidence*"]
+include = ["config*", "core*", "accounts*", "incidents*", "ingestion*", "analytics*", "evidence*", "investigations*"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 python_files = ["test_*.py"]
-testpaths = ["core/tests", "accounts/tests", "incidents/tests", "ingestion/tests", "analytics/tests", "evidence/tests"]
+testpaths = ["core/tests", "accounts/tests", "incidents/tests", "ingestion/tests", "analytics/tests", "evidence/tests", "investigations/tests"]
 addopts = "--strict-markers --disable-warnings"
 
 [tool.ruff]
@@ -48,6 +48,7 @@ select = ["E4", "E7", "E9", "F", "I", "B", "UP", "S"]
 ignore = ["S101"]
 
 [tool.ruff.lint.per-file-ignores]
+"investigations/tests/*" = ["S105", "S106"]
 "evidence/tests/*" = ["S105", "S106"]
 "analytics/tests/*" = ["S105", "S106"]
 "core/tests/*" = ["S105", "S106"]
@@ -55,11 +56,11 @@ ignore = ["S101"]
 "incidents/tests/*" = ["S105", "S106"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["evidence", 
+known-first-party = ["evidence",
     "accounts",
     "analytics",
     "config",
     "core",
     "incidents",
     "ingestion",
-]
+    "investigations"]

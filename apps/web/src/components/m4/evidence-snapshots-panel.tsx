@@ -193,6 +193,7 @@ export function EvidenceSnapshotsPanel({ incidentId }: { incidentId: string }) {
             <button type="button" aria-pressed={zone === "utc"} onClick={() => setZone("utc")}>UTC</button>
             <button type="button" aria-pressed={zone === "local"} onClick={() => setZone("local")}>Local</button>
           </div>
+          <Link className={styles.secondaryLink} href={`/incidents/${encodeURIComponent(incidentId)}/investigations`}>AI investigation</Link>
           <Link className={styles.secondaryLink} href={`/incidents/${encodeURIComponent(incidentId)}/relationships`}>Relationships</Link>
         </div>
       </header>

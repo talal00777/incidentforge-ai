@@ -44,6 +44,7 @@ if not REDIS_URL:
 INSTALLED_APPS = [
     "analytics",
     "evidence",
+    "investigations",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
