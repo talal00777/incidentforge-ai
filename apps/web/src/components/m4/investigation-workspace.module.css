@@ -21,3 +21,55 @@
 .root :is(button,a,select,input,summary):focus-visible{outline:3px solid #69a8ac;outline-offset:2px}
 @media(max-width:1020px){.columns{grid-template-columns:minmax(0,1fr)}.hypotheses{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:600px){.root{padding:14px;gap:12px}.header{padding:18px}.header h1{width:100%}.form,.reportBody{padding:16px}.inputRow{grid-template-columns:minmax(0,1fr)}.reportHeader{padding:18px}.cardHeader{padding:16px}}
+
+/* Investigation report presentation — source details remain opt-in. */
+.headerActions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.timeToggle{display:inline-flex;border:1px solid #cddde0;border-radius:9px;padding:3px;background:#f7faf9;gap:2px}
+.timeToggle button{border:0;background:transparent;color:#506973;cursor:pointer;border-radius:6px;padding:8px 11px;font-size:12px;font-weight:650}
+.timeToggle button[aria-pressed="true"]{background:#fff;color:#174c58;box-shadow:0 1px 3px #1232391c}
+.reportHeader{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.reportType{display:block;color:#5b7880;font-size:11px;font-weight:700;letter-spacing:.055em;text-transform:uppercase;margin-bottom:9px}
+.reviewLabel{display:inline-block;border:1px solid #d7e0e1;border-radius:999px;padding:7px 11px;background:#f6f8f8;color:#4d6770;font-size:11px;font-weight:700}
+.reportBody{gap:27px}
+.reportBody .reportSection{min-width:0}
+.reportBody .overview h3{font-size:13px;margin:0 0 10px}
+.reportBody .summary{background:#f6faf9;border-left:3px solid #27717b;border-radius:7px;padding:19px 21px;font-size:15px;line-height:1.72}
+.sectionHeading{display:flex;align-items:baseline;gap:11px;border-bottom:1px solid #e7edef;padding-bottom:11px;margin-bottom:14px}
+.sectionHeading h3{margin:0;font-size:16px}
+.sectionHeading span{font-size:12px;color:#738992;font-variant-numeric:tabular-nums}
+.reportBody .factList{list-style:decimal;padding-left:26px;gap:10px}
+.reportBody .factList li{padding:15px 18px 16px 14px;margin-left:0}
+.reportBody .factList li::marker{font-weight:700;color:#64828a;font-size:12px}
+.reportBody .factList p{font-size:13px;line-height:1.75;margin-bottom:12px}
+.evidenceGroup{display:flex;align-items:center;gap:9px 12px;flex-wrap:wrap}
+.evidenceGroup>strong{font-size:11px;color:#657d84;font-weight:700}
+.reportBody .references{display:inline-flex;align-items:center;gap:7px;flex-wrap:wrap;max-width:100%}
+.reportBody .references button{white-space:nowrap;padding:7px 9px;border-radius:7px;border:1px solid #c8dedf;background:#edf6f6;color:#185a66;font-size:11px;font-weight:700}
+.reportBody .references button[aria-pressed="true"]{background:#1b6470;color:#fff;border-color:#1b6470}
+.reportBody .references button:hover:not([aria-pressed="true"]){background:#dceeed}
+.reportBody .hypotheses{display:grid;grid-template-columns:minmax(0,1fr);gap:13px}
+.reportBody .hypotheses article{padding:20px 21px;border-radius:11px;background:#fff}
+.reportBody .hypothesisHeading{align-items:flex-start;gap:12px;margin-bottom:16px}
+.reportBody .hypothesisHeading h4{font-size:14px;line-height:1.55;max-width:64ch}
+.reportBody .hypothesisHeading .assessment{font-size:11px;letter-spacing:0;text-transform:none;background:#f3f6f6;border:1px solid #dce5e5;padding:6px 10px;border-radius:999px;white-space:normal}
+.evidenceRows{display:flex;flex-wrap:wrap;gap:15px 25px;padding:0 0 14px}
+.reportBody .citedLine{display:grid;gap:8px;margin:0}
+.reportBody .citedLine>strong{font-size:11px;color:#5d737b}
+.hypothesisDetail{border-top:1px solid #ecf0f1;padding-top:13px;margin-top:3px}
+.hypothesisDetail>strong{color:#47656d;font-size:11px;font-weight:750}
+.reportBody .hypothesisDetail ul{display:grid;gap:5px;margin:6px 0 0;padding-left:18px}
+.reportBody .hypothesisDetail li{font-size:12px;line-height:1.65}
+.reportBody .limitations{padding-left:18px;list-style:disc;gap:8px}
+.reportBody .limitations li{padding:0;font-size:13px;line-height:1.7}
+.reportBody .limitations li:before{display:none}
+.evidenceFocus{scroll-margin-top:24px;outline:none}
+.evidenceFocus:focus-visible{outline:3px solid #69a8ac;outline-offset:2px}
+.evidenceFocus .focusHeader h3{font-size:15px;margin:0 0 12px}
+.evidenceFocus .eventContext{margin:2px 0 12px;font-size:13px;font-weight:700;color:#31535b}
+.eventMetadata{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px 22px;margin:0 0 16px}
+.eventMetadata div{min-width:0}
+.eventMetadata dt{font-size:10px;font-weight:700;color:#668088;margin-bottom:4px}
+.eventMetadata dd{margin:0;font-size:12px;overflow-wrap:anywhere;color:#2e5159}
+.eventMetadata .fullId{font-size:11px;font-variant-numeric:tabular-nums}
+.reportBody .evidenceFocus .eventMessage{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;background:#fff;border:1px solid #deeaeb;border-radius:8px;padding:12px 14px;font-size:12px;line-height:1.7}
+@media(max-width:600px){.headerActions{width:100%;justify-content:space-between}.reportBody{gap:21px}.reportBody .hypotheses article{padding:15px}.reportBody .factList{padding-left:20px}.eventMetadata{grid-template-columns:minmax(0,1fr)}.reportBody .summary{padding:15px;font-size:14px}}

@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { apiGet, apiWrite, describeApiFailure } from "@/lib/api-client";
 import { availableProviders, canInvestigate, firstModel, type ProviderOption } from "@/lib/investigation-options";
+import { distinctHypothesisChecks, hypothesisStatus, mergeSuggestedActions, readableInvestigationDate, type TimeDisplay } from "@/lib/investigation-presentation";
 import styles from "./investigation-workspace.module.css";
 
 type EvidenceEntry = {
@@ -57,13 +58,6 @@ type ReportSummary = {
 type Report = ReportSummary & { report: ReportBody };
 type PromptProfile = "zero_shot" | "few_shot" | "decomposed_verified";
 
-function readableDate(value: string): string {
-  const time = new Date(value);
-  return Number.isNaN(time.valueOf()) ? "Time unknown" : new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
-  }).format(time);
-}
-
 export function InvestigationWorkspace({ incidentId }: { incidentId: string }) {
   const root = `incidents/${encodeURIComponent(incidentId)}`;
   const [providers, setProviders] = useState<ProviderOption[]>([]);
@@ -79,10 +73,19 @@ export function InvestigationWorkspace({ incidentId }: { incidentId: string }) {
   const [consented, setConsented] = useState(false);
   const [report, setReport] = useState<Report | null>(null);
   const [selectedEvidence, setSelectedEvidence] = useState<string | null>(null);
+  const [timeDisplay, setTimeDisplay] = useState<TimeDisplay>("local");
+  const evidenceRef = useRef<HTMLElement | null>(null);
+  const evidenceTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
   const [error, setError] = useState("");
   const enabledProviders = useMemo(() => availableProviders(providers), [providers]);
+  const visibleActions = useMemo(() => mergeSuggestedActions(report?.report.suggested_actions ?? []), [report]);
+  const actionTexts = useMemo(() => visibleActions.map((item) => item.action), [visibleActions]);
+
+  useEffect(() => {
+    if (selectedEvidence) evidenceRef.current?.focus();
+  }, [selectedEvidence, snapshot]);
 
   useEffect(() => {
     let active = true;
@@ -143,6 +146,7 @@ export function InvestigationWorkspace({ incidentId }: { incidentId: string }) {
         prompt_profile: profile,
         transmission_consent: { accepted: true, snapshot_sha256: snapshot.sha256 },
       });
+      setSelectedEvidence(null);
       setReport(result);
       setHistory(await apiGet<ReportSummary[]>(`${root}/investigations`));
     } catch (failure) {
@@ -158,6 +162,7 @@ export function InvestigationWorkspace({ incidentId }: { incidentId: string }) {
     try {
       const result = await apiGet<Report>(`${root}/investigations/${encodeURIComponent(id)}`);
       if (result.snapshot_id !== snapshotId) changeSnapshot(result.snapshot_id);
+      setSelectedEvidence(null);
       setReport(result);
     } catch (failure) {
       setError(describeApiFailure(failure));
@@ -167,20 +172,36 @@ export function InvestigationWorkspace({ incidentId }: { incidentId: string }) {
   }
 
   function references(ids: string[]) {
-    if (!ids.length) return <span className={styles.muted}>None cited</span>;
+    if (!ids.length) return <span className={styles.muted}>No supporting events cited</span>;
     return <span className={styles.references}>{ids.map((id) => (
-      <button key={id} type="button" onClick={() => setSelectedEvidence(id)} title={id}>
-        {id.slice(0, 8)}
+      <button
+        key={id}
+        type="button"
+        onClick={(event) => { evidenceTriggerRef.current = event.currentTarget; setSelectedEvidence(id); }}
+        title={`Inspect event ${id}`}
+        aria-label={`Inspect evidence event ${id}`}
+        aria-pressed={selectedEvidence === id}
+      >
+        Event {id.slice(0, 8)}
       </button>
     ))}</span>;
   }
 
-  const currentEvidence = snapshot?.entries.find((item) => item.event_id === selectedEvidence);
+  const currentEvidence =
+  snapshot && report && snapshot.id === report.snapshot_id
+    ? snapshot.entries.find((item) => item.event_id === selectedEvidence)
+    : undefined;
 
   return <main className={styles.root}>
     <header className={styles.header}>
       <h1>AI investigation</h1>
-      <Link className={styles.back} href={`/incidents/${encodeURIComponent(incidentId)}/evidence-snapshots`}>Evidence selection</Link>
+      <div className={styles.headerActions}>
+        <div className={styles.timeToggle} role="group" aria-label="Date and time display">
+          <button type="button" aria-pressed={timeDisplay === "local"} onClick={() => setTimeDisplay("local")}>Local</button>
+          <button type="button" aria-pressed={timeDisplay === "utc"} onClick={() => setTimeDisplay("utc")}>UTC</button>
+        </div>
+        <Link className={styles.back} href={`/incidents/${encodeURIComponent(incidentId)}/evidence-snapshots`}>Evidence selection</Link>
+      </div>
     </header>
 
     {error && <p className={styles.error} role="alert">{error}</p>}
@@ -192,7 +213,7 @@ export function InvestigationWorkspace({ incidentId }: { incidentId: string }) {
             <label>Evidence snapshot
               <select value={snapshotId} onChange={(event) => changeSnapshot(event.target.value)} disabled={working}>
                 {snapshots.length === 0 && <option value="">No saved snapshots</option>}
-                {snapshots.map((item) => <option key={item.id} value={item.id}>{item.event_count} events · {readableDate(item.created_at)}</option>)}
+                {snapshots.map((item) => <option key={item.id} value={item.id}>{item.event_count} events · {readableInvestigationDate(item.created_at, timeDisplay)}</option>)}
               </select>
             </label>
             <div className={styles.inputRow}>
@@ -259,41 +280,98 @@ export function InvestigationWorkspace({ incidentId }: { incidentId: string }) {
           {history.length === 0 ? <p className={styles.empty}>No investigations yet</p> : <ul className={styles.history}>
             {history.map((item) => <li key={item.id}>
               <button type="button" disabled={working} onClick={() => void openReport(item.id)}>
-                <strong>{item.model_id}</strong><span>{item.provider} · {readableDate(item.created_at)}</span>
+                <strong>{item.model_id}</strong><span>{item.provider} · {readableInvestigationDate(item.created_at, timeDisplay)}</span>
               </button>
             </li>)}
           </ul>}
         </section>
       </div>
       {report && <section className={styles.report} aria-labelledby="report-title">
-        <div className={styles.reportHeader}><div><h2 id="report-title">AI-generated findings</h2><span>{report.provider} · {report.model_id} · {readableDate(report.created_at)}</span></div></div>
+        <div className={styles.reportHeader}>
+          <div>
+            <span className={styles.reportType}>AI-generated investigation</span>
+            <h2 id="report-title">Investigation findings</h2>
+            <span>{report.provider} · {report.model_id} · {readableInvestigationDate(report.created_at, timeDisplay)}</span>
+          </div>
+          <span className={styles.reviewLabel}>Review required</span>
+        </div>
         <div className={styles.reportBody}>
-          <p className={styles.summary}>{report.report.incident_summary}</p>
-          <section><h3>Observed facts</h3>
-            <ul className={styles.factList}>{report.report.observed_facts.map((fact, index) => <li key={index}>
-              <p>{fact.statement}</p>{references(fact.event_ids)}
-            </li>)}</ul>
+          <section className={styles.overview} aria-labelledby="overview-title">
+            <h3 id="overview-title">Incident overview</h3>
+            <p className={styles.summary}>{report.report.incident_summary}</p>
           </section>
-          <section><h3>Hypotheses</h3><div className={styles.hypotheses}>
-            {report.report.hypotheses.map((item, index) => <article key={index}>
-              <div className={styles.hypothesisHeading}><h4>{item.title}</h4><span>{item.status.replaceAll("_", " ")}</span></div>
-              <div className={styles.citedLine}><strong>Supporting</strong>{references(item.supporting_event_ids)}</div>
-              {item.contradicting_event_ids.length > 0 && <div className={styles.citedLine}><strong>Counterevidence</strong>{references(item.contradicting_event_ids)}</div>}
-              {item.alternative_explanations.length > 0 && <p><b>Alternatives:</b> {item.alternative_explanations.join(" · ")}</p>}
-              {item.further_checks.length > 0 && <ul>{item.further_checks.map((check, i) => <li key={i}>{check}</li>)}</ul>}
-            </article>)}
-          </div></section>
-          {report.report.suggested_actions.length > 0 && <section><h3>Suggested checks</h3>
-            <ul className={styles.factList}>{report.report.suggested_actions.map((item, index) => <li key={index}>
-              <p>{item.action}</p>{references(item.rationale_event_ids)}
-            </li>)}</ul>
+          <section className={styles.reportSection} aria-labelledby="facts-title">
+            <div className={styles.sectionHeading}>
+              <h3 id="facts-title">Observed facts</h3>
+              <span>{report.report.observed_facts.length}</span>
+            </div>
+            <ol className={styles.factList}>{report.report.observed_facts.map((fact, index) => <li key={index}>
+              <p>{fact.statement}</p>
+              <div className={styles.evidenceGroup}><strong>Source events</strong>{references(fact.event_ids)}</div>
+            </li>)}</ol>
+          </section>
+          <section className={styles.reportSection} aria-labelledby="hypotheses-title">
+            <div className={styles.sectionHeading}>
+              <h3 id="hypotheses-title">Hypotheses</h3>
+              <span>{report.report.hypotheses.length}</span>
+            </div>
+            <div className={styles.hypotheses}>
+              {report.report.hypotheses.map((item, index) => {
+                const assessment = hypothesisStatus(item.status);
+                const additionalChecks = distinctHypothesisChecks(item.further_checks, actionTexts);
+                return <article key={index}>
+                  <div className={styles.hypothesisHeading}>
+                    <h4>{item.title}</h4>
+                    <span className={styles.assessment} title={assessment.meaning} aria-label={assessment.meaning}>
+                      {assessment.label}
+                    </span>
+                  </div>
+                  <div className={styles.evidenceRows}>
+                    <div className={styles.citedLine}><strong>Supporting evidence</strong>{references(item.supporting_event_ids)}</div>
+                    {item.contradicting_event_ids.length > 0 && <div className={styles.citedLine}><strong>Contradicting evidence</strong>{references(item.contradicting_event_ids)}</div>}
+                  </div>
+                  {item.alternative_explanations.length > 0 && <div className={styles.hypothesisDetail}>
+                    <strong>Other possibilities</strong>
+                    <ul>{item.alternative_explanations.map((alternative, i) => <li key={i}>{alternative}</li>)}</ul>
+                  </div>}
+                  {additionalChecks.length > 0 && <div className={styles.hypothesisDetail}>
+                    <strong>Additional checks</strong>
+                    <ul>{additionalChecks.map((check, i) => <li key={i}>{check}</li>)}</ul>
+                  </div>}
+                </article>;
+              })}
+            </div>
+          </section>
+          {visibleActions.length > 0 && <section className={styles.reportSection} aria-labelledby="checks-title">
+            <div className={styles.sectionHeading}>
+              <h3 id="checks-title">Suggested checks</h3>
+              <span>{visibleActions.length}</span>
+            </div>
+            <ol className={styles.factList}>{visibleActions.map((item, index) => <li key={index}>
+              <p>{item.action}</p>
+              <div className={styles.evidenceGroup}><strong>Related events</strong>{references(item.rationale_event_ids)}</div>
+            </li>)}</ol>
           </section>}
-          {report.report.limitations.length > 0 && <section><h3>Limitations</h3><ul className={styles.limitations}>{report.report.limitations.map((item, i) => <li key={i}>{item}</li>)}</ul></section>}
-          {selectedEvidence && <section className={styles.evidenceFocus}>
-            <div className={styles.focusHeader}><h3>Evidence reference</h3><button type="button" onClick={() => setSelectedEvidence(null)}>Close</button></div>
-            {currentEvidence ? <><strong>{currentEvidence.service || "Unknown service"} · {currentEvidence.source_name}</strong>
-              <p>{currentEvidence.message}</p></> : <p>Choose the report snapshot to inspect this event.</p>}
+          {report.report.limitations.length > 0 && <section className={styles.reportSection} aria-labelledby="limits-title">
+            <div className={styles.sectionHeading}><h3 id="limits-title">Limitations</h3></div>
+            <ul className={styles.limitations}>{report.report.limitations.map((item, i) => <li key={i}>{item}</li>)}</ul>
           </section>}
+          {selectedEvidence && <aside className={styles.evidenceFocus} ref={evidenceRef} tabIndex={-1} role="region" aria-labelledby="evidence-focus-title">
+            <div className={styles.focusHeader}>
+              <h3 id="evidence-focus-title">Source event</h3>
+              <button type="button" onClick={() => { setSelectedEvidence(null); evidenceTriggerRef.current?.focus(); }}>Close</button>
+            </div>
+            {currentEvidence ? <>
+              <p className={styles.eventContext}>{currentEvidence.service || "Unknown service"} · {currentEvidence.severity || "Unknown severity"}</p>
+              <dl className={styles.eventMetadata}>
+                <div><dt>Source</dt><dd>{currentEvidence.source_name}</dd></div>
+                <div><dt>Lines</dt><dd>{currentEvidence.source_lines[0]}–{currentEvidence.source_lines[1]}</dd></div>
+                <div><dt>Time</dt><dd>{readableInvestigationDate(currentEvidence.occurred_at, timeDisplay)}</dd></div>
+                <div><dt>Event ID</dt><dd className={styles.fullId}>{currentEvidence.event_id}</dd></div>
+              </dl>
+              <p className={styles.eventMessage}>{currentEvidence.message}</p>
+            </> : <p className={styles.muted}>Source event not available in this snapshot.</p>}
+          </aside>}
         </div>
       </section>}
     </>}
