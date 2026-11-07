@@ -1,0 +1,140 @@
+.root{margin:0 24px 24px;border:1px solid #dce7e9;border-radius:12px;overflow:hidden;background:#fff}
+.header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid #e6ecee;padding:18px 20px}
+.header h3{font-size:15px;letter-spacing:-.015em;margin:0 0 5px;color:#234852}
+.meta{font-size:11px;color:#657d84}
+.status{font-size:11px;font-weight:700;color:#365e65;border-radius:999px;background:#f1f6f6;border:1px solid #dce6e6;padding:6px 10px}
+.body{padding:19px 20px;display:grid;gap:20px}
+.decisions{display:grid;gap:12px}
+.hypothesis{min-width:0;border:1px solid #e4edef;padding:15px;border-radius:9px;background:#fbfcfc}
+.hypothesis>strong{display:block;font-size:13px;color:#2c4f58;line-height:1.6;margin-bottom:12px;overflow-wrap:anywhere}
+.fieldGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.fieldGrid label,.footer label{display:grid;gap:7px;min-width:0;font-size:11px;font-weight:700;color:#4d6870}
+.fieldGrid select,.fieldGrid textarea,.footer select{width:100%;border:1px solid #cbdde0;background:#fff;color:#264751;border-radius:7px;font:inherit;font-weight:400;font-size:12px;padding:9px 11px;line-height:1.5}
+.fieldGrid textarea{resize:vertical;min-height:76px}
+.footer{display:flex;justify-content:space-between;gap:15px;align-items:end;flex-wrap:wrap;border-top:1px solid #edf0f1;padding-top:16px}
+.footer label{min-width:150px}
+.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.actions button{border:1px solid #b8ccd0;padding:9px 15px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700}
+.primary{background:#205e68!important;border-color:#205e68!important;color:#fff}
+.secondary{background:#fff;color:#2b616a}
+.actions button:disabled{cursor:not-allowed;opacity:.55}
+.error,.success,.empty{font-size:12px;line-height:1.5;margin:15px 20px;color:#5e747c}
+.error{color:#902f37}
+.success{color:#23705c}
+.root :is(button,select,textarea):focus-visible{outline:3px solid #69a8ac;outline-offset:2px}
+@media(max-width:700px){.root{margin:0 16px 16px}.header,.body{padding:15px}.fieldGrid{grid-template-columns:minmax(0,1fr)}.footer{align-items:stretch}.actions{width:100%}}
+
+/* IF-UI-POLISH-2026-11-07 BEGIN */
+/* Subtle incident-review visual polish: scoped to the Human Review form. */
+.root{
+  border-color:#dce6e8;
+  border-radius:11px;
+  box-shadow:0 1px 3px rgba(18,44,52,.035);
+}
+.header{
+  padding:19px 22px;
+  background:#fff;
+  border-bottom-color:#e6edee;
+}
+.header h3{
+  color:#24434c;
+  font-size:16px;
+  font-weight:740;
+  letter-spacing:-.02em;
+}
+.status{
+  background:#f5f8f8;
+  color:#496972;
+  border-color:#dce6e7;
+}
+.body{padding:22px;gap:19px}
+.decisions{gap:14px}
+.hypothesis{
+  padding:18px;
+  border-radius:9px;
+  border-color:#e1e9eb;
+  border-left:3px solid #b9d0d4;
+  background:#fff;
+}
+.hypothesis>strong{
+  color:#25434d;
+  font-size:13px;
+  line-height:1.6;
+}
+.fieldGrid label,.footer label{color:#49636d}
+.fieldGrid select,.fieldGrid textarea,.footer select{
+  min-height:42px;
+  border-color:#cbdcde;
+  border-radius:8px;
+  background:#fff;
+  color:#24454e;
+}
+.fieldGrid textarea{line-height:1.65}
+.footer{border-top-color:#e8edef;padding-top:19px}
+.actions button{
+  min-height:42px;
+  border-radius:8px;
+  font-weight:700;
+}
+.actions .secondary{background:#fff;border-color:#c6d8da;color:#245764}
+.actions .secondary:hover:not(:disabled){background:#f3f8f8}
+.actions .primary{background:#175b66!important;border-color:#175b66!important}
+.actions .primary:hover:not(:disabled){background:#104952!important}
+.root :is(button,select,textarea):focus-visible{
+  outline:3px solid #4f9199;
+  outline-offset:3px;
+}
+@media(max-width:700px){
+  .root{margin:0 16px 16px}
+  .header,.body{padding:16px}
+  .hypothesis{padding:15px}
+}
+/* IF-UI-POLISH-2026-11-07 END */
+
+/* IF-WORKSPACE-DESIGN-2026-11-07 BEGIN */
+/* Visible, structured review workflow without modifying review data or save behavior. */
+.root{margin:0 clamp(16px,3vw,36px) 30px;border:1px solid #dce6e9;border-radius:12px;background:#fff;box-shadow:0 2px 10px rgba(20,53,62,.03)}
+.root .header{background:#fbfcfc;border-bottom:1px solid #e1e9eb;padding:23px 26px}
+.root .header h3{font-size:19px;letter-spacing:-.025em;color:#233c46}
+.root .status{padding:7px 12px;background:#eaf4f4;color:#24626a;border:1px solid #cce2e4;font-weight:760}
+.root .body{padding:26px;gap:22px}
+.reviewProgress{padding:18px 20px;border:1px solid #dce8e9;border-radius:9px;background:#f3f8f9}
+.progressText{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center;color:#294650;font-size:12px}
+.progressText strong{font-size:13px}
+.progressText span{color:#58717a}
+.progressTrack{height:8px;width:100%;border-radius:999px;background:#dce8e9;margin-top:15px;overflow:hidden}
+.progressFill{height:100%;border-radius:999px;background:#268995;transition:width .2s ease-out}
+.reviewGuide{display:grid;gap:4px;padding:0 2px}
+.reviewGuide h4{font-size:16px;letter-spacing:-.02em;margin:0;color:#223d46;font-weight:760}
+.reviewGuide p{font-size:12px;line-height:1.6;color:#65808a;margin:0}
+.root .decisions{gap:16px}
+.root .hypothesis{padding:21px;border:1px solid #dfe8eb;border-left:4px solid #8ebac0;background:#fff;border-radius:10px;box-shadow:0 2px 7px rgba(20,53,62,.026)}
+.hypothesisTop{display:flex;align-items:flex-start;gap:13px;margin-bottom:18px}
+.hypothesisNumber{display:inline-flex;align-items:center;justify-content:center;flex:none;width:32px;height:32px;border-radius:8px;background:#eaf3f4;color:#226471;font-size:11px;font-weight:800;font-variant-numeric:tabular-nums}
+.hypothesisTop strong{flex:1;min-width:0;color:#263f49;font-size:14px;line-height:1.5;font-weight:750;overflow-wrap:anywhere}
+.decisionTag{font-size:10px;line-height:1.35;font-weight:740;color:#54707a;border:1px solid #d9e5e7;border-radius:6px;padding:7px 9px;background:#f7fafa;max-width:168px;text-align:right}
+.root .hypothesis .fieldGrid{grid-template-columns:minmax(175px,.72fr) minmax(0,1.28fr)}
+.root .fieldGrid{gap:18px}
+.root .fieldGrid label,.root .footer label{font-size:12px;line-height:1.45;font-weight:750;color:#405d67}
+.root .fieldGrid select,.root .fieldGrid textarea,.root .footer select{font-size:13px;min-height:44px;border:1px solid #c7d9dc;border-radius:8px;padding:12px;line-height:1.5}
+.root .fieldGrid textarea{min-height:100px}
+.root .footer{border-top:1px solid #e1e9eb;padding:22px 0 0;align-items:center}
+.root .actions button{min-height:44px;font-size:12px;border-radius:7px}
+.root .actions .primary{background:#176673!important;border-color:#176673!important}
+.root :is(button,select,textarea):focus-visible{outline:3px solid #6cabb2;outline-offset:3px}
+@media(max-width:800px){
+  .root .body{padding:18px}
+  .root .header{padding:18px}
+  .root .hypothesis{padding:16px}
+  .root .hypothesis .fieldGrid{grid-template-columns:minmax(0,1fr)}
+  .hypothesisTop{flex-wrap:wrap}
+  .decisionTag{max-width:none;margin-left:45px}
+}
+@media(max-width:600px){
+  .root{margin:0 14px 18px}
+  .root .fieldGrid{grid-template-columns:minmax(0,1fr)}
+  .root .footer{align-items:stretch}
+  .root .actions{width:100%}
+  .root .actions button{flex:1}
+}
+/* IF-WORKSPACE-DESIGN-2026-11-07 END */
