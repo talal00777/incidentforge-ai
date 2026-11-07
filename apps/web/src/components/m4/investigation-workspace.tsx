@@ -1,11 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { apiGet, apiWrite, describeApiFailure } from "@/lib/api-client";
 import { availableProviders, canInvestigate, firstModel, type ProviderOption } from "@/lib/investigation-options";
 import { distinctHypothesisChecks, hypothesisStatus, mergeSuggestedActions, readableInvestigationDate, type TimeDisplay } from "@/lib/investigation-presentation";
+import { InvestigationReview } from "./investigation-review";
+import { investigationPath, investigationReportPath, humanReviewPath } from "@/lib/investigation-routes";
 import styles from "./investigation-workspace.module.css";
 
 type EvidenceEntry = {
@@ -58,7 +61,10 @@ type ReportSummary = {
 type Report = ReportSummary & { report: ReportBody };
 type PromptProfile = "zero_shot" | "few_shot" | "decomposed_verified";
 
-export function InvestigationWorkspace({ incidentId }: { incidentId: string }) {
+type View = "manage" | "ai" | "human";
+
+export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }: { incidentId: string; reportId?: string; view?: View }) {
+  const router = useRouter();
   const root = `incidents/${encodeURIComponent(incidentId)}`;
   const [providers, setProviders] = useState<ProviderOption[]>([]);
   const [snapshots, setSnapshots] = useState<SnapshotSummary[]>([]);
@@ -76,8 +82,8 @@ export function InvestigationWorkspace({ incidentId }: { incidentId: string }) {
   const [timeDisplay, setTimeDisplay] = useState<TimeDisplay>("local");
   const evidenceRef = useRef<HTMLElement | null>(null);
   const evidenceTriggerRef = useRef<HTMLButtonElement | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [working, setWorking] = useState(false);
+  const [loading, setLoading] = useState(!reportId);
+  const [working, setWorking] = useState(Boolean(reportId));
   const [error, setError] = useState("");
   const enabledProviders = useMemo(() => availableProviders(providers), [providers]);
   const visibleActions = useMemo(() => mergeSuggestedActions(report?.report.suggested_actions ?? []), [report]);
@@ -88,6 +94,7 @@ export function InvestigationWorkspace({ incidentId }: { incidentId: string }) {
   }, [selectedEvidence, snapshot]);
 
   useEffect(() => {
+    if (reportId) return;
     let active = true;
     Promise.all([
       apiGet<ProviderOption[]>("investigation/providers"),
@@ -110,10 +117,24 @@ export function InvestigationWorkspace({ incidentId }: { incidentId: string }) {
       if (active) setLoading(false);
     });
     return () => { active = false; };
-  }, [root]);
+  }, [root, reportId]);
 
   useEffect(() => {
-    if (!snapshotId) return;
+    if (!reportId) return;
+    let active = true;
+    apiGet<Report>(`${root}/investigations/${encodeURIComponent(reportId)}`)
+      .then((result) => {
+        if (!active) return;
+        setReport(result);
+        if (view === "ai") setSnapshotId(result.snapshot_id);
+      })
+      .catch((failure: unknown) => { if (active) setError(describeApiFailure(failure)); })
+      .finally(() => { if (active) setWorking(false); });
+    return () => { active = false; };
+  }, [root, reportId, view]);
+
+  useEffect(() => {
+    if (!snapshotId || view === "human") return;
     let active = true;
     apiGet<Snapshot>(`${root}/evidence/snapshots/${encodeURIComponent(snapshotId)}`)
       .then((result) => { if (active) setSnapshot(result); })
@@ -146,9 +167,7 @@ export function InvestigationWorkspace({ incidentId }: { incidentId: string }) {
         prompt_profile: profile,
         transmission_consent: { accepted: true, snapshot_sha256: snapshot.sha256 },
       });
-      setSelectedEvidence(null);
-      setReport(result);
-      setHistory(await apiGet<ReportSummary[]>(`${root}/investigations`));
+      router.push(investigationReportPath(incidentId, result.id));
     } catch (failure) {
       setError(describeApiFailure(failure));
     } finally {
@@ -156,19 +175,8 @@ export function InvestigationWorkspace({ incidentId }: { incidentId: string }) {
     }
   }
 
-  async function openReport(id: string) {
-    setWorking(true);
-    setError("");
-    try {
-      const result = await apiGet<Report>(`${root}/investigations/${encodeURIComponent(id)}`);
-      if (result.snapshot_id !== snapshotId) changeSnapshot(result.snapshot_id);
-      setSelectedEvidence(null);
-      setReport(result);
-    } catch (failure) {
-      setError(describeApiFailure(failure));
-    } finally {
-      setWorking(false);
-    }
+  function openReport(id: string) {
+    router.push(investigationReportPath(incidentId, id));
   }
 
   function references(ids: string[]) {
@@ -194,19 +202,36 @@ export function InvestigationWorkspace({ incidentId }: { incidentId: string }) {
 
   return <main className={styles.root}>
     <header className={styles.header}>
-      <h1>AI investigation</h1>
+      <div className={styles.masthead}>
+        <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
+          <Link href="/">Home</Link><span aria-hidden="true">/</span>
+          <Link href={`/incidents/${encodeURIComponent(incidentId)}`}>Incident</Link><span aria-hidden="true">/</span>
+          <span aria-current="page">{view === "manage" ? "Investigations" : view === "ai" ? "AI findings" : "Human review"}</span>
+        </nav>
+        <span className={styles.stageKicker}>Incident investigation workspace</span>
+        <h1>{view === "manage" ? "AI investigations" : view === "ai" ? "AI findings" : "Human review"}</h1>
+        <p className={styles.pageSubtitle}>{view === "manage" ? "Generate an investigation or continue from a saved result." : view === "ai" ? "Explore the findings and trace each claim to its source events." : "Evaluate AI hypotheses and record human conclusions."}</p>
+      </div>
       <div className={styles.headerActions}>
-        <div className={styles.timeToggle} role="group" aria-label="Date and time display">
+        {view !== "human" && <div className={styles.timeToggle} role="group" aria-label="Date and time display">
           <button type="button" aria-pressed={timeDisplay === "local"} onClick={() => setTimeDisplay("local")}>Local</button>
           <button type="button" aria-pressed={timeDisplay === "utc"} onClick={() => setTimeDisplay("utc")}>UTC</button>
-        </div>
-        <Link className={styles.back} href={`/incidents/${encodeURIComponent(incidentId)}/evidence-snapshots`}>Evidence selection</Link>
+        </div>}
+        <nav className={styles.pageNav} aria-label="Related pages">
+          <Link href={`/incidents/${encodeURIComponent(incidentId)}/evidence-snapshots`}>View evidence</Link>
+          <Link href={`/incidents/${encodeURIComponent(incidentId)}`}>Incident overview</Link>
+        </nav>
       </div>
     </header>
+    <nav className={styles.workspaceTabs} aria-label="Investigation workflow">
+      <Link href={investigationPath(incidentId)} aria-current={view === "manage" ? "page" : undefined}>Investigations</Link>
+      {reportId && <Link href={investigationReportPath(incidentId, reportId)} aria-current={view === "ai" ? "page" : undefined}>AI findings</Link>}
+      {reportId && <Link href={humanReviewPath(incidentId, reportId)} aria-current={view === "human" ? "page" : undefined}>Human review</Link>}
+    </nav>
 
     {error && <p className={styles.error} role="alert">{error}</p>}
     {loading ? <p className={styles.empty} role="status">Loading investigations…</p> : <>
-      <div className={styles.columns}>
+      {view === "manage" && <div className={styles.columns}>
         <section className={styles.card} aria-labelledby="settings-title">
           <div className={styles.cardHeader}><h2 id="settings-title">Investigation settings</h2></div>
           <div className={styles.form}>
@@ -285,16 +310,18 @@ export function InvestigationWorkspace({ incidentId }: { incidentId: string }) {
             </li>)}
           </ul>}
         </section>
-      </div>
-      {report && <section className={styles.report} aria-labelledby="report-title">
+      </div>}
+      {view !== "manage" && !report && working && <p className={styles.empty} role="status">Loading saved investigation…</p>}
+      {view === "ai" && report && <section className={styles.report} aria-labelledby="report-title">
         <div className={styles.reportHeader}>
           <div>
             <span className={styles.reportType}>AI-generated investigation</span>
             <h2 id="report-title">Investigation findings</h2>
-            <span>{report.provider} · {report.model_id} · {readableInvestigationDate(report.created_at, timeDisplay)}</span>
+            <span className={styles.reportMeta}>{report.provider} · {report.model_id} · {readableInvestigationDate(report.created_at, timeDisplay)}</span>
           </div>
-          <span className={styles.reviewLabel}>Review required</span>
+          <Link className={styles.primaryLink} href={humanReviewPath(incidentId, report.id)}>Open human review</Link>
         </div>
+        <div className={styles.reportLayout}>
         <div className={styles.reportBody}>
           <section className={styles.overview} aria-labelledby="overview-title">
             <h3 id="overview-title">Incident overview</h3>
@@ -373,6 +400,30 @@ export function InvestigationWorkspace({ incidentId }: { incidentId: string }) {
             </> : <p className={styles.muted}>Source event not available in this snapshot.</p>}
           </aside>}
         </div>
+        <aside className={styles.reportRail} aria-label="Report navigation">
+          <span className={styles.railKicker}>On this page</span>
+          <nav aria-label="Report sections">
+            <a href="#overview-title">Overview</a>
+            <a href="#facts-title">Observed facts <span>{report.report.observed_facts.length}</span></a>
+            <a href="#hypotheses-title">Hypotheses <span>{report.report.hypotheses.length}</span></a>
+            {visibleActions.length > 0 && <a href="#checks-title">Suggested checks <span>{visibleActions.length}</span></a>}
+            {report.report.limitations.length > 0 && <a href="#limits-title">Limitations</a>}
+          </nav>
+          <div className={styles.railNote}>AI-generated findings require human verification before conclusions are finalized.</div>
+        </aside>
+        </div>
+      </section>}
+      {view === "human" && report && <section className={styles.report} aria-labelledby="review-page-title">
+        <div className={styles.reportHeader}>
+          <div>
+            <span className={styles.reportType}>Human-authored decisions</span>
+            <h2 id="review-page-title">Review investigation findings</h2>
+            <p className={styles.reviewIntro}>Record your assessment of the evidence, then save your conclusions as a review revision. The AI findings remain unchanged.</p>
+            <p className={styles.reviewContext}>{report.report.incident_summary}</p>
+          </div>
+          <Link className={styles.back} href={investigationReportPath(incidentId, report.id)}>View AI findings</Link>
+        </div>
+        <InvestigationReview key={report.id} incidentId={incidentId} reportId={report.id} hypotheses={report.report.hypotheses.map((item) => item.title)} />
       </section>}
     </>}
   </main>;

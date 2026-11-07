@@ -73,3 +73,247 @@
 .eventMetadata .fullId{font-size:11px;font-variant-numeric:tabular-nums}
 .reportBody .evidenceFocus .eventMessage{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;background:#fff;border:1px solid #deeaeb;border-radius:8px;padding:12px 14px;font-size:12px;line-height:1.7}
 @media(max-width:600px){.headerActions{width:100%;justify-content:space-between}.reportBody{gap:21px}.reportBody .hypotheses article{padding:15px}.reportBody .factList{padding-left:20px}.eventMetadata{grid-template-columns:minmax(0,1fr)}.reportBody .summary{padding:15px;font-size:14px}}
+
+/* Incident navigation remains visible on generation, AI findings and human review pages. */
+.pageNav{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.pageNav a{display:inline-flex;align-items:center;justify-content:center;min-height:39px;padding:8px 12px;border:1px solid #cfdddf;background:#fff;border-radius:8px;color:#225762;text-decoration:none;font-size:12px;font-weight:700}
+.pageNav a:hover{border-color:#7ba9af;background:#f0f8f7}
+.primaryLink{display:inline-flex;justify-content:center;align-items:center;min-height:43px;padding:10px 17px;border-radius:9px;text-decoration:none;color:#fff!important;background:#145962;border:1px solid #145962;font-size:12px!important;font-weight:750;white-space:nowrap}
+.primaryLink:hover{background:#0c444c}
+.reviewIntro{max-width:68ch;margin:10px 0 0;color:#49646d;font-size:13px;line-height:1.6}
+.reviewContext{max-width:80ch;padding:14px 17px;background:#f7faf9;border-left:3px solid #397984;border-radius:7px;margin:13px 0 0;color:#304f58;font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+.root :is(.pageNav a,.primaryLink):focus-visible{outline:3px solid #69a8ac;outline-offset:3px}
+@media(max-width:650px){.pageNav{width:100%}.pageNav a{flex:1 1 auto}.primaryLink{width:100%}}
+
+/* IF-UI-POLISH-2026-11-07 BEGIN */
+/* Subtle incident-review visual polish: scoped to the AI investigation workspace. */
+.root{
+  --if-polish-text:#243e48;
+  --if-polish-muted:#58717a;
+  --if-polish-border:#dce6e8;
+}
+.root .header{
+  padding:20px 24px;
+  border-color:var(--if-polish-border);
+  border-radius:12px;
+  box-shadow:0 1px 2px rgba(18,44,52,.035);
+}
+.root .header h1{
+  font-size:clamp(22px,2vw,29px);
+  letter-spacing:-.03em;
+  line-height:1.25;
+  color:var(--if-polish-text);
+}
+.root .pageNav a{
+  min-height:36px;
+  padding:7px 11px;
+  border-color:transparent;
+  border-radius:7px;
+  background:transparent;
+  color:#365c66;
+  font-size:12px;
+  font-weight:650;
+}
+.root .pageNav a:hover{
+  border-color:#dce8e9;
+  background:#f1f6f6;
+  color:#164c57;
+}
+.root .card,.root .report{
+  border-color:var(--if-polish-border);
+  border-radius:12px;
+  box-shadow:0 1px 3px rgba(18,44,52,.04);
+}
+.root .cardHeader{
+  min-height:62px;
+  border-color:#e8eeef;
+}
+.root .history button{
+  border-radius:8px;
+  padding:15px 10px;
+}
+.root .history button:hover{background:#f2f7f7}
+.root .reportHeader{
+  padding:23px 27px;
+  border-bottom-color:#e6edee;
+  background:#fff;
+}
+.root .reportHeader h2{
+  font-size:clamp(19px,1.9vw,24px);
+  letter-spacing:-.025em;
+  color:var(--if-polish-text);
+}
+.root .reportType{
+  letter-spacing:.065em;
+  color:#57717a;
+}
+.root .reportBody{
+  width:100%;
+  max-width:1080px;
+  margin-inline:auto;
+  padding:clamp(18px,2.5vw,29px);
+  gap:29px;
+}
+.root .overview .summary{
+  border-left:3px solid #39717a;
+  border-radius:7px;
+  background:#f6f9f9;
+  color:#28454d;
+  line-height:1.75;
+}
+.root .sectionHeading{
+  padding-bottom:12px;
+  border-color:#e8edee;
+}
+.root .sectionHeading h3{
+  color:#203e47;
+  font-weight:740;
+  letter-spacing:-.01em;
+}
+.root .factList li{
+  border-color:#e4ebec;
+  border-radius:8px;
+  background:#fff;
+}
+.root .hypotheses article{
+  border:1px solid #e2eaeb;
+  border-left:3px solid #a8c8cd;
+  border-radius:9px;
+  background:#fff;
+}
+.root .hypothesisHeading h4{
+  color:#24434c;
+  line-height:1.55;
+  font-weight:720;
+}
+.root .hypothesisHeading .assessment{
+  border-color:#dce5e7;
+  background:#f5f8f8;
+  color:#456770;
+}
+.root .references button{
+  min-height:32px;
+  padding:6px 10px;
+  border-radius:6px;
+  border-color:#c9dfe2;
+  background:#f1f8f8;
+  color:#1c5964;
+}
+.root .references button:hover:not([aria-pressed="true"]){
+  border-color:#a9cbd0;
+  background:#e9f3f3;
+}
+.root .evidenceFocus{
+  border-color:#b7d2d6;
+  border-radius:9px;
+  background:#f6fafa;
+  box-shadow:0 1px 3px rgba(18,44,52,.035);
+}
+.root :is(.pageNav a,.primaryLink,.references button):focus-visible{
+  outline:3px solid #4f9199;
+  outline-offset:3px;
+}
+@media(max-width:650px){
+  .root .header{padding:17px}
+  .root .reportHeader{padding:18px}
+  .root .reportBody{padding:16px;gap:23px}
+  .root .pageNav a{min-height:38px;border-color:#dce8e9;background:#fff}
+  .root .hypotheses article{padding:16px}
+}
+/* IF-UI-POLISH-2026-11-07 END */
+
+/* IF-WORKSPACE-DESIGN-2026-11-07 BEGIN */
+/* IncidentForge visual system: clear navigation, focused documents, evidence-first UI. */
+.root{
+  --if-ink:#192f38;
+  --if-soft:#5d717b;
+  --if-rule:#dfe8eb;
+  --if-accent:#16616c;
+  max-width:1380px;
+  margin-inline:auto;
+}
+.root .header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:20px;
+  padding:30px clamp(20px,3vw,38px) 26px;
+  border:1px solid var(--if-rule);
+  border-radius:15px 15px 0 0;
+  background:linear-gradient(112deg,#f7fafb 0%,#fff 64%);
+  box-shadow:none;
+}
+.masthead{min-width:0;flex:1 1 auto;display:grid;justify-items:start;gap:8px}
+.breadcrumbs{display:flex;flex-wrap:wrap;align-items:center;gap:9px;font-size:12px;color:#6d7f87;margin-bottom:10px}
+.breadcrumbs a{color:#3d646e;text-decoration:none;font-weight:650}
+.breadcrumbs a:hover{text-decoration:underline}
+.breadcrumbs span[aria-current="page"]{color:#263f48;font-weight:700}
+.stageKicker{text-transform:uppercase;font-size:10px;letter-spacing:.115em;font-weight:800;color:#387885}
+.root .header .masthead h1{margin:0;font-size:clamp(26px,2.5vw,36px);font-weight:760;color:var(--if-ink);letter-spacing:-.038em;line-height:1.12}
+.pageSubtitle{max-width:66ch;margin:3px 0 0;color:#607781;font-size:13px;line-height:1.55}
+.root .headerActions{align-items:flex-end;justify-content:flex-end;flex-direction:column;gap:14px;padding-top:7px}
+.root .pageNav{display:flex;gap:10px}
+.root .pageNav a{padding:5px 0;min-height:auto;background:transparent!important;border:0!important;border-radius:0;color:#34646e!important;font-size:12px;font-weight:700;text-decoration:none}
+.root .pageNav a:hover{text-decoration:underline}
+.workspaceTabs{display:flex;align-items:stretch;gap:24px;min-height:55px;padding:0 clamp(20px,3vw,38px);background:#fff;border:1px solid var(--if-rule);border-top:0;border-radius:0 0 13px 13px;margin-bottom:24px;overflow-x:auto;scrollbar-width:thin}
+.workspaceTabs a{display:inline-flex;align-items:center;padding:2px 1px 0;border-bottom:3px solid transparent;white-space:nowrap;font-weight:700;font-size:13px;color:#63757d;text-decoration:none}
+.workspaceTabs a:hover{color:#1f5661}
+.workspaceTabs a[aria-current="page"]{color:#125a65;border-bottom-color:#16808b}
+.root :is(.breadcrumbs a,.workspaceTabs a,.pageNav a):focus-visible{outline:3px solid #62a6ad;outline-offset:3px;border-radius:3px}
+.root .columns{align-items:start;gap:22px}
+.root .card{border:1px solid var(--if-rule);border-radius:13px;box-shadow:0 3px 12px rgba(17,56,67,.035);background:#fff}
+.root .cardHeader{background:#fafcfc;border-bottom:1px solid var(--if-rule)}
+.root .report{border:0;border-radius:0;background:transparent;box-shadow:none;overflow:visible}
+.root .reportHeader{align-items:center;padding:27px clamp(20px,3vw,36px);background:#fff;border:1px solid var(--if-rule);border-radius:14px 14px 0 0;box-shadow:0 4px 14px rgba(21,49,59,.025)}
+.root .reportHeader h2{font-size:clamp(22px,2.2vw,29px);line-height:1.18;color:var(--if-ink);letter-spacing:-.035em;margin-bottom:7px}
+.root .reportType{font-size:10px;letter-spacing:.1em;color:#227481}
+.reportMeta{color:var(--if-soft);font-size:12px;line-height:1.6}
+.root .primaryLink{min-height:44px;background:#125d67;color:#fff;border-radius:8px;padding:10px 17px;box-shadow:0 2px 5px rgba(0,70,80,.12)}
+.reportLayout{display:grid;grid-template-columns:minmax(0,1fr) 244px;gap:20px;align-items:start}
+.root .reportLayout>.reportBody{display:grid;gap:28px;min-width:0;max-width:none;width:100%;margin:0;padding:clamp(20px,3vw,38px);border:1px solid var(--if-rule);border-top:0;border-radius:0 0 14px 14px;background:#fff}
+.root .reportLayout .overview h3{font-size:12px;color:#46616c;text-transform:uppercase;letter-spacing:.07em;margin-bottom:13px}
+.root .reportLayout .overview .summary{padding:22px 24px;border:1px solid #d7e6e9;border-left:4px solid #3e929c;border-radius:9px;background:#f3f9fa;font-size:16px;line-height:1.75;color:#213d47;margin:0}
+.root .reportLayout .reportSection{min-width:0}
+.root .reportLayout .sectionHeading{border-bottom:1px solid #dfe7ea;padding-bottom:12px;margin-bottom:18px}
+.root .reportLayout .sectionHeading h3{font-size:17px;font-weight:760;color:#1d343d;letter-spacing:-.02em}
+.root .reportLayout .sectionHeading>span{margin-left:auto;font-size:11px;font-weight:700;background:#eef3f4;color:#59717a;padding:5px 9px;border-radius:6px}
+.root .reportLayout .factList li{padding:17px 20px;border:1px solid #e2e9eb;border-radius:9px;background:#fff}
+.root .reportLayout .hypotheses{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+.root .reportLayout .hypotheses article{background:#fff;border:1px solid #dfe7ea;border-left:4px solid #76a6af;border-radius:10px;padding:24px;box-shadow:0 2px 7px rgba(20,46,57,.025)}
+.root .reportLayout .hypothesisHeading{display:flex;gap:14px;align-items:start;justify-content:space-between;margin-bottom:19px}
+.root .reportLayout .hypothesisHeading h4{font-size:15px;font-weight:740;color:#243d47;line-height:1.5}
+.root .reportLayout .hypothesisHeading .assessment{background:#f0f6f6;color:#2b606b;border:1px solid #cbdfe2;padding:7px 11px;border-radius:7px;font-size:11px;font-weight:750;letter-spacing:0}
+.root .reportLayout .evidenceRows{background:#f9fbfb;border:1px solid #e9edef;border-radius:8px;padding:14px;margin:0 0 14px}
+.root .reportLayout .references button{border-radius:6px;background:#f0f7f8;border:1px solid #ccdde0;color:#1c626b;min-height:33px}
+.root .reportLayout .references button:hover{background:#deedef}
+.root .reportLayout .hypothesisDetail{margin-top:12px;padding-top:14px}
+.root .reportLayout .limitations{border-left:3px solid #cad9dc;padding:11px 0 11px 24px;background:#fafbfb}
+.reportRail{position:sticky;top:20px;align-self:start;margin-top:20px;padding:20px 17px;background:#fff;border:1px solid #dce6e9;border-radius:11px;box-shadow:0 2px 8px rgba(25,57,66,.025)}
+.railKicker{display:block;padding:0 9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:#6a8088;font-weight:800}
+.reportRail nav{display:grid;gap:3px}
+.reportRail nav a{display:flex;align-items:center;justify-content:space-between;gap:12px;text-decoration:none;color:#46646e;padding:11px 10px;border-radius:7px;font-size:12px;font-weight:650}
+.reportRail nav a:hover{background:#edf5f5;color:#145e68}
+.reportRail nav a span{font-size:11px;border:1px solid #e0e9ea;border-radius:5px;padding:1px 6px;color:#5d7780}
+.railNote{margin-top:15px;padding:14px 10px 2px;border-top:1px solid #edf0f1;color:#637b83;line-height:1.6;font-size:11px}
+.root .reviewContext{border-left:4px solid #6ca0aa;background:#f5f9fa;padding:14px 18px;max-width:76ch}
+.root .reviewIntro{max-width:75ch}
+@media(max-width:1050px){
+  .reportLayout{grid-template-columns:minmax(0,1fr)}
+  .reportRail{position:static;order:-1;margin-top:16px}
+  .reportRail nav{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+  .railNote{display:none}
+}
+@media(max-width:750px){
+  .root .header{padding:23px 18px;flex-direction:column}
+  .root .headerActions{align-items:flex-start;padding-top:0}
+  .root .pageNav{gap:18px}
+  .workspaceTabs{gap:22px;padding-inline:18px;margin-bottom:16px}
+  .root .reportHeader{padding:22px 18px}
+  .root .reportLayout>.reportBody{padding:20px 16px}
+  .root .reportLayout .overview .summary{padding:17px;font-size:14px}
+  .root .reportLayout .hypotheses article{padding:17px}
+  .root .reportLayout .hypothesisHeading{flex-wrap:wrap}
+  .root .reportLayout .factList li{padding:14px}
+  .root .primaryLink{width:100%}
+}
+/* IF-WORKSPACE-DESIGN-2026-11-07 END */
