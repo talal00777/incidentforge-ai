@@ -140,7 +140,7 @@ export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }
       .then((result) => { if (active) setSnapshot(result); })
       .catch((failure: unknown) => { if (active) setError(describeApiFailure(failure)); });
     return () => { active = false; };
-  }, [root, snapshotId]);
+  }, [root, snapshotId, view]);
 
   function changeSnapshot(id: string) {
     setSnapshotId(id);

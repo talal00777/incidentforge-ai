@@ -89,3 +89,36 @@ class InvestigationReviewRevision(models.Model):
             )
         ]
 
+class PostmortemVersion(models.Model):
+    """Immutable, versioned capture of AI findings and a specific human review."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    incident = models.ForeignKey(Incident, on_delete=models.PROTECT, related_name="postmortem_versions")
+    investigation = models.ForeignKey(
+        InvestigationReport, on_delete=models.PROTECT, related_name="postmortem_versions"
+    )
+    review_revision = models.ForeignKey(
+        InvestigationReviewRevision, on_delete=models.PROTECT, related_name="postmortem_versions"
+    )
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    version = models.PositiveIntegerField()
+    schema_version = models.CharField(max_length=12, default="1.0")
+    content = models.JSONField()
+    content_sha256 = models.CharField(max_length=64)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-version",)
+        indexes = [models.Index(fields=["incident", "-version"], name="inv_pm_inc_ver_idx")]
+        constraints = [
+            models.UniqueConstraint(fields=["incident", "version"], name="inv_pm_inc_version_uniq"),
+            models.UniqueConstraint(
+                fields=["investigation", "review_revision"], name="inv_pm_report_review_uniq"
+            ),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self._state.adding:
+            raise ValueError("Postmortem versions are immutable; create a new version.")
+        super().save(*args, **kwargs)
+

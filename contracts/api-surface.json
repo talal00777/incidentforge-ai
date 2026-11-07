@@ -145,6 +145,21 @@
       "path": "/api/v1/incidents/{incident_id}/investigations/{report_id}/review",
       "method": "put",
       "status": "200"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/reports",
+      "method": "get",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/reports",
+      "method": "post",
+      "status": "201"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/reports/{version_id}",
+      "method": "get",
+      "status": "200"
     }
   ],
   "system_response_properties": [
@@ -175,6 +190,8 @@
     "/api/v1/investigation/providers",
     "/api/v1/incidents/{incident_id}/investigations",
     "/api/v1/incidents/{incident_id}/investigations/{report_id}",
-    "/api/v1/incidents/{incident_id}/investigations/{report_id}/review"
+    "/api/v1/incidents/{incident_id}/investigations/{report_id}/review",
+    "/api/v1/incidents/{incident_id}/reports",
+    "/api/v1/incidents/{incident_id}/reports/{version_id}"
   ]
 }
