@@ -50,3 +50,42 @@ class InvestigationReport(models.Model):
     class Meta:
         ordering = ("-created_at", "-id")
         indexes = [models.Index(fields=["incident", "-created_at"], name="inv_report_inc_date_idx")]
+
+class InvestigationReview(models.Model):
+    """Mutable pointer to append-only human review revisions of one AI report."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    report = models.OneToOneField(
+        InvestigationReport, on_delete=models.PROTECT, related_name="human_review"
+    )
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    latest_revision = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class InvestigationReviewRevision(models.Model):
+    """Historical reviewer input; generated investigation data is never overwritten."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    review = models.ForeignKey(
+        InvestigationReview, on_delete=models.PROTECT, related_name="revisions"
+    )
+    number = models.PositiveIntegerField()
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    status = models.CharField(
+        max_length=16, choices=[("draft", "Draft"), ("reviewed", "Reviewed")]
+    )
+    impact_notes = models.TextField(blank=True)
+    remediation_notes = models.TextField(blank=True)
+    hypotheses = models.JSONField(default=list)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-number",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["review", "number"], name="inv_review_revision_unique"
+            )
+        ]
+
