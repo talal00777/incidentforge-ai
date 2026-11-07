@@ -33,9 +33,11 @@ class PostmortemListCreateView(ScopedPostmortemView):
     @extend_schema(responses={200: PostmortemSummarySerializer(many=True)}, tags=["reports"])
     def get(self, request, incident_id):
         incident = self.owned_incident(request, incident_id)
-        versions = PostmortemVersion.objects.filter(incident=incident).select_related(
-            "review_revision"
-        ).order_by("-version")[:100]
+        versions = (
+            PostmortemVersion.objects.filter(incident=incident)
+            .select_related("review_revision")
+            .order_by("-version")[:100]
+        )
         return Response(PostmortemSummarySerializer(versions, many=True).data)
 
     @extend_schema(
@@ -50,7 +52,8 @@ class PostmortemListCreateView(ScopedPostmortemView):
         values = serializer.validated_data
         investigation = get_object_or_404(
             InvestigationReport.objects.select_related("snapshot"),
-            id=values["investigation_id"], incident=incident,
+            id=values["investigation_id"],
+            incident=incident,
         )
         try:
             version, created = create_postmortem(
@@ -70,7 +73,8 @@ class PostmortemDetailView(ScopedPostmortemView):
         incident = self.owned_incident(request, incident_id)
         version = get_object_or_404(
             PostmortemVersion.objects.select_related("review_revision"),
-            id=version_id, incident=incident,
+            id=version_id,
+            incident=incident,
         )
         try:
             verified_content(version)

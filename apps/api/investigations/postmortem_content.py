@@ -80,6 +80,10 @@ def build_content(*, incident, investigation, revision, evidence_entries: list[d
                 }
                 for item in evidence_entries
             ],
-            key=lambda event: (event["occurred_at"] is None, event["occurred_at"] or "", event["event_id"]),
+            key=lambda event: (
+                event["occurred_at"] is None,
+                event["occurred_at"] or "",
+                event["event_id"],
+            ),
         ),
     }

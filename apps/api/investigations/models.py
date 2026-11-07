@@ -51,6 +51,7 @@ class InvestigationReport(models.Model):
         ordering = ("-created_at", "-id")
         indexes = [models.Index(fields=["incident", "-created_at"], name="inv_report_inc_date_idx")]
 
+
 class InvestigationReview(models.Model):
     """Mutable pointer to append-only human review revisions of one AI report."""
 
@@ -73,9 +74,7 @@ class InvestigationReviewRevision(models.Model):
     )
     number = models.PositiveIntegerField()
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
-    status = models.CharField(
-        max_length=16, choices=[("draft", "Draft"), ("reviewed", "Reviewed")]
-    )
+    status = models.CharField(max_length=16, choices=[("draft", "Draft"), ("reviewed", "Reviewed")])
     impact_notes = models.TextField(blank=True)
     remediation_notes = models.TextField(blank=True)
     hypotheses = models.JSONField(default=list)
@@ -84,16 +83,17 @@ class InvestigationReviewRevision(models.Model):
     class Meta:
         ordering = ("-number",)
         constraints = [
-            models.UniqueConstraint(
-                fields=["review", "number"], name="inv_review_revision_unique"
-            )
+            models.UniqueConstraint(fields=["review", "number"], name="inv_review_revision_unique")
         ]
+
 
 class PostmortemVersion(models.Model):
     """Immutable, versioned capture of AI findings and a specific human review."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    incident = models.ForeignKey(Incident, on_delete=models.PROTECT, related_name="postmortem_versions")
+    incident = models.ForeignKey(
+        Incident, on_delete=models.PROTECT, related_name="postmortem_versions"
+    )
     investigation = models.ForeignKey(
         InvestigationReport, on_delete=models.PROTECT, related_name="postmortem_versions"
     )
@@ -121,4 +121,3 @@ class PostmortemVersion(models.Model):
         if not self._state.adding:
             raise ValueError("Postmortem versions are immutable; create a new version.")
         super().save(*args, **kwargs)
-

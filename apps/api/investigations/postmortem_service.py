@@ -26,11 +26,18 @@ class PostmortemConflict(Exception):
 def _verified_entries(investigation):
     """Check the original evidence digest without relying on today's privacy-policy version."""
     snapshot = investigation.snapshot
-    if snapshot.incident_id != investigation.incident_id or snapshot.sha256 != investigation.snapshot_sha256:
-        raise PostmortemConflict("source_integrity", "The investigation source could not be verified.")
+    if (
+        snapshot.incident_id != investigation.incident_id
+        or snapshot.sha256 != investigation.snapshot_sha256
+    ):
+        raise PostmortemConflict(
+            "source_integrity", "The investigation source could not be verified."
+        )
     entries = snapshot.entries
     if not isinstance(entries, list) or len(entries) != snapshot.item_count or not entries:
-        raise PostmortemConflict("source_integrity", "The investigation source could not be verified.")
+        raise PostmortemConflict(
+            "source_integrity", "The investigation source could not be verified."
+        )
     try:
         package = {
             "selection_version": snapshot.selection_version,
@@ -38,25 +45,37 @@ def _verified_entries(investigation):
             "incident_id": str(snapshot.incident_id),
             "events": entries,
         }
-        data = json.dumps(package, sort_keys=True, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-        if len(data) != snapshot.payload_bytes or hashlib.sha256(data).hexdigest() != snapshot.sha256:
+        data = json.dumps(
+            package, sort_keys=True, ensure_ascii=False, separators=(",", ":")
+        ).encode("utf-8")
+        if (
+            len(data) != snapshot.payload_bytes
+            or hashlib.sha256(data).hexdigest() != snapshot.sha256
+        ):
             raise ValueError("Evidence mismatch")
         if len({item["event_id"] for item in entries}) != len(entries):
             raise ValueError("Duplicate event")
         validate_report(investigation.report, entries)
     except (KeyError, TypeError, ValueError, ProviderFailure) as exc:
-        raise PostmortemConflict("source_integrity", "The investigation source could not be verified.") from exc
+        raise PostmortemConflict(
+            "source_integrity", "The investigation source could not be verified."
+        ) from exc
     return entries
 
 
 def verified_content(version):
     """Do not return corrupted content from storage."""
     try:
-        valid = version.schema_version == "1.0" and content_sha256(version.content) == version.content_sha256
+        valid = (
+            version.schema_version == "1.0"
+            and content_sha256(version.content) == version.content_sha256
+        )
     except (TypeError, ValueError, OverflowError):
         valid = False
     if not valid:
-        raise PostmortemConflict("report_integrity", "This report version failed its integrity check.")
+        raise PostmortemConflict(
+            "report_integrity", "This report version failed its integrity check."
+        )
     return version.content
 
 
@@ -69,10 +88,16 @@ def create_postmortem(*, incident: Incident, investigation, expected_review_revi
     try:
         review = InvestigationReview.objects.select_for_update().get(report=investigation)
     except InvestigationReview.DoesNotExist as exc:
-        raise PostmortemConflict("review_required", "Complete and save the human review first.") from exc
+        raise PostmortemConflict(
+            "review_required", "Complete and save the human review first."
+        ) from exc
     if review.latest_revision != expected_review_revision:
-        raise PostmortemConflict("review_conflict", "The human review has changed. Reload it before finalizing.")
-    revision = InvestigationReviewRevision.objects.get(review=review, number=expected_review_revision)
+        raise PostmortemConflict(
+            "review_conflict", "The human review has changed. Reload it before finalizing."
+        )
+    revision = InvestigationReviewRevision.objects.get(
+        review=review, number=expected_review_revision
+    )
     count = len(investigation.report.get("hypotheses", []))
     choices = {"reviewed", "accepted_as_working_hypothesis", "rejected"}
     decisions = revision.hypotheses
@@ -88,7 +113,9 @@ def create_postmortem(*, incident: Incident, investigation, expected_review_revi
         )
     )
     if not complete:
-        raise PostmortemConflict("review_incomplete", "Complete the human review before finalizing.")
+        raise PostmortemConflict(
+            "review_incomplete", "Complete the human review before finalizing."
+        )
 
     existing = PostmortemVersion.objects.filter(
         investigation=investigation, review_revision=revision
@@ -99,7 +126,9 @@ def create_postmortem(*, incident: Incident, investigation, expected_review_revi
 
     evidence_entries = _verified_entries(investigation)
     content = build_content(
-        incident=locked_incident, investigation=investigation, revision=revision,
+        incident=locked_incident,
+        investigation=investigation,
+        revision=revision,
         evidence_entries=evidence_entries,
     )
     latest = PostmortemVersion.objects.filter(incident=locked_incident).order_by("-version").first()
