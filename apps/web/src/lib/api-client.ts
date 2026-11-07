@@ -67,7 +67,7 @@ export async function apiGet<T>(path: string): Promise<T> {
 
 export async function apiWrite<T>(
   path: string,
-  method: "POST" | "PATCH" | "DELETE",
+  method: "POST" | "PUT" | "PATCH" | "DELETE",
   payload?: unknown,
 ): Promise<T> {
   const csrf = await apiGet<{ csrf_token: string }>("auth/csrf");
