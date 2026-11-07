@@ -14,6 +14,7 @@ from evidence.views import (
 )
 from incidents.views import IncidentDetailView, IncidentListCreateView
 from ingestion.views import EventsView, JobsView, SourcesView, UploadView
+from investigations.postmortem_views import PostmortemDetailView, PostmortemListCreateView
 from investigations.review_views import InvestigationReviewView
 from investigations.views import (
     InvestigationDetailView,
@@ -21,12 +22,22 @@ from investigations.views import (
     ProviderListView,
 )
 
-from investigations.postmortem_views import PostmortemDetailView, PostmortemListCreateView
-
 urlpatterns = [
-    path("api/v1/incidents/<uuid:incident_id>/reports", PostmortemListCreateView.as_view(), name="postmortem-list"),
-    path("api/v1/incidents/<uuid:incident_id>/reports/<uuid:version_id>", PostmortemDetailView.as_view(), name="postmortem-detail"),
-    path("api/v1/incidents/<uuid:incident_id>/investigations/<uuid:report_id>/review", InvestigationReviewView.as_view(), name="investigation-review"),
+    path(
+        "api/v1/incidents/<uuid:incident_id>/reports",
+        PostmortemListCreateView.as_view(),
+        name="postmortem-list",
+    ),
+    path(
+        "api/v1/incidents/<uuid:incident_id>/reports/<uuid:version_id>",
+        PostmortemDetailView.as_view(),
+        name="postmortem-detail",
+    ),
+    path(
+        "api/v1/incidents/<uuid:incident_id>/investigations/<uuid:report_id>/review",
+        InvestigationReviewView.as_view(),
+        name="investigation-review",
+    ),
     path(
         "api/v1/investigation/providers", ProviderListView.as_view(), name="investigation-providers"
     ),

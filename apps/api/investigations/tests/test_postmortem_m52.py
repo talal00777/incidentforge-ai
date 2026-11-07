@@ -2,8 +2,8 @@
 
 import json
 from copy import deepcopy
-from uuid import uuid4
 from unittest.mock import patch
+from uuid import uuid4
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -14,7 +14,8 @@ from incidents.models import Incident
 from investigations.models import PostmortemVersion
 from investigations.postmortem_content import canonical_bytes, content_sha256
 from investigations.postmortem_service import PostmortemConflict, _verified_entries
-from investigations.tests.test_human_review_m51 import review_payload, saved_report as saved_report
+from investigations.tests.test_human_review_m51 import review_payload
+from investigations.tests.test_human_review_m51 import saved_report as saved_report
 
 
 @pytest.mark.django_db
@@ -22,9 +23,14 @@ def test_finalize_only_completed_review_and_reuse_same_revision(saved_report):
     client, _, incident, report, review_url = saved_report
     root = f"/api/v1/incidents/{incident.id}/reports"
     data = {"investigation_id": str(report.id), "expected_review_revision": 1}
-    assert client.post(root, data=json.dumps(data), content_type="application/json").status_code == 409
+    assert (
+        client.post(root, data=json.dumps(data), content_type="application/json").status_code == 409
+    )
     review = review_payload(status="reviewed")
-    assert client.put(review_url, data=json.dumps(review), content_type="application/json").status_code == 200
+    assert (
+        client.put(review_url, data=json.dumps(review), content_type="application/json").status_code
+        == 200
+    )
     created = client.post(root, data=json.dumps(data), content_type="application/json")
     assert created.status_code == 201, created.content
     body = created.json()
@@ -32,7 +38,10 @@ def test_finalize_only_completed_review_and_reuse_same_revision(saved_report):
     assert body["review_revision_number"] == 1
     assert body["content"]["ai"]["findings"] == report.report
     assert body["content"]["human"]["status"] == "reviewed"
-    assert body["content"]["evidence_manifest"][0]["event_id"] == report.report["observed_facts"][0]["event_ids"][0]
+    assert (
+        body["content"]["evidence_manifest"][0]["event_id"]
+        == report.report["observed_facts"][0]["event_ids"][0]
+    )
     assert "message" not in body["content"]["evidence_manifest"][0]
     assert len(canonical_bytes(body["content"])) < 50_000
     assert body["content_sha256"] == content_sha256(body["content"])
@@ -53,14 +62,38 @@ def test_finalize_only_completed_review_and_reuse_same_revision(saved_report):
 def test_review_updates_create_new_version_without_rewriting_old(saved_report):
     client, _, incident, report, review_url = saved_report
     root = f"/api/v1/incidents/{incident.id}/reports"
-    assert client.put(review_url, data=json.dumps(review_payload(status="reviewed")), content_type="application/json").status_code == 200
-    first = client.post(root, data=json.dumps({"investigation_id": str(report.id), "expected_review_revision": 1}), content_type="application/json").json()
+    assert (
+        client.put(
+            review_url,
+            data=json.dumps(review_payload(status="reviewed")),
+            content_type="application/json",
+        ).status_code
+        == 200
+    )
+    first = client.post(
+        root,
+        data=json.dumps({"investigation_id": str(report.id), "expected_review_revision": 1}),
+        content_type="application/json",
+    ).json()
     revision = review_payload(revision=1, status="reviewed")
     revision["impact_notes"] = "Different downstream impact after follow-up."
-    assert client.put(review_url, data=json.dumps(revision), content_type="application/json").status_code == 200
-    stale = client.post(root, data=json.dumps({"investigation_id": str(report.id), "expected_review_revision": 1}), content_type="application/json")
+    assert (
+        client.put(
+            review_url, data=json.dumps(revision), content_type="application/json"
+        ).status_code
+        == 200
+    )
+    stale = client.post(
+        root,
+        data=json.dumps({"investigation_id": str(report.id), "expected_review_revision": 1}),
+        content_type="application/json",
+    )
     assert stale.status_code == 409
-    second = client.post(root, data=json.dumps({"investigation_id": str(report.id), "expected_review_revision": 2}), content_type="application/json")
+    second = client.post(
+        root,
+        data=json.dumps({"investigation_id": str(report.id), "expected_review_revision": 2}),
+        content_type="application/json",
+    )
     assert second.status_code == 201
     assert second.json()["version"] == 2
     assert second.json()["content"]["human"]["impact_notes"] == revision["impact_notes"]
@@ -74,8 +107,19 @@ def test_review_updates_create_new_version_without_rewriting_old(saved_report):
 def test_draft_review_and_malformed_inputs_do_not_generate_reports(saved_report):
     client, _, incident, report, review_url = saved_report
     root = f"/api/v1/incidents/{incident.id}/reports"
-    assert client.put(review_url, data=json.dumps(review_payload(status="draft")), content_type="application/json").status_code == 200
-    draft = client.post(root, data=json.dumps({"investigation_id": str(report.id), "expected_review_revision": 1}), content_type="application/json")
+    assert (
+        client.put(
+            review_url,
+            data=json.dumps(review_payload(status="draft")),
+            content_type="application/json",
+        ).status_code
+        == 200
+    )
+    draft = client.post(
+        root,
+        data=json.dumps({"investigation_id": str(report.id), "expected_review_revision": 1}),
+        content_type="application/json",
+    )
     assert draft.status_code == 409
     assert draft.json()["code"] == "review_incomplete"
     for payload in (
@@ -83,7 +127,10 @@ def test_draft_review_and_malformed_inputs_do_not_generate_reports(saved_report)
         {"investigation_id": str(report.id), "expected_review_revision": 0},
         {"expected_review_revision": 1},
     ):
-        assert client.post(root, data=json.dumps(payload), content_type="application/json").status_code == 400
+        assert (
+            client.post(root, data=json.dumps(payload), content_type="application/json").status_code
+            == 400
+        )
     assert PostmortemVersion.objects.count() == 0
 
 
@@ -91,13 +138,30 @@ def test_draft_review_and_malformed_inputs_do_not_generate_reports(saved_report)
 def test_cross_user_and_deleted_incident_are_not_visible(saved_report):
     client, owner, incident, report, review_url = saved_report
     root = f"/api/v1/incidents/{incident.id}/reports"
-    client.put(review_url, data=json.dumps(review_payload(status="reviewed")), content_type="application/json")
-    created = client.post(root, data=json.dumps({"investigation_id": str(report.id), "expected_review_revision": 1}), content_type="application/json").json()
-    other = get_user_model().objects.create_user(f"other-{uuid4()}@example.org", "test-password-1234")
+    client.put(
+        review_url,
+        data=json.dumps(review_payload(status="reviewed")),
+        content_type="application/json",
+    )
+    created = client.post(
+        root,
+        data=json.dumps({"investigation_id": str(report.id), "expected_review_revision": 1}),
+        content_type="application/json",
+    ).json()
+    other = get_user_model().objects.create_user(
+        f"other-{uuid4()}@example.org", "test-password-1234"
+    )
     client.force_login(other)
     assert client.get(root).status_code == 404
     assert client.get(f"{root}/{created['id']}").status_code == 404
-    assert client.post(root, data=json.dumps({"investigation_id": str(report.id), "expected_review_revision": 1}), content_type="application/json").status_code == 404
+    assert (
+        client.post(
+            root,
+            data=json.dumps({"investigation_id": str(report.id), "expected_review_revision": 1}),
+            content_type="application/json",
+        ).status_code
+        == 404
+    )
     client.logout()
     assert client.get(root).status_code in (401, 403)
     client.force_login(owner)
@@ -111,8 +175,16 @@ def test_cross_user_and_deleted_incident_are_not_visible(saved_report):
 def test_corrupted_report_is_never_served_and_direct_save_rejected(saved_report):
     client, _, incident, report, review_url = saved_report
     root = f"/api/v1/incidents/{incident.id}/reports"
-    client.put(review_url, data=json.dumps(review_payload(status="reviewed")), content_type="application/json")
-    created = client.post(root, data=json.dumps({"investigation_id": str(report.id), "expected_review_revision": 1}), content_type="application/json").json()
+    client.put(
+        review_url,
+        data=json.dumps(review_payload(status="reviewed")),
+        content_type="application/json",
+    )
+    created = client.post(
+        root,
+        data=json.dumps({"investigation_id": str(report.id), "expected_review_revision": 1}),
+        content_type="application/json",
+    ).json()
     version = PostmortemVersion.objects.get(id=created["id"])
     version.content = {"tampered": True}
     with pytest.raises(ValueError, match="immutable"):
@@ -132,10 +204,21 @@ def test_corrupted_report_is_never_served_and_direct_save_rejected(saved_report)
 @pytest.mark.django_db
 def test_source_tampering_and_cross_incident_source_rejected(saved_report):
     client, owner, incident, report, review_url = saved_report
-    client.put(review_url, data=json.dumps(review_payload(status="reviewed")), content_type="application/json")
+    client.put(
+        review_url,
+        data=json.dumps(review_payload(status="reviewed")),
+        content_type="application/json",
+    )
     root = f"/api/v1/incidents/{incident.id}/reports"
     second = Incident.objects.create(owner=owner, title="Other")
-    assert client.post(f"/api/v1/incidents/{second.id}/reports", data=json.dumps({"investigation_id": str(report.id), "expected_review_revision": 1}), content_type="application/json").status_code == 404
+    assert (
+        client.post(
+            f"/api/v1/incidents/{second.id}/reports",
+            data=json.dumps({"investigation_id": str(report.id), "expected_review_revision": 1}),
+            content_type="application/json",
+        ).status_code
+        == 404
+    )
     snapshot = report.snapshot
     tampered = deepcopy(snapshot.entries)
     tampered[0]["message"] = "changed evidence"
@@ -144,8 +227,14 @@ def test_source_tampering_and_cross_incident_source_rejected(saved_report):
         _verified_entries(report)
     with patch(
         "investigations.postmortem_service._verified_entries",
-        side_effect=PostmortemConflict("source_integrity", "The investigation source could not be verified."),
+        side_effect=PostmortemConflict(
+            "source_integrity", "The investigation source could not be verified."
+        ),
     ):
-        response = client.post(root, data=json.dumps({"investigation_id": str(report.id), "expected_review_revision": 1}), content_type="application/json")
+        response = client.post(
+            root,
+            data=json.dumps({"investigation_id": str(report.id), "expected_review_revision": 1}),
+            content_type="application/json",
+        )
     assert response.status_code == 409
     assert response.json()["code"] == "source_integrity"
