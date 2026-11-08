@@ -7,6 +7,7 @@ import { apiGet, describeApiFailure } from "@/lib/api-client";
 import { investigationReportPath } from "@/lib/investigation-routes";
 import { postmortemsPath } from "@/lib/postmortem-routes";
 import type { PostmortemVersion, SourceReference } from "@/lib/postmortem-types";
+import { PostmortemExports } from "./postmortem-exports";
 import styles from "./postmortem.module.css";
 
 function formattedDate(value: string): string {
@@ -60,6 +61,7 @@ export function PostmortemDetail({ incidentId, versionId }: { incidentId: string
         </div>
         <Link className={styles.secondary} href={investigationReportPath(incidentId, doc.ai.investigation_id)}>View source investigation</Link>
       </header>
+      <PostmortemExports incidentId={incidentId} versionId={versionId} />
       <div className={styles.document}>
         <section className={styles.block} aria-labelledby="summary-title">
           <div className={styles.sectionHead}><h2 id="summary-title">Incident summary</h2><span className={styles.origin}>AI-generated</span></div>

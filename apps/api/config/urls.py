@@ -14,6 +14,7 @@ from evidence.views import (
 )
 from incidents.views import IncidentDetailView, IncidentListCreateView
 from ingestion.views import EventsView, JobsView, SourcesView, UploadView
+from investigations.postmortem_export_views import PostmortemDownloadView
 from investigations.postmortem_views import PostmortemDetailView, PostmortemListCreateView
 from investigations.review_views import InvestigationReviewView
 from investigations.views import (
@@ -23,6 +24,11 @@ from investigations.views import (
 )
 
 urlpatterns = [
+    path(
+        "api/v1/incidents/<uuid:incident_id>/reports/<uuid:version_id>/download",
+        PostmortemDownloadView.as_view(),
+        name="postmortem-download",
+    ),
     path(
         "api/v1/incidents/<uuid:incident_id>/reports",
         PostmortemListCreateView.as_view(),

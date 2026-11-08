@@ -160,6 +160,11 @@
       "path": "/api/v1/incidents/{incident_id}/reports/{version_id}",
       "method": "get",
       "status": "200"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/reports/{version_id}/download",
+      "method": "get",
+      "status": "200"
     }
   ],
   "system_response_properties": [
@@ -192,6 +197,7 @@
     "/api/v1/incidents/{incident_id}/investigations/{report_id}",
     "/api/v1/incidents/{incident_id}/investigations/{report_id}/review",
     "/api/v1/incidents/{incident_id}/reports",
-    "/api/v1/incidents/{incident_id}/reports/{version_id}"
+    "/api/v1/incidents/{incident_id}/reports/{version_id}",
+    "/api/v1/incidents/{incident_id}/reports/{version_id}/download"
   ]
 }
