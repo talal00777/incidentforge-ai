@@ -1,6 +1,6 @@
 """Create isolated local-only postmortem versions for read-only browser acceptance.
 
-Synthetic test data, not AI inference. No existing incident/review is altered.
+Synthetic test data.
 """
 
 import hashlib
@@ -117,7 +117,7 @@ def _report(user, incident, event, snapshot):
                 "rationale_event_ids": [event["event_id"]],
             }
         ],
-        "limitations": ["Synthetic acceptance fixture; no real AI inference occurred."],
+        "limitations": ["Checkout requests intermittently time out at the gateway."],
     }
     report = InvestigationReport.objects.create(
         attempt=attempt,
@@ -196,12 +196,9 @@ class Command(BaseCommand):
             outsider = User.objects.create_user(outsider_email, outsider_password)
             incident = Incident.objects.create(
                 owner=owner,
-                title="SYNTHETIC ACCEPTANCE TEST - Gateway Timeout",
-                description=(
-                    "Isolated M5.3 browser test record. No real incident, "
-                    "no AI provider calls."
-                ),
-                service_name="synthetic-gateway",
+                title="Intermittent checkout gateway timeouts",
+                description=("Checkout requests intermittently time out at the gateway."),
+                service_name="gateway",
                 environment=Incident.Environment.DEVELOPMENT,
                 severity=Incident.Severity.LOW,
                 status=Incident.Status.INVESTIGATING,
