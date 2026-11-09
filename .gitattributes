@@ -3,3 +3,4 @@
 *.py text eol=lf
 *.ts text eol=lf
 *.tsx text eol=lf
+*.pdf binary
