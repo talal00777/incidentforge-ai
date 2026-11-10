@@ -128,6 +128,30 @@ CELERY_BEAT_SCHEDULE = {
     },
 }
 
+
+def retention_days(name: str, default: int) -> int:
+    try:
+        value = int(os.getenv(name, str(default)))
+    except ValueError as exc:
+        raise ImproperlyConfigured(f"{name} must be an integer") from exc
+    if not 1 <= value <= 3650:
+        raise ImproperlyConfigured(f"{name} must be between 1 and 3650")
+    return value
+
+
+RETENTION_EVIDENCE_DAYS = retention_days("RETENTION_EVIDENCE_DAYS", 30)
+RETENTION_REPORT_DAYS = retention_days("RETENTION_REPORT_DAYS", 90)
+RETENTION_CLEANUP_ENABLED = env_bool("RETENTION_CLEANUP_ENABLED", False)
+if RETENTION_CLEANUP_ENABLED:
+    CELERY_BEAT_SCHEDULE.update(
+        {
+            "purge-deleted-reports": {
+                "task": "incidents.tasks.purge_deleted_reports",
+                "schedule": 86400.0,
+            },
+        }
+    )
+
 CSRF_TRUSTED_ORIGINS = env_csv("DJANGO_CSRF_TRUSTED_ORIGINS")
 CSRF_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SAMESITE = "Lax"

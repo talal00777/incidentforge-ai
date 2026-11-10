@@ -61,3 +61,17 @@ class IncidentAuditEvent(models.Model):
 
     class Meta:
         ordering = ("-occurred_at",)
+
+
+class ReportPurgeReceipt(models.Model):
+    incident = models.OneToOneField(
+        Incident, on_delete=models.PROTECT, related_name="report_purge_receipt"
+    )
+    completed_at = models.DateTimeField(auto_now_add=True)
+    retention_days = models.PositiveSmallIntegerField()
+    postmortems = models.PositiveIntegerField(default=0)
+    review_revisions = models.PositiveIntegerField(default=0)
+    reviews = models.PositiveIntegerField(default=0)
+    reports = models.PositiveIntegerField(default=0)
+    attempts = models.PositiveIntegerField(default=0)
+    snapshots = models.PositiveIntegerField(default=0)

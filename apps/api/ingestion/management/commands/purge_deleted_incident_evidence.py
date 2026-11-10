@@ -39,7 +39,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("--execute", action="store_true")
-        parser.add_argument("--minimum-deleted-days", type=int, default=30)
+        parser.add_argument(
+            "--minimum-deleted-days", type=int, default=settings.RETENTION_EVIDENCE_DAYS
+        )
         parser.add_argument("--max-incidents", type=int, default=25)
         parser.add_argument("--after-incident-id", type=str)
 
