@@ -132,6 +132,26 @@
       "status": "201"
     },
     {
+      "path": "/api/v1/incidents/{incident_id}/ai-runs",
+      "method": "get",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/ai-runs",
+      "method": "post",
+      "status": "202"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/ai-runs/{job_id}",
+      "method": "get",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/ai-runs/{job_id}/cancel",
+      "method": "post",
+      "status": "202"
+    },
+    {
       "path": "/api/v1/incidents/{incident_id}/investigations/{report_id}",
       "method": "get",
       "status": "200"

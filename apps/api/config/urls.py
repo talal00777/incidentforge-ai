@@ -14,6 +14,7 @@ from evidence.views import (
 )
 from incidents.views import IncidentDetailView, IncidentListCreateView
 from ingestion.views import EventsView, JobsView, SourcesView, UploadView
+from investigations.async_views import AIJobCancelView, AIJobDetailView, AIJobListCreateView
 from investigations.postmortem_export_views import PostmortemDownloadView
 from investigations.postmortem_views import PostmortemDetailView, PostmortemListCreateView
 from investigations.review_views import InvestigationReviewView
@@ -24,6 +25,21 @@ from investigations.views import (
 )
 
 urlpatterns = [
+    path(
+        "api/v1/incidents/<uuid:incident_id>/ai-runs",
+        AIJobListCreateView.as_view(),
+        name="ai-job-list",
+    ),
+    path(
+        "api/v1/incidents/<uuid:incident_id>/ai-runs/<uuid:job_id>",
+        AIJobDetailView.as_view(),
+        name="ai-job-detail",
+    ),
+    path(
+        "api/v1/incidents/<uuid:incident_id>/ai-runs/<uuid:job_id>/cancel",
+        AIJobCancelView.as_view(),
+        name="ai-job-cancel",
+    ),
     path(
         "api/v1/incidents/<uuid:incident_id>/reports/<uuid:version_id>/download",
         PostmortemDownloadView.as_view(),

@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 from evidence.models import EvidenceSnapshot
 from incidents.models import Incident
@@ -121,3 +122,69 @@ class PostmortemVersion(models.Model):
         if not self._state.adding:
             raise ValueError("Postmortem versions are immutable; create a new version.")
         super().save(*args, **kwargs)
+
+
+class AIInvestigationJob(models.Model):
+    class State(models.TextChoices):
+        QUEUED = "queued", "Queued"
+        RUNNING = "running", "Running"
+        RETRY_WAIT = "retry_wait", "Retry wait"
+        CANCELLING = "cancelling", "Cancelling"
+        CANCELLED = "cancelled", "Cancelled"
+        SUCCEEDED = "succeeded", "Succeeded"
+        FAILED = "failed", "Failed"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    incident = models.ForeignKey(Incident, on_delete=models.PROTECT, related_name="ai_jobs")
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    snapshot = models.ForeignKey(EvidenceSnapshot, on_delete=models.PROTECT)
+    attempt = models.OneToOneField(InvestigationAttempt, on_delete=models.PROTECT)
+    idempotency_key = models.CharField(max_length=64, blank=True)
+    request_fingerprint = models.CharField(max_length=64)
+    provider = models.CharField(max_length=32)
+    model_id = models.CharField(max_length=160)
+    prompt_profile = models.CharField(max_length=32)
+    temperature = models.FloatField()
+    max_output_tokens = models.PositiveSmallIntegerField()
+    state = models.CharField(max_length=16, choices=State.choices, default=State.QUEUED)
+    attempt_count = models.PositiveSmallIntegerField(default=0)
+    claim_token = models.UUIDField(null=True, blank=True)
+    lease_until = models.DateTimeField(null=True, blank=True)
+    available_at = models.DateTimeField(default=timezone.now)
+    cancel_requested = models.BooleanField(default=False)
+    error_code = models.CharField(max_length=40, blank=True)
+    requested_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["owner", "-requested_at"], name="inv_ai_owner_date_idx"),
+            models.Index(fields=["state", "available_at"], name="inv_ai_state_ready_idx"),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["incident"],
+                condition=models.Q(state__in=["queued", "running", "retry_wait", "cancelling"]),
+                name="inv_ai_active_incident_uniq",
+            ),
+            models.UniqueConstraint(
+                fields=["owner", "idempotency_key"],
+                condition=~models.Q(idempotency_key=""),
+                name="inv_ai_owner_key_uniq",
+            ),
+        ]
+
+
+class AIJobExecution(models.Model):
+    job = models.ForeignKey(AIInvestigationJob, on_delete=models.CASCADE, related_name="executions")
+    number = models.PositiveSmallIntegerField()
+    state = models.CharField(max_length=16, default="running")
+    error_code = models.CharField(max_length=40, blank=True)
+    started_at = models.DateTimeField()
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["job", "number"], name="inv_ai_execution_number_uniq")
+        ]

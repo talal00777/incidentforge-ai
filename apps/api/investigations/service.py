@@ -6,12 +6,22 @@ from investigations.validation import validate_facts, validate_report
 
 
 def run_investigation(
-    *, provider, model, entries, temperature, max_tokens, prompt_profile, adapter=None
+    *,
+    provider,
+    model,
+    entries,
+    temperature,
+    max_tokens,
+    prompt_profile,
+    adapter=None,
+    check_cancel=None,
 ):
     client = adapter if adapter is not None else ChatCompletionsAdapter(provider)
     usage_total = {"prompt_tokens": 0, "completion_tokens": 0}
 
     def call(messages, schema, token_limit):
+        if check_cancel is not None:
+            check_cancel()
         result, usage = client.complete(
             model=model,
             messages=messages,

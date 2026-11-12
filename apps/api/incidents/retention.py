@@ -7,6 +7,7 @@ from evidence.models import EvidenceSnapshot
 from incidents.models import Incident, ReportPurgeReceipt
 from ingestion.models import IngestionJob
 from investigations.models import (
+    AIInvestigationJob,
     InvestigationAttempt,
     InvestigationReport,
     InvestigationReview,
@@ -25,6 +26,10 @@ def purge_report_content(incident_id, *, cutoff, retention_days, execute):
     if ReportPurgeReceipt.objects.filter(incident=incident).exists():
         return "complete", None
     if IngestionJob.objects.filter(incident=incident, state__in=ACTIVE_JOBS).exists():
+        return "active", None
+
+    ai_jobs = AIInvestigationJob.objects.filter(incident=incident)
+    if ai_jobs.filter(state__in=["queued", "running", "retry_wait", "cancelling"]).exists():
         return "active", None
 
     reports = InvestigationReport.objects.filter(incident=incident)
@@ -46,6 +51,7 @@ def purge_report_content(incident_id, *, cutoff, retention_days, execute):
         revisions.delete()
         reviews.delete()
         reports.delete()
+        ai_jobs.delete()
         attempts.delete()
         snapshots.delete()
         Incident.objects.filter(pk=incident.pk).update(

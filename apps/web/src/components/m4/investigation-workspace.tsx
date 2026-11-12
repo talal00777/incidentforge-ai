@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { apiGet, apiWrite, describeApiFailure } from "@/lib/api-client";
+import { isActiveJob, jobLabel, type AIJob } from "@/lib/ai-jobs";
 import { availableProviders, canInvestigate, firstModel, type ProviderOption } from "@/lib/investigation-options";
 import { distinctHypothesisChecks, hypothesisStatus, mergeSuggestedActions, readableInvestigationDate, type TimeDisplay } from "@/lib/investigation-presentation";
 import { InvestigationReview } from "./investigation-review";
@@ -85,6 +86,7 @@ export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }
   const [loading, setLoading] = useState(!reportId);
   const [working, setWorking] = useState(Boolean(reportId));
   const [error, setError] = useState("");
+  const [activeJob, setActiveJob] = useState<AIJob | null>(null);
   const enabledProviders = useMemo(() => availableProviders(providers), [providers]);
   const visibleActions = useMemo(() => mergeSuggestedActions(report?.report.suggested_actions ?? []), [report]);
   const actionTexts = useMemo(() => visibleActions.map((item) => item.action), [visibleActions]);
@@ -100,11 +102,13 @@ export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }
       apiGet<ProviderOption[]>("investigation/providers"),
       apiGet<SnapshotSummary[]>(`${root}/evidence/snapshots`),
       apiGet<ReportSummary[]>(`${root}/investigations`),
-    ]).then(([options, evidence, reports]) => {
+      apiGet<AIJob[]>(`${root}/ai-runs`),
+    ]).then(([options, evidence, reports, jobs]) => {
       if (!active) return;
       setProviders(options);
       setSnapshots(evidence);
       setHistory(reports);
+      setActiveJob(jobs.find(isActiveJob) ?? null);
       const first = availableProviders(options)[0];
       if (first) {
         setProvider(first.name);
@@ -142,6 +146,43 @@ export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }
     return () => { active = false; };
   }, [root, snapshotId, view]);
 
+  const jobId = activeJob?.job_id;
+  const jobState = activeJob?.state;
+  useEffect(() => {
+    if (!jobId || !jobState || !["queued", "running", "retry_wait", "cancelling"].includes(jobState)) return;
+    let cancelled = false;
+    const refresh = async () => {
+      try {
+        const next = await apiGet<AIJob>(`${root}/ai-runs/${encodeURIComponent(jobId)}`);
+        if (cancelled) return;
+        if (next.state === "succeeded" && next.report_id) {
+          router.push(investigationReportPath(incidentId, next.report_id));
+          return;
+        }
+        if (!isActiveJob(next)) {
+          setError(next.error?.message ?? (next.state === "cancelled" ? "Investigation cancelled." : "Investigation ended without a report."));
+          setActiveJob(null);
+          return;
+        }
+        setActiveJob(next);
+      } catch (failure) {
+        if (!cancelled) setError(describeApiFailure(failure));
+      }
+    };
+    const timer = window.setInterval(() => void refresh(), 2500);
+    return () => { cancelled = true; window.clearInterval(timer); };
+  }, [jobId, jobState, incidentId, root, router]);
+
+  async function cancelInvestigation() {
+    if (!activeJob || !isActiveJob(activeJob) || activeJob.cancel_requested) return;
+    try {
+      const updated = await apiWrite<AIJob>(`${root}/ai-runs/${encodeURIComponent(activeJob.job_id)}/cancel`, "POST");
+      setActiveJob(isActiveJob(updated) ? updated : null);
+    } catch (failure) {
+      setError(describeApiFailure(failure));
+    }
+  }
+
   function changeSnapshot(id: string) {
     setSnapshotId(id);
     setSnapshot(null);
@@ -152,13 +193,13 @@ export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }
   }
 
   async function generateReport() {
-    if (!snapshot || snapshot.id !== snapshotId || !canInvestigate(snapshotId, provider, model, consented, working)) return;
+    if (!snapshot || snapshot.id !== snapshotId || !canInvestigate(snapshotId, provider, model, consented, working || Boolean(activeJob))) return;
     setWorking(true);
     setConsented(false);
     setReport(null);
     setError("");
     try {
-      const result = await apiWrite<Report>(`${root}/investigations`, "POST", {
+      const result = await apiWrite<AIJob>(`${root}/ai-runs`, "POST", {
         snapshot_id: snapshot.id,
         provider,
         model_id: model,
@@ -167,7 +208,11 @@ export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }
         prompt_profile: profile,
         transmission_consent: { accepted: true, snapshot_sha256: snapshot.sha256 },
       });
-      router.push(investigationReportPath(incidentId, result.id));
+      if (result.state === "succeeded" && result.report_id) {
+        router.push(investigationReportPath(incidentId, result.report_id));
+      } else {
+        setActiveJob(result);
+      }
     } catch (failure) {
       setError(describeApiFailure(failure));
     } finally {
@@ -295,9 +340,14 @@ export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }
               <input type="checkbox" checked={consented} onChange={(event) => setConsented(event.target.checked)} disabled={working || !snapshot || snapshot.id !== snapshotId || !model}/>
               <span>I consent to sending this selected, redacted snapshot to {provider || "the selected provider"} for this investigation only.</span>
             </label>
-            <button type="button" className={styles.primary} disabled={!snapshot || snapshot.id !== snapshotId || !canInvestigate(snapshotId, provider, model, consented, working)} onClick={() => void generateReport()}>
-              {working ? "Processing…" : "Generate investigation"}
+            <button type="button" className={styles.primary} disabled={!snapshot || snapshot.id !== snapshotId || !canInvestigate(snapshotId, provider, model, consented, working || Boolean(activeJob))} onClick={() => void generateReport()}>
+              {activeJob ? "Investigation in progress" : working ? "Submitting…" : "Generate investigation"}
             </button>
+            {activeJob && isActiveJob(activeJob) && <div role="status" className={styles.snapshotPreview}>
+              <strong>{jobLabel(activeJob)}</strong>
+              <span>Attempt {activeJob.attempt_count} of 3</span>
+              {!activeJob.cancel_requested && <button type="button" onClick={() => void cancelInvestigation()}>Cancel investigation</button>}
+            </div>}
           </div>
         </section>
         <section className={styles.card} aria-labelledby="history-title">

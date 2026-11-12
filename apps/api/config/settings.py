@@ -198,3 +198,10 @@ LOGGING = {
         "django.request": {"handlers": ["console"], "level": "WARNING", "propagate": False}
     },
 }
+
+AI_JOB_MAX_ATTEMPTS = 3
+AI_JOB_LEASE_SECONDS = 180
+CELERY_BEAT_SCHEDULE["reconcile-investigations"] = {
+    "task": "investigations.jobs.reconcile_investigations",
+    "schedule": 60.0,
+}
