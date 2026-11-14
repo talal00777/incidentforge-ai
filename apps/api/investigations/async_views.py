@@ -3,6 +3,7 @@
 import hashlib
 import re
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -16,7 +17,7 @@ from rest_framework.views import APIView
 from evidence.models import EvidenceSnapshot
 from incidents.models import Incident
 from investigations.jobs import ACTIVE, cancel_job, enqueue_job, job_data, request_fingerprint
-from investigations.models import AIInvestigationJob, InvestigationAttempt
+from investigations.models import AIInvestigationJob, AIJobEvent, InvestigationAttempt
 from investigations.providers import ProviderFailure, select_provider
 from investigations.serializers import InvestigationCreateSerializer
 from investigations.validation import snapshot_entries
@@ -38,9 +39,16 @@ class AIJobStatusSerializer(serializers.Serializer):
     completed_at = serializers.DateTimeField(allow_null=True)
 
 
-class AIJobListCreateView(APIView):
+class PrivateAIJobView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def finalize_response(self, request, response, *args, **kwargs):
+        response = super().finalize_response(request, response, *args, **kwargs)
+        response["Cache-Control"] = "private, no-store"
+        return response
+
+
+class AIJobListCreateView(PrivateAIJobView):
     def owned_incident(self, request, incident_id):
         return get_object_or_404(
             Incident, id=incident_id, owner=request.user, deleted_at__isnull=True
@@ -123,7 +131,10 @@ class AIJobListCreateView(APIView):
                     },
                     status=409,
                 )
-            if AIInvestigationJob.objects.filter(owner=request.user, state__in=ACTIVE).count() >= 2:
+            if (
+                AIInvestigationJob.objects.filter(owner=request.user, state__in=ACTIVE).count()
+                >= settings.AI_JOB_MAX_ACTIVE_PER_OWNER
+            ):
                 return Response(
                     {"code": "investigation_limit", "detail": "Too many active investigations."},
                     status=429,
@@ -151,6 +162,9 @@ class AIJobListCreateView(APIView):
                 temperature=fields["temperature"],
                 max_output_tokens=int(fields["max_output_tokens"]),
             )
+            AIJobEvent.objects.create(
+                job=job, actor=request.user, action=AIJobEvent.Action.SUBMITTED
+            )
             transaction.on_commit(lambda: enqueue_job(str(job.id)))
         return self.accepted(job)
 
@@ -162,9 +176,7 @@ class AIJobListCreateView(APIView):
         return response
 
 
-class AIJobDetailView(APIView):
-    permission_classes = [IsAuthenticated]
-
+class AIJobDetailView(PrivateAIJobView):
     def owned_job(self, request, incident_id, job_id):
         return get_object_or_404(
             AIInvestigationJob,
@@ -193,7 +205,7 @@ class AIJobCancelView(AIJobDetailView):
                 {"code": "job_completed", "detail": "Investigation is already complete."},
                 status=409,
             )
-        job = cancel_job(job.pk)
+        job = cancel_job(job.pk, actor=request.user)
         response = Response(job_data(job), status=202)
         response["Cache-Control"] = "private, no-store"
         return response

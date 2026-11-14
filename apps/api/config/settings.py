@@ -199,8 +199,21 @@ LOGGING = {
     },
 }
 
-AI_JOB_MAX_ATTEMPTS = 3
-AI_JOB_LEASE_SECONDS = 180
+
+def bounded_env_int(name: str, default: int, lower: int, upper: int) -> int:
+    try:
+        value = int(os.getenv(name, str(default)))
+    except ValueError as exc:
+        raise ImproperlyConfigured(f"{name} must be an integer") from exc
+    if not lower <= value <= upper:
+        raise ImproperlyConfigured(f"{name} must be between {lower} and {upper}")
+    return value
+
+
+AI_JOB_MAX_ATTEMPTS = bounded_env_int("AI_JOB_MAX_ATTEMPTS", 3, 1, 5)
+AI_JOB_LEASE_SECONDS = bounded_env_int("AI_JOB_LEASE_SECONDS", 180, 30, 900)
+AI_JOB_MAX_ACTIVE_PER_OWNER = bounded_env_int("AI_JOB_MAX_ACTIVE_PER_OWNER", 2, 1, 5)
+AI_JOB_RECONCILE_BATCH_SIZE = bounded_env_int("AI_JOB_RECONCILE_BATCH_SIZE", 50, 1, 250)
 CELERY_BEAT_SCHEDULE["reconcile-investigations"] = {
     "task": "investigations.jobs.reconcile_investigations",
     "schedule": 60.0,

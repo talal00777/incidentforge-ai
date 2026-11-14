@@ -188,3 +188,30 @@ class AIJobExecution(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["job", "number"], name="inv_ai_execution_number_uniq")
         ]
+
+
+class AIJobEvent(models.Model):
+    """Minimal state-transition history; never stores provider or evidence content."""
+
+    class Action(models.TextChoices):
+        SUBMITTED = "submitted", "Submitted"
+        CLAIMED = "claimed", "Claimed"
+        CANCEL_REQUESTED = "cancel_requested", "Cancel requested"
+        CANCELLED = "cancelled", "Cancelled"
+        RETRY_SCHEDULED = "retry_scheduled", "Retry scheduled"
+        INTERRUPTED = "interrupted", "Interrupted"
+        COMPLETED = "completed", "Completed"
+        FAILED = "failed", "Failed"
+
+    job = models.ForeignKey(AIInvestigationJob, on_delete=models.CASCADE, related_name="events")
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL
+    )
+    action = models.CharField(max_length=20, choices=Action.choices)
+    attempt_number = models.PositiveSmallIntegerField(default=0)
+    error_code = models.CharField(max_length=40, blank=True)
+    occurred_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("occurred_at", "id")
+        indexes = [models.Index(fields=["job", "-occurred_at"], name="inv_ai_event_job_date_idx")]

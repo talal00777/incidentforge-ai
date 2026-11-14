@@ -12,7 +12,12 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
-from investigations.models import AIInvestigationJob, AIJobExecution, InvestigationReport
+from investigations.models import (
+    AIInvestigationJob,
+    AIJobEvent,
+    AIJobExecution,
+    InvestigationReport,
+)
 from investigations.providers import ProviderFailure, select_provider
 from investigations.service import run_investigation
 from investigations.validation import snapshot_entries
@@ -108,6 +113,16 @@ def _lease():
     return timedelta(seconds=settings.AI_JOB_LEASE_SECONDS)
 
 
+def _event(job, action, *, actor=None, error_code=""):
+    AIJobEvent.objects.create(
+        job=job,
+        actor=actor,
+        action=action,
+        attempt_number=job.attempt_count,
+        error_code=error_code,
+    )
+
+
 def _cancel_locked(job, now):
     job.state = AIInvestigationJob.State.CANCELLED
     job.cancel_requested = True
@@ -120,15 +135,18 @@ def _cancel_locked(job, now):
     job.attempt.status = "failed"
     job.attempt.failure_code = "cancelled"
     job.attempt.save(update_fields=["status", "failure_code", "updated_at"])
+    _event(job, AIJobEvent.Action.CANCELLED)
 
 
-def cancel_job(job_id):
+def cancel_job(job_id, *, actor=None):
     with transaction.atomic():
         job = (
             AIInvestigationJob.objects.select_for_update().select_related("attempt").get(pk=job_id)
         )
         if job.state in TERMINAL:
             return job
+        if not job.cancel_requested:
+            _event(job, AIJobEvent.Action.CANCEL_REQUESTED, actor=actor)
         job.cancel_requested = True
         if job.state in ("queued", "retry_wait"):
             _cancel_locked(job, timezone.now())
@@ -157,6 +175,7 @@ def _claim(job_id):
             job.attempt.status = "failed"
             job.attempt.failure_code = "attempts_exhausted"
             job.attempt.save(update_fields=["status", "failure_code", "updated_at"])
+            _event(job, AIJobEvent.Action.FAILED, error_code="attempts_exhausted")
             return None
         token = uuid4()
         job.state = AIInvestigationJob.State.RUNNING
@@ -176,6 +195,7 @@ def _claim(job_id):
             ]
         )
         AIJobExecution.objects.create(job=job, number=job.attempt_count, started_at=now)
+        _event(job, AIJobEvent.Action.CLAIMED)
         return token
 
 
@@ -251,6 +271,12 @@ def _finish(job_id, token, *, output=None, failure=None):
         job.attempt.save(update_fields=["status", "failure_code", "updated_at"])
         execution.completed_at = now
         execution.save(update_fields=["state", "error_code", "completed_at"])
+        if job.state == AIInvestigationJob.State.SUCCEEDED:
+            _event(job, AIJobEvent.Action.COMPLETED)
+        elif job.state == AIInvestigationJob.State.FAILED:
+            _event(job, AIJobEvent.Action.FAILED, error_code=job.error_code)
+        elif job.state == AIInvestigationJob.State.RETRY_WAIT:
+            _event(job, AIJobEvent.Action.RETRY_SCHEDULED, error_code=job.error_code)
     return followup
 
 
@@ -310,11 +336,11 @@ def reconcile_investigations():
         jobs = list(
             AIInvestigationJob.objects.select_for_update(skip_locked=True)
             .filter(due | expired)
-            .order_by("requested_at")[:50]
+            .order_by("requested_at")[: settings.AI_JOB_RECONCILE_BATCH_SIZE]
         )
         for job in jobs:
             if job.state in ("running", "cancelling"):
-                if job.lease_until is None or job.lease_until > now:
+                if job.lease_until is not None and job.lease_until > now:
                     continue
                 execution = AIJobExecution.objects.filter(job=job, number=job.attempt_count).first()
                 if execution:
@@ -322,6 +348,7 @@ def reconcile_investigations():
                     execution.error_code = "lease_expired"
                     execution.completed_at = now
                     execution.save(update_fields=["state", "error_code", "completed_at"])
+                _event(job, AIJobEvent.Action.INTERRUPTED, error_code="lease_expired")
                 if job.cancel_requested:
                     _cancel_locked(job, now)
                     continue
@@ -334,9 +361,11 @@ def reconcile_investigations():
                     job.attempt.status = "failed"
                     job.attempt.failure_code = "attempts_exhausted"
                     job.attempt.save(update_fields=["status", "failure_code", "updated_at"])
+                    _event(job, AIJobEvent.Action.FAILED, error_code="attempts_exhausted")
                 else:
                     job.state = AIInvestigationJob.State.RETRY_WAIT
                     job.available_at = now
+                    _event(job, AIJobEvent.Action.RETRY_SCHEDULED, error_code="lease_expired")
                 job.save()
             if job.state in ("queued", "retry_wait") and job.available_at <= now:
                 pending.append(str(job.id))
