@@ -9,7 +9,7 @@ export function timePositionPercent(start: string, first: string, last: string):
 }
 
 export function timelineCountTicks(maximum: number): number[] {
-  const top = Math.max(1, Math.ceil(maximum));
+  const top = Number.isFinite(maximum) ? Math.max(1, Math.ceil(maximum)) : 1;
   if (top <= 4) return Array.from({ length: top + 1 }, (_, index) => top - index);
   return [...new Set([top, Math.round(top * 0.75), Math.round(top * 0.5), Math.round(top * 0.25), 0])];
 }

@@ -20,12 +20,13 @@ export type IncidentAnalysis = {
 export const CHART_PAGE_SIZE = 36;
 
 export function chartPages(length: number) {
+  if (!Number.isFinite(length)) return 1;
   return Math.max(1, Math.ceil(Math.max(length, 0) / CHART_PAGE_SIZE));
 }
 
 export function chartPage<T>(values: T[], index: number) {
   const maxIndex = chartPages(values.length) - 1;
-  const page = Math.min(Math.max(0, index), maxIndex);
+  const page = Number.isFinite(index) ? Math.min(Math.max(0, Math.trunc(index)), maxIndex) : 0;
   return values.slice(page * CHART_PAGE_SIZE, (page + 1) * CHART_PAGE_SIZE);
 }
 
