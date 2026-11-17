@@ -1,29 +1,33 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Account, apiWrite, describeApiFailure } from "@/lib/api-client";
+import { normalizeAccountEmail } from "@/lib/auth-email";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const submitting = useRef(false);
   const [error, setError] = useState("");
   const registration = mode === "register";
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting.current) return;
+    submitting.current = true;
     setBusy(true);
     setError("");
     try {
-      await apiWrite<Account>(`auth/${mode}`, "POST", { email, password });
+      await apiWrite<Account>(`auth/${mode}`, "POST", { email: normalizeAccountEmail(email), password });
       router.replace("/incidents");
       router.refresh();
     } catch (failure) {
       setError(describeApiFailure(failure));
-    } finally {
+      submitting.current = false;
       setBusy(false);
     }
   }
@@ -36,11 +40,11 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         <p className="m1-subtitle">Access your incident workspace.</p>
         <form onSubmit={submit} className="m1-form">
           <label htmlFor="auth-email">Email</label>
-          <input id="auth-email" type="email" name="email" autoComplete="email" required maxLength={254} value={email} onChange={(event) => setEmail(event.target.value)} />
+          <input id="auth-email" type="email" name="email" autoComplete="email" required maxLength={254} disabled={busy} aria-invalid={Boolean(error)} aria-describedby={error ? "auth-error" : undefined} value={email} onChange={(event) => { setEmail(event.target.value); setError(""); }} />
           <label htmlFor="auth-password">Password</label>
-          <input id="auth-password" type="password" name="password" required minLength={registration ? 12 : undefined} autoComplete={registration ? "new-password" : "current-password"} value={password} onChange={(event) => setPassword(event.target.value)} />
+          <input id="auth-password" type="password" name="password" required minLength={registration ? 12 : undefined} disabled={busy} aria-invalid={Boolean(error)} aria-describedby={error ? "auth-error" : undefined} autoComplete={registration ? "new-password" : "current-password"} value={password} onChange={(event) => { setPassword(event.target.value); setError(""); }} />
           {registration && <p className="m1-hint">Use a unique password of at least 12 characters.</p>}
-          {error && <p className="m1-error" role="alert">{error}</p>}
+          {error && <p id="auth-error" className="m1-error" role="alert">{error}</p>}
           <button className="button button-primary" type="submit" disabled={busy}>{busy ? "Submitting…" : registration ? "Create account" : "Sign in"}</button>
         </form>
         <p className="m1-footnote">{registration ? "Already have an account?" : "New to IncidentForge?"} <Link href={registration ? "/login" : "/register"}>{registration ? "Sign in" : "Create account"}</Link></p>
