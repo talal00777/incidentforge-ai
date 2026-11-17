@@ -1,13 +1,14 @@
 export const MAX_SELECTED_EVENTS = 60;
 
 export function toggleEvidenceSelection(current: string[], id: string): string[] {
+  if (!id.trim()) return current;
   if (current.includes(id)) return current.filter((value) => value !== id);
   if (current.length >= MAX_SELECTED_EVENTS) return current;
   return [...current, id];
 }
 
 export function selectionKey(ids: string[]): string {
-  return [...ids].sort().join("|");
+  return JSON.stringify([...new Set(ids)].sort());
 }
 
 export function evidenceTime(value: string | null, zone: "utc" | "local"): string {

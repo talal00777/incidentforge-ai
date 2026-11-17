@@ -18,3 +18,14 @@ describe("evidence selection", () => {
     expect(evidenceTime("2026-10-27T08:00:00Z", "utc")).toContain("UTC");
   });
 });
+
+
+describe("evidence selection identity", () => {
+  it("uses collision-free keys for unusual identifiers", () => {
+    expect(selectionKey(["a|b", "c"])).not.toBe(selectionKey(["a", "b|c"]));
+    expect(selectionKey(["b", "a", "a"])).toBe(selectionKey(["a", "b"]));
+  });
+  it("does not accept empty event identifiers", () => {
+    expect(toggleEvidenceSelection(["evt-1"], "  ")).toEqual(["evt-1"]);
+  });
+});
