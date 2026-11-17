@@ -55,7 +55,9 @@ function checkKey(value: string): string {
 export function mergeSuggestedActions(actions: readonly SuggestedAction[]): SuggestedAction[] {
   const merged = new Map<string, SuggestedAction>();
   for (const item of actions) {
-    const key = checkKey(item.action);
+    const actionKey = checkKey(item.action);
+    if (!actionKey) continue;
+    const key = JSON.stringify([actionKey, item.safety]);
     const previous = merged.get(key);
     if (!previous) {
       merged.set(key, { ...item, rationale_event_ids: [...new Set(item.rationale_event_ids)] });

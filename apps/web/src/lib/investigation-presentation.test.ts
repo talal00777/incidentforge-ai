@@ -41,3 +41,16 @@ describe("AI investigation report presentation", () => {
     )).toEqual(["Check trace IDs"]);
   });
 });
+
+
+describe("action safety presentation", () => {
+  it("keeps differently classified actions separate even with matching wording", () => {
+    const actions = mergeSuggestedActions([
+      { action: "Inspect service metrics", safety: "review_only", rationale_event_ids: ["one"] },
+      { action: "Inspect service metrics.", safety: "requires_approval", rationale_event_ids: ["two"] },
+      { action: " ", safety: "review_only", rationale_event_ids: ["three"] },
+    ]);
+    expect(actions).toHaveLength(2);
+    expect(actions.map((item) => item.safety)).toEqual(["review_only", "requires_approval"]);
+  });
+});
