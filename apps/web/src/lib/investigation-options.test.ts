@@ -21,3 +21,21 @@ describe("investigation configuration", () => {
     expect(canInvestigate("snapshot", "groq", "model-a", true, true)).toBe(false);
   });
 });
+
+
+describe("provider configuration validation", () => {
+  it("drops providers without actual models and removes duplicate identifiers", () => {
+    const providers = [
+      { name: "primary", models: ["", "model-x", "model-x", " ", "model-y"], available: true },
+      { name: "empty", models: [" ", ""], available: true },
+    ];
+    expect(availableProviders(providers)).toEqual([{
+      name: "primary", models: ["model-x", "model-y"], available: true,
+    }]);
+    expect(firstModel(providers, "empty")).toBe("");
+  });
+  it("does not submit blank identifiers despite a checked consent box", () => {
+    expect(canInvestigate(" ", "provider", "model", true, false)).toBe(false);
+    expect(canInvestigate("snap", "provider", " ", true, false)).toBe(false);
+  });
+});
