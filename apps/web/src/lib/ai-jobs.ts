@@ -25,6 +25,7 @@ export function isActiveJob(job: AIJob): boolean {
 }
 
 export function jobLabel(job: AIJob): string {
+  if (job.cancel_requested && isActiveJob(job)) return "Cancellation requested";
   switch (job.state) {
     case "queued": return "Waiting to start";
     case "running": return "Investigating";
@@ -34,4 +35,9 @@ export function jobLabel(job: AIJob): string {
     case "succeeded": return "Completed";
     case "failed": return "Failed";
   }
+}
+
+
+export function jobAttemptLabel(job: AIJob): string {
+  return job.attempt_count > 0 ? `Attempt ${job.attempt_count}` : "Waiting for first attempt";
 }

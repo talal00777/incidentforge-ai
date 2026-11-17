@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { apiGet, apiWrite, describeApiFailure } from "@/lib/api-client";
-import { isActiveJob, jobLabel, type AIJob } from "@/lib/ai-jobs";
+import { isActiveJob, jobAttemptLabel, jobLabel, type AIJob } from "@/lib/ai-jobs";
 import { availableProviders, canInvestigate, firstModel, type ProviderOption } from "@/lib/investigation-options";
 import { distinctHypothesisChecks, hypothesisStatus, mergeSuggestedActions, readableInvestigationDate, type TimeDisplay } from "@/lib/investigation-presentation";
 import { InvestigationReview } from "./investigation-review";
@@ -345,7 +345,7 @@ export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }
             </button>
             {activeJob && isActiveJob(activeJob) && <div role="status" className={styles.snapshotPreview}>
               <strong>{jobLabel(activeJob)}</strong>
-              <span>Attempt {activeJob.attempt_count} of 3</span>
+              <span>{jobAttemptLabel(activeJob)}</span>
               {!activeJob.cancel_requested && <button type="button" onClick={() => void cancelInvestigation()}>Cancel investigation</button>}
             </div>}
           </div>

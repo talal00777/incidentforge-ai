@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isActiveJob, jobLabel, type AIJob } from "./ai-jobs";
+import { isActiveJob, jobAttemptLabel, jobLabel, type AIJob } from "./ai-jobs";
 
 const example = {
   job_id: "00000000-0000-4000-8000-000000000001",
@@ -27,5 +27,17 @@ describe("investigation job state", () => {
   it("maps states to concise status labels", () => {
     expect(jobLabel({ ...example, state: "retry_wait" })).toBe("Retry scheduled");
     expect(jobLabel({ ...example, state: "succeeded" })).toBe("Completed");
+  });
+});
+
+
+describe("job progress feedback", () => {
+  it("identifies cancellation requests before the server enters cancelling", () => {
+    expect(jobLabel({ ...example, state: "running", cancel_requested: true })).toBe("Cancellation requested");
+    expect(jobLabel({ ...example, state: "cancelling" })).toBe("Cancelling");
+  });
+  it("does not claim a hardcoded retry limit", () => {
+    expect(jobAttemptLabel(example)).toBe("Waiting for first attempt");
+    expect(jobAttemptLabel({ ...example, attempt_count: 5 })).toBe("Attempt 5");
   });
 });
