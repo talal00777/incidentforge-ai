@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics, pagination
@@ -40,6 +41,15 @@ class IncidentListCreateView(OwnedIncidentMixin, generics.ListCreateAPIView):
             if selected_status not in Incident.Status.values:
                 raise ValidationError({"status": "Invalid incident status"})
             queryset = queryset.filter(status=selected_status)
+        search = self.request.query_params.get("search", "").strip()
+        if len(search) > 100:
+            raise ValidationError({"search": "Search must be 100 characters or fewer"})
+        if search:
+            queryset = queryset.filter(
+                Q(title__icontains=search)
+                | Q(service_name__icontains=search)
+                | Q(description__icontains=search)
+            )
         return queryset
 
     @transaction.atomic

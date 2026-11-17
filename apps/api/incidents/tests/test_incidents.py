@@ -116,3 +116,24 @@ def test_owner_field_cannot_be_overridden(owner_client, users):
     )
     assert result.status_code == 201
     assert Incident.objects.get(pk=result.json()["id"]).owner == users[0]
+
+
+@pytest.mark.django_db
+def test_incident_search_is_owner_scoped_and_bounded(owner_client, users):
+    client, _ = owner_client
+    owner, other = users
+    matches_title = Incident.objects.create(owner=owner, title="Payment gateway slowdown")
+    matches_service = Incident.objects.create(
+        owner=owner, title="Queue lag", service_name="gateway-worker"
+    )
+    Incident.objects.create(owner=owner, title="Unrelated change")
+    Incident.objects.create(owner=other, title="Gateway internal outage")
+    results = client.get("/api/v1/incidents?search=GATEWAY").json()
+    assert results["count"] == 2
+    assert {item["id"] for item in results["results"]} == {
+        str(matches_title.id),
+        str(matches_service.id),
+    }
+    assert client.get("/api/v1/incidents?search=%20gateway%20").json()["count"] == 2
+    assert client.get("/api/v1/incidents?search=" + "z" * 101).status_code == 400
+    assert client.get("/api/v1/incidents?status=resolved&search=gateway").json()["count"] == 0
