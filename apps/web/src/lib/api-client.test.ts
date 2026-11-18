@@ -30,3 +30,23 @@ describe("API client", () => {
     await expect(apiGet("incidents/unknown")).rejects.toMatchObject({ name: "ApiError", status: 404, message: "Not found." });
   });
 });
+
+
+describe("API response integrity", () => {
+  it("reports malformed successful responses as a typed error", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("<html>gateway error</html>", { status: 200 })));
+    await expect(apiGet("incidents")).rejects.toMatchObject({
+      name: "ApiError", status: 200, message: "The server returned an invalid response.",
+    });
+  });
+  it("accepts HTTP 205 as an empty successful response", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 205 })));
+    await expect(apiGet("auth/me")).resolves.toBeUndefined();
+  });
+  it("uses the non-field validation error and bounds large messages", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      non_field_errors: ["A".repeat(300)],
+    }), { status: 400 })));
+    await expect(apiGet("incidents")).rejects.toMatchObject({ status: 400, message: "A".repeat(240) });
+  });
+});

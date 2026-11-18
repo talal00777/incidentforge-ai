@@ -41,18 +41,22 @@ export class ApiError extends Error {
 function messageFromBody(body: unknown): string {
   if (!body || typeof body !== "object") return "The request could not be completed.";
   const record = body as Record<string, unknown>;
-  if (typeof record.detail === "string") return record.detail;
+  if (typeof record.detail === "string" && record.detail.trim()) return record.detail.trim().slice(0, 240);
+  if (Array.isArray(record.non_field_errors) && typeof record.non_field_errors[0] === "string") {
+    return record.non_field_errors[0].slice(0, 240);
+  }
   for (const value of Object.values(record)) {
-    if (typeof value === "string") return value;
-    if (Array.isArray(value) && typeof value[0] === "string") return value[0];
+    if (typeof value === "string" && value.trim()) return value.trim().slice(0, 240);
+    if (Array.isArray(value) && typeof value[0] === "string") return value[0].slice(0, 240);
   }
   return "The request could not be completed.";
 }
 
 async function parseResponse<T>(response: Response): Promise<T> {
-  if (response.status === 204) return undefined as T;
+  if (response.status === 204 || response.status === 205) return undefined as T;
   const body: unknown = await response.json().catch(() => undefined);
   if (!response.ok) throw new ApiError(response.status, messageFromBody(body));
+  if (body === undefined) throw new ApiError(response.status, "The server returned an invalid response.");
   return body as T;
 }
 
