@@ -116,6 +116,86 @@ export interface paths {
         patch: operations["incidents_partial_update"];
         trace?: never;
     };
+    "/api/v1/incidents/{incident_id}/ai-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["incidents_ai_runs_list"];
+        put?: never;
+        post: operations["incidents_ai_runs_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/incidents/{incident_id}/ai-runs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["incidents_ai_runs_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/incidents/{incident_id}/ai-runs/{job_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["incidents_ai_runs_cancel_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/incidents/{incident_id}/analysis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["incidents_analysis_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/incidents/{incident_id}/analysis/charts/{chart_type}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["incidents_analysis_charts_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/incidents/{incident_id}/events": {
         parameters: {
             query?: never;
@@ -132,6 +212,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/incidents/{incident_id}/evidence/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["incidents_evidence_preview_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/incidents/{incident_id}/evidence/snapshots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["incidents_evidence_snapshots_list"];
+        put?: never;
+        post: operations["incidents_evidence_snapshots_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/incidents/{incident_id}/evidence/snapshots/{snapshot_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["incidents_evidence_snapshots_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/incidents/{incident_id}/investigations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["incidents_investigations_list"];
+        put?: never;
+        post: operations["incidents_investigations_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/incidents/{incident_id}/investigations/{report_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["incidents_investigations_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/incidents/{incident_id}/investigations/{report_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["incidents_investigations_review_retrieve"];
+        put: operations["incidents_investigations_review_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/incidents/{incident_id}/jobs/{job_id}": {
         parameters: {
             query?: never;
@@ -140,6 +316,71 @@ export interface paths {
             cookie?: never;
         };
         get: operations["incidents_jobs_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/incidents/{incident_id}/relationships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["incidents_relationships_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/incidents/{incident_id}/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["incidents_reports_list"];
+        put?: never;
+        post: operations["incidents_reports_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/incidents/{incident_id}/reports/{version_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["incidents_reports_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/incidents/{incident_id}/reports/{version_id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Stream an authorized version as PDF or canonical JSON without storing public files. */
+        get: operations["incidents_reports_download_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -180,6 +421,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/investigation/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["investigation_providers_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system": {
         parameters: {
             query?: never;
@@ -200,6 +457,72 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AIJobStatus: {
+            /** Format: uuid */
+            job_id: string;
+            state: string;
+            attempt_count: number;
+            cancel_requested: boolean;
+            /** Format: uuid */
+            report_id: string | null;
+            error: unknown;
+            /** Format: date-time */
+            available_at: string;
+            /** Format: date-time */
+            requested_at: string;
+            /** Format: date-time */
+            started_at: string | null;
+            /** Format: date-time */
+            completed_at: string | null;
+        };
+        Analysis: {
+            algorithm_version: string;
+            input_sha256: string;
+            bucket_minutes: number;
+            total_events: number;
+            error_events: number;
+            missing_event_time: number;
+            severity_counts: components["schemas"]["CountBySeverity"][];
+            service_counts: components["schemas"]["CountByService"][];
+            fingerprint_groups: components["schemas"]["FingerprintGroup"][];
+            timeline: components["schemas"]["TimelineBucket"][];
+            anomaly: components["schemas"]["Anomaly"];
+            limitations: string[];
+        };
+        Anomaly: {
+            status: string;
+            reason?: string;
+            method?: string;
+            /** Format: double */
+            threshold?: number;
+            buckets: string[];
+        };
+        Correlation: {
+            version: string;
+            total_events: number;
+            correlated_groups: number;
+            unknown_time: number;
+            groups: components["schemas"]["RelationshipGroup"][];
+            transitions: components["schemas"]["ServiceTransition"][];
+            timeline: components["schemas"]["RelationshipEvent"][];
+            timeline_truncated: boolean;
+        };
+        CountByService: {
+            service: string;
+            count: number;
+        };
+        CountBySeverity: {
+            severity: string;
+            count: number;
+        };
+        /**
+         * @description * `needs_review` - needs_review
+         *     * `reviewed` - reviewed
+         *     * `accepted_as_working_hypothesis` - accepted_as_working_hypothesis
+         *     * `rejected` - rejected
+         * @enum {string}
+         */
+        DecisionEnum: "needs_review" | "reviewed" | "accepted_as_working_hypothesis" | "rejected";
         /**
          * @description * `production` - Production
          *     * `staging` - Staging
@@ -225,6 +548,87 @@ export interface components {
             message: string;
             fingerprint: string;
         };
+        EvidenceEntry: {
+            /** Format: uuid */
+            event_id: string;
+            /** Format: uuid */
+            source_id: string;
+            source_sha256: string;
+            source_name: string;
+            source_lines: number[];
+            /** Format: date-time */
+            occurred_at: string | null;
+            timestamp_quality: string;
+            severity: string;
+            service: string;
+            message: string;
+        };
+        EvidencePreview: {
+            sha256: string;
+            event_count: number;
+            characters: number;
+            payload_bytes: number;
+            selection_version: string;
+            privacy_policy_version: string;
+            entries: components["schemas"]["EvidenceEntry"][];
+            transmitted: boolean;
+        };
+        EvidenceSelectionRequest: {
+            event_ids: string[];
+        };
+        EvidenceSnapshot: {
+            sha256: string;
+            event_count: number;
+            characters: number;
+            payload_bytes: number;
+            selection_version: string;
+            privacy_policy_version: string;
+            entries: components["schemas"]["EvidenceEntry"][];
+            transmitted: boolean;
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            consent_accepted_at: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        EvidenceSnapshotCreateRequest: {
+            event_ids: string[];
+            expected_sha256: string;
+            privacy_consent: components["schemas"]["PrivacyConsentRequest"];
+        };
+        EvidenceSnapshotSummary: {
+            /** Format: uuid */
+            id: string;
+            sha256: string;
+            event_count: number;
+            characters: number;
+            payload_bytes: number;
+            selection_version: string;
+            privacy_policy_version: string;
+            /** Format: date-time */
+            consent_accepted_at: string;
+            /** Format: date-time */
+            created_at: string;
+            transmitted: boolean;
+        };
+        Fact: {
+            statement: string;
+            event_ids: string[];
+        };
+        FingerprintGroup: {
+            fingerprint: string;
+            count: number;
+            event_ids: string[];
+        };
+        Hypothesis: {
+            title: string;
+            status: string;
+            supporting_event_ids: string[];
+            contradicting_event_ids: string[];
+            alternative_explanations: string[];
+            further_checks: string[];
+        };
         Incident: {
             /** Format: uuid */
             readonly id: string;
@@ -234,7 +638,7 @@ export interface components {
             environment?: components["schemas"]["EnvironmentEnum"];
             timezone?: string;
             severity?: components["schemas"]["SeverityEnum"];
-            status?: components["schemas"]["StatusEnum"];
+            status?: components["schemas"]["IncidentStatusEnum"];
             impact_notes?: string;
             /** Format: date-time */
             readonly created_at: string;
@@ -248,9 +652,17 @@ export interface components {
             environment?: components["schemas"]["EnvironmentEnum"];
             timezone?: string;
             severity?: components["schemas"]["SeverityEnum"];
-            status?: components["schemas"]["StatusEnum"];
+            status?: components["schemas"]["IncidentStatusEnum"];
             impact_notes?: string;
         };
+        /**
+         * @description * `open` - Open
+         *     * `investigating` - Investigating
+         *     * `resolved` - Resolved
+         *     * `archived` - Archived
+         * @enum {string}
+         */
+        IncidentStatusEnum: "open" | "investigating" | "resolved" | "archived";
         IngestionJobStatus: {
             /** Format: uuid */
             id: string;
@@ -259,11 +671,79 @@ export interface components {
             rejected: number;
             error_code: string;
         };
+        InvestigationCreateRequest: {
+            /** Format: uuid */
+            snapshot_id: string;
+            provider: string;
+            model_id: string;
+            /** Format: double */
+            temperature: number;
+            max_output_tokens: components["schemas"]["MaxOutputTokensEnum"];
+            prompt_profile: components["schemas"]["PromptProfileEnum"];
+            transmission_consent: components["schemas"]["TransferConsentRequest"];
+        };
+        InvestigationDetail: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            snapshot_id: string;
+            snapshot_sha256: string;
+            provider: string;
+            model_id: string;
+            /** Format: double */
+            temperature: number;
+            max_output_tokens: number;
+            prompt_profile: string;
+            prompt_version: string;
+            response_schema_version: string;
+            input_tokens: number | null;
+            output_tokens: number | null;
+            /** Format: date-time */
+            consent_accepted_at: string;
+            /** Format: date-time */
+            created_at: string;
+            report: components["schemas"]["ReportBody"];
+        };
+        InvestigationSummary: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            snapshot_id: string;
+            snapshot_sha256: string;
+            provider: string;
+            model_id: string;
+            /** Format: double */
+            temperature: number;
+            max_output_tokens: number;
+            prompt_profile: string;
+            prompt_version: string;
+            response_schema_version: string;
+            input_tokens: number | null;
+            output_tokens: number | null;
+            /** Format: date-time */
+            consent_accepted_at: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        /**
+         * @description * `trace` - trace
+         *     * `request` - request
+         * @enum {string}
+         */
+        KindEnum: "trace" | "request";
         LoginRequest: {
             /** Format: email */
             email: string;
             password: string;
         };
+        /**
+         * @description * `512` - 512
+         *     * `1024` - 1024
+         *     * `2048` - 2048
+         *     * `4096` - 4096
+         * @enum {integer}
+         */
+        MaxOutputTokensEnum: 512 | 1024 | 2048 | 4096;
         PaginatedEvents: {
             count: number;
             /** Format: uri */
@@ -294,12 +774,63 @@ export interface components {
             environment?: components["schemas"]["EnvironmentEnum"];
             timezone?: string;
             severity?: components["schemas"]["SeverityEnum"];
-            status?: components["schemas"]["StatusEnum"];
+            status?: components["schemas"]["IncidentStatusEnum"];
             impact_notes?: string;
         };
         PatchedProfileUpdateRequest: {
             first_name?: string;
             last_name?: string;
+        };
+        /**
+         * @description * `1.0` - 1.0
+         * @enum {string}
+         */
+        PolicyVersionEnum: "1.0";
+        PostmortemCreateRequest: {
+            /** Format: uuid */
+            investigation_id: string;
+            expected_review_revision: number;
+        };
+        PostmortemDetail: {
+            /** Format: uuid */
+            id: string;
+            version: number;
+            /** Format: uuid */
+            investigation_id: string;
+            review_revision_number: number;
+            content_sha256: string;
+            created_by_id: string;
+            /** Format: date-time */
+            created_at: string;
+            content: unknown;
+        };
+        PostmortemSummary: {
+            /** Format: uuid */
+            id: string;
+            version: number;
+            /** Format: uuid */
+            investigation_id: string;
+            review_revision_number: number;
+            content_sha256: string;
+            created_by_id: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        PrivacyConsentRequest: {
+            accepted: boolean;
+            policy_version: components["schemas"]["PolicyVersionEnum"];
+        };
+        /**
+         * @description * `zero_shot` - zero_shot
+         *     * `few_shot` - few_shot
+         *     * `decomposed_verified` - decomposed_verified
+         * @enum {string}
+         */
+        PromptProfileEnum: "zero_shot" | "few_shot" | "decomposed_verified";
+        ProviderOption: {
+            name: string;
+            models: string[];
+            available: boolean;
         };
         RegistrationRequest: {
             /** Format: email */
@@ -307,6 +838,74 @@ export interface components {
             password: string;
             first_name?: string;
             last_name?: string;
+        };
+        RelationshipEvent: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            source_id: string;
+            line_start: number;
+            line_end: number;
+            /** Format: date-time */
+            occurred_at: string | null;
+            timestamp_quality: string;
+            severity: string;
+            service: string;
+            message: string;
+        };
+        RelationshipGroup: {
+            key: string;
+            kind: components["schemas"]["KindEnum"];
+            event_count: number;
+            service_count: number;
+            services: string[];
+            /** Format: date-time */
+            first_at: string | null;
+            /** Format: date-time */
+            last_at: string | null;
+            unknown_time: number;
+            truncated: boolean;
+            events: components["schemas"]["RelationshipEvent"][];
+        };
+        ReportBody: {
+            schema_version: string;
+            incident_summary: string;
+            observed_facts: components["schemas"]["Fact"][];
+            hypotheses: components["schemas"]["Hypothesis"][];
+            suggested_actions: components["schemas"]["SuggestedAction"][];
+            limitations: string[];
+        };
+        ReviewHypothesis: {
+            index: number;
+            decision: components["schemas"]["DecisionEnum"];
+            note: string;
+        };
+        ReviewHypothesisRequest: {
+            index: number;
+            decision: components["schemas"]["DecisionEnum"];
+            note: string;
+        };
+        ReviewResponse: {
+            revision: number;
+            status: components["schemas"]["Status9e9Enum"];
+            impact_notes: string;
+            remediation_notes: string;
+            hypotheses: components["schemas"]["ReviewHypothesis"][];
+            /** Format: date-time */
+            updated_at: string | null;
+        };
+        ReviewUpdateRequest: {
+            expected_revision: number;
+            status: components["schemas"]["Status9e9Enum"];
+            impact_notes: string;
+            remediation_notes: string;
+            hypotheses: components["schemas"]["ReviewHypothesisRequest"][];
+        };
+        ServiceTransition: {
+            from_service: string;
+            to_service: string;
+            count: number;
+            event_ids: string[];
         };
         /**
          * @description * `low` - Low
@@ -343,18 +942,31 @@ export interface components {
          */
         StateF6eEnum: "queued" | "running" | "succeeded" | "failed";
         /**
-         * @description * `open` - Open
-         *     * `investigating` - Investigating
-         *     * `resolved` - Resolved
-         *     * `archived` - Archived
+         * @description * `draft` - draft
+         *     * `reviewed` - reviewed
          * @enum {string}
          */
-        StatusEnum: "open" | "investigating" | "resolved" | "archived";
+        Status9e9Enum: "draft" | "reviewed";
+        SuggestedAction: {
+            action: string;
+            safety: string;
+            rationale_event_ids: string[];
+        };
         SystemInfo: {
             name: string;
             api_version: string;
             milestone: string;
             capabilities: string[];
+        };
+        TimelineBucket: {
+            /** Format: date-time */
+            start: string;
+            total: number;
+            errors: number;
+        };
+        TransferConsentRequest: {
+            accepted: boolean;
+            snapshot_sha256: string;
         };
         UploadAccepted: {
             /** Format: uuid */
@@ -629,6 +1241,160 @@ export interface operations {
             };
         };
     };
+    incidents_ai_runs_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIJobStatus"][];
+                };
+            };
+        };
+    };
+    incidents_ai_runs_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvestigationCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["InvestigationCreateRequest"];
+                "multipart/form-data": components["schemas"]["InvestigationCreateRequest"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIJobStatus"];
+                };
+            };
+        };
+    };
+    incidents_ai_runs_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIJobStatus"];
+                };
+            };
+        };
+    };
+    incidents_ai_runs_cancel_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AIJobStatus"];
+                };
+            };
+        };
+    };
+    incidents_analysis_retrieve: {
+        parameters: {
+            query?: {
+                /** @description 1, 5, 15 or 60 */
+                bucket_minutes?: number;
+            };
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Analysis"];
+                };
+            };
+        };
+    };
+    incidents_analysis_charts_retrieve: {
+        parameters: {
+            query?: {
+                bucket_minutes?: number;
+            };
+            header?: never;
+            path: {
+                chart_type: string;
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": string;
+                };
+            };
+            /** @description Invalid chart or bucket size */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Incident analysis size limit exceeded */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     incidents_events_retrieve: {
         parameters: {
             query?: {
@@ -654,6 +1420,223 @@ export interface operations {
             };
         };
     };
+    incidents_evidence_preview_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvidenceSelectionRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EvidenceSelectionRequest"];
+                "multipart/form-data": components["schemas"]["EvidenceSelectionRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvidencePreview"];
+                };
+            };
+        };
+    };
+    incidents_evidence_snapshots_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvidenceSnapshotSummary"][];
+                };
+            };
+        };
+    };
+    incidents_evidence_snapshots_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvidenceSnapshotCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["EvidenceSnapshotCreateRequest"];
+                "multipart/form-data": components["schemas"]["EvidenceSnapshotCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvidenceSnapshot"];
+                };
+            };
+        };
+    };
+    incidents_evidence_snapshots_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+                snapshot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvidenceSnapshot"];
+                };
+            };
+        };
+    };
+    incidents_investigations_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvestigationSummary"][];
+                };
+            };
+        };
+    };
+    incidents_investigations_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvestigationCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["InvestigationCreateRequest"];
+                "multipart/form-data": components["schemas"]["InvestigationCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvestigationDetail"];
+                };
+            };
+        };
+    };
+    incidents_investigations_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvestigationDetail"];
+                };
+            };
+        };
+    };
+    incidents_investigations_review_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewResponse"];
+                };
+            };
+        };
+    };
+    incidents_investigations_review_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewUpdateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ReviewUpdateRequest"];
+                "multipart/form-data": components["schemas"]["ReviewUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewResponse"];
+                };
+            };
+        };
+    };
     incidents_jobs_retrieve: {
         parameters: {
             query?: never;
@@ -672,6 +1655,131 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["IngestionJobStatus"];
+                };
+            };
+        };
+    };
+    incidents_relationships_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Correlation"];
+                };
+            };
+        };
+    };
+    incidents_reports_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostmortemSummary"][];
+                };
+            };
+        };
+    };
+    incidents_reports_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostmortemCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PostmortemCreateRequest"];
+                "multipart/form-data": components["schemas"]["PostmortemCreateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostmortemDetail"];
+                };
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostmortemDetail"];
+                };
+            };
+        };
+    };
+    incidents_reports_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PostmortemDetail"];
+                };
+            };
+        };
+    };
+    incidents_reports_download_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Export format; defaults to pdf. */
+                export_format?: "json" | "pdf";
+            };
+            header?: never;
+            path: {
+                incident_id: string;
+                version_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                    "application/json": string;
                 };
             };
         };
@@ -718,6 +1826,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UploadAccepted"];
+                };
+            };
+        };
+    };
+    investigation_providers_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProviderOption"][];
                 };
             };
         };
