@@ -1,0 +1,13 @@
+{
+  "case_count": 30,
+  "category_counts": {
+    "adversarial": 4,
+    "clear": 6,
+    "insufficient": 5,
+    "malformed_privacy": 4,
+    "misleading": 5,
+    "multiservice": 6
+  },
+  "sha256": "7665de074f1996fc4f4b5575615bfd1562c54166f763f8d66fc7bb9ae5ee8c11",
+  "version": "M63-001"
+}
