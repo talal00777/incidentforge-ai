@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { IncidentWorkflowNav } from "@/components/incident-workflow-nav";
+import { useAccount } from "@/components/m1/use-account";
 import { apiGet, describeApiFailure } from "@/lib/api-client";
 import styles from "./relationships.module.css";
 
@@ -87,6 +89,7 @@ function EventList({ events, zone, incidentId }: { events: RelatedEvent[]; zone:
 }
 
 export function RelationshipsPanel({ incidentId }: { incidentId: string }) {
+  const account = useAccount();
   const [data, setData] = useState<Relationships | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -96,13 +99,14 @@ export function RelationshipsPanel({ incidentId }: { incidentId: string }) {
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
+    if (account.state !== "signed-in") return;
     let alive = true;
     apiGet<Relationships>(`incidents/${encodeURIComponent(incidentId)}/relationships`)
       .then((result) => { if (alive) { setData(result); setError(""); } })
       .catch((failure) => { if (alive) setError(describeApiFailure(failure)); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [incidentId]);
+  }, [account.state, incidentId]);
 
   const activeGroup = data?.groups.find((g) => g.key === selectedGroup) ?? null;
   const transition = selectedTransition === null ? null : data?.transitions[selectedTransition];
@@ -110,6 +114,18 @@ export function RelationshipsPanel({ incidentId }: { incidentId: string }) {
     if (!transition || !data) return [];
     return data.timeline.filter((event) => transition.event_ids.includes(event.id));
   }, [transition, data]);
+
+  if (account.state === "loading") return <main className={styles.root}><p role="status" className={styles.state}>Checking your session…</p></main>;
+  if (account.state === "error") return <main className={styles.root}><p role="alert" className={styles.errorBox}>{account.message}</p></main>;
+  if (account.state === "signed-out") {
+    return (
+      <main className={styles.root}>
+        <section className={styles.card}>
+          <p className={styles.state}>Please <Link className="m1-table-link" href="/login">sign in</Link> to inspect event relationships.</p>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className={styles.root} aria-busy={loading}>
@@ -124,6 +140,8 @@ export function RelationshipsPanel({ incidentId }: { incidentId: string }) {
           <Link className={styles.back} href={`/incidents/${encodeURIComponent(incidentId)}/analysis`}>Incident analysis</Link>
         </div>
       </header>
+
+      <IncidentWorkflowNav incidentId={incidentId} current="relationships" className="workflow-tabs m3-stage-tabs" />
 
       {loading && <p role="status" className={styles.state}>Loading relationships…</p>}
       {error && <p role="alert" className={styles.errorBox}>{error}</p>}

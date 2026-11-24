@@ -15,7 +15,7 @@ export function AccountSection() {
   if (account.state === "loading") return <p role="status">Checking your session…</p>;
   if (account.state === "error") return <p role="alert">{account.message}</p>;
   if (account.state === "signed-out") {
-    return <div className="m1-account"><p>Sign in to manage incidents.</p><Link className="button button-primary" href="/login">Sign in</Link><Link href="/register">Create account</Link></div>;
+    return <div className="m1-account"><p>Sign in to manage incidents.</p><Link className="button button-primary" href="/login">Sign in</Link><Link className="button button-outline" href="/register">Create account</Link></div>;
   }
 
   async function signOut() {
@@ -34,7 +34,7 @@ export function AccountSection() {
 
   return <div className="m1-account">
     <span className="m1-account-email">{account.user.email}</span>
-    <Link href="/profile">Profile</Link>
+    <Link className="button button-outline" href="/profile">Profile</Link>
     <button className="button button-outline" type="button" onClick={signOut} disabled={busy}>Sign out</button>
     {error && <p role="alert">{error}</p>}
   </div>;

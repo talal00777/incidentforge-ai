@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { IncidentWorkflowNav } from "@/components/incident-workflow-nav";
+import { useAccount } from "@/components/m1/use-account";
 import { AnalysisCharts } from "@/components/m3/analysis-charts";
 import { apiGet, describeApiFailure } from "@/lib/api-client";
 import { eventTimeLabel, type IncidentAnalysis } from "@/lib/analysis-display";
@@ -12,6 +14,7 @@ import styles from "./incident-analysis.module.css";
 type Timezone = "utc" | "local";
 
 export function AnalysisPanel({ incidentId }: { incidentId: string }) {
+  const account = useAccount();
   const [data, setData] = useState<IncidentAnalysis | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -19,6 +22,7 @@ export function AnalysisPanel({ incidentId }: { incidentId: string }) {
   const [zone, setZone] = useState<Timezone>("utc");
 
   useEffect(() => {
+    if (account.state !== "signed-in") return;
     let active = true;
     apiGet<IncidentAnalysis>(`incidents/${encodeURIComponent(incidentId)}/analysis?bucket_minutes=${bucket}`)
       .then((result) => {
@@ -37,7 +41,19 @@ export function AnalysisPanel({ incidentId }: { incidentId: string }) {
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, [incidentId, bucket]);
+  }, [account.state, incidentId, bucket]);
+
+  if (account.state === "loading") return <div className={styles.loading} role="status">Checking your session…</div>;
+  if (account.state === "error") return <div className={styles.alert} role="alert">{account.message}</div>;
+  if (account.state === "signed-out") {
+    return (
+      <div className={styles.root}>
+        <section className={styles.card}>
+          <p className={styles.empty}>Please <Link className="m1-table-link" href="/login">sign in</Link> to inspect incident analysis.</p>
+        </section>
+      </div>
+    );
+  }
 
   const recurring = data?.fingerprint_groups.filter((group) => group.count > 1).length ?? 0;
   const metrics = data ? [
@@ -74,12 +90,13 @@ export function AnalysisPanel({ incidentId }: { incidentId: string }) {
               <button type="button" aria-pressed={zone === "local"} className={zone === "local" ? styles.zoneSelected : ""} onClick={() => setZone("local")}>Local</button>
             </div>
           </div>
-          <Link className={styles.backLink} href={`/incidents/${encodeURIComponent(incidentId)}/relationships`}>Relationships</Link>
           <Link className={styles.backLink} href={`/incidents/${encodeURIComponent(incidentId)}/sources`}>
             <span aria-hidden="true">←</span><span>Evidence &amp; sources</span>
           </Link>
         </div>
       </header>
+
+      <IncidentWorkflowNav incidentId={incidentId} current="analysis" className="workflow-tabs m3-stage-tabs" />
 
       {loading && <div className={styles.loading} role="status">Loading analysis…</div>}
       {error && <div className={styles.alert} role="alert">{error}</div>}

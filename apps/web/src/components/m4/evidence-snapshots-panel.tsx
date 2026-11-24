@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { IncidentWorkflowNav } from "@/components/incident-workflow-nav";
+import { useAccount } from "@/components/m1/use-account";
 import { apiGet, apiWrite, describeApiFailure } from "@/lib/api-client";
 import { evidenceTime, MAX_SELECTED_EVENTS, selectionKey, toggleEvidenceSelection } from "@/lib/evidence-selection";
 import styles from "./evidence-snapshots.module.css";
@@ -76,6 +78,7 @@ function EvidencePreviewList({ entries, zone }: { entries: EvidenceEntry[]; zone
 }
 
 export function EvidenceSnapshotsPanel({ incidentId }: { incidentId: string }) {
+  const account = useAccount();
   const [events, setEvents] = useState<IncidentEvent[]>([]);
   const [eventPage, setEventPage] = useState(1);
   const [nextPage, setNextPage] = useState(false);
@@ -109,6 +112,7 @@ export function EvidenceSnapshotsPanel({ incidentId }: { incidentId: string }) {
   }, [basePath]);
 
   useEffect(() => {
+  if (account.state !== "signed-in") return;
   let active = true;
 
   Promise.all([
@@ -136,7 +140,7 @@ export function EvidenceSnapshotsPanel({ incidentId }: { incidentId: string }) {
   return () => {
     active = false;
   };
-}, [incidentId, basePath]);
+}, [account.state, incidentId, basePath]);
 
   function toggle(id: string) {
     setSelected((current) => toggleEvidenceSelection(current, id));
@@ -184,6 +188,18 @@ export function EvidenceSnapshotsPanel({ incidentId }: { incidentId: string }) {
     }
   }
 
+  if (account.state === "loading") return <main className={styles.root}><p className={styles.state} role="status">Checking your session…</p></main>;
+  if (account.state === "error") return <main className={styles.root}><p className={styles.error} role="alert">{account.message}</p></main>;
+  if (account.state === "signed-out") {
+    return (
+      <main className={styles.root}>
+        <section className={styles.card}>
+          <p className={styles.state}>Please <Link className="m1-table-link" href="/login">sign in</Link> to manage evidence snapshots.</p>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className={styles.root}>
       <header className={styles.header}>
@@ -197,6 +213,8 @@ export function EvidenceSnapshotsPanel({ incidentId }: { incidentId: string }) {
           <Link className={styles.secondaryLink} href={`/incidents/${encodeURIComponent(incidentId)}/relationships`}>Relationships</Link>
         </div>
       </header>
+
+      <IncidentWorkflowNav incidentId={incidentId} current="snapshots" className="workflow-tabs m3-stage-tabs" />
 
       {error && <p className={styles.error} role="alert">{error}</p>}
       {loading ? <p className={styles.state} role="status">Loading evidence…</p> : (
@@ -270,7 +288,12 @@ export function EvidenceSnapshotsPanel({ incidentId }: { incidentId: string }) {
                 <ul className={styles.snapshotList}>
                   {snapshots.map((snapshot) => (
                     <li key={snapshot.id}>
-                      <span>{snapshot.event_count} events</span>
+                      <div className={styles.snapshotSummary}>
+                        <span>{snapshot.event_count} events</span>
+                        <span className={snapshot.transmitted ? styles.statusSent : styles.statusLocal}>
+                          {snapshot.transmitted ? "Sent to AI" : "Local only"}
+                        </span>
+                      </div>
                       <time dateTime={snapshot.created_at}>{evidenceTime(snapshot.created_at, zone)}</time>
                       <button type="button" className={styles.secondaryButton} disabled={working} onClick={async () => {
                         setWorking(true);

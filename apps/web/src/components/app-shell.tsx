@@ -29,7 +29,23 @@ function NavigationGroup({ items, label }: { items: readonly NavigationItem[]; l
   );
 }
 
+function breadcrumbLabel(pathname: string): string {
+  if (pathname === "/") return "Overview";
+  if (pathname === "/profile") return "Profile";
+  if (pathname === "/incidents") return "Incidents";
+  if (pathname === "/incidents/new") return "New incident";
+  if (pathname.endsWith("/sources")) return "Evidence & sources";
+  if (pathname.endsWith("/analysis")) return "Incident analysis";
+  if (pathname.endsWith("/relationships")) return "Relationships";
+  if (pathname.endsWith("/evidence-snapshots")) return "Evidence snapshots";
+  if (pathname.includes("/investigations")) return "AI investigations";
+  if (pathname.includes("/reports")) return "Postmortems";
+  if (pathname.startsWith("/incidents/")) return "Incident details";
+  return "Workspace";
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   return (
     <div className="app-shell">
       <aside className="sidebar" aria-label="Primary navigation">
@@ -46,22 +62,23 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Link>
         <nav className="side-nav" aria-label="Workspace sections">
           <NavigationGroup label="Workspace" items={primaryNavigation} />
-          <NavigationGroup label="Preferences" items={secondaryNavigation} />
+          <NavigationGroup label="Account" items={secondaryNavigation} />
         </nav>
         <div className="sidebar-bottom">Incident operations</div>
       </aside>
 
       <div className="app-main">
         <header className="app-header">
-          <div className="breadcrumb"><span>Workspace</span><span aria-hidden="true">/</span><strong>Overview</strong></div>
+          <div className="breadcrumb">
+            <span>Workspace</span>
+            <span aria-hidden="true">/</span>
+            <strong>{breadcrumbLabel(pathname)}</strong>
+          </div>
           <div className="header-actions">
-            <button className="search-control" type="button" disabled>
+            <Link className="search-control" href="/incidents">
               <ProductIcon name="search" size={16} />
-              <span>Search incidents</span>
-            </button>
-            <button className="icon-button" type="button" aria-label="Notifications" disabled>
-              <ProductIcon name="bell" size={18} />
-            </button>
+              <span>Browse incidents</span>
+            </Link>
             <span className="workspace-label">Local workspace</span>
           </div>
         </header>

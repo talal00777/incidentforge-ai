@@ -41,22 +41,49 @@ export function IncidentsList() {
   return <>
     <div className="m1-toolbar"><AccountSection /><Link className="button button-primary" href="/incidents/new">New incident</Link></div>
     <section className="panel" aria-labelledby="list-heading">
-      <div className="panel-header"><div><h2 id="list-heading">Incidents</h2><p>Records owned by your account.</p></div>
+      <div className="panel-header">
+        <div><h2 id="list-heading">Incidents</h2><p>Records owned by your account.</p></div>
+        {current?.data && <span className="m2-count-pill">{current.data.count.toLocaleString()} total</span>}
+      </div>
+      <form role="search" aria-label="Search incidents" className="m1-search-bar" onSubmit={(event) => {
+        event.preventDefault();
+        setSearch(draftSearch.trim());
+        setPage(1);
+      }}>
+        <div className="m1-search-field">
+          <label htmlFor="incident-search">Search title, service or description</label>
+          <input
+            id="incident-search"
+            className="m1-search-input"
+            type="search"
+            maxLength={100}
+            placeholder="Filter by title, service, or description…"
+            value={draftSearch}
+            onChange={(event) => setDraftSearch(event.target.value)}
+          />
+        </div>
         <label className="m1-filter">Status
           <select value={status} onChange={(event) => { setStatus(event.target.value as typeof status); setPage(1); }}>
             {statuses.map((item) => <option key={item} value={item}>{item === "all" ? "All statuses" : item}</option>)}
           </select>
         </label>
-      </div>
-      <form role="search" aria-label="Search incidents" className="m1-toolbar" onSubmit={(event) => {
-        event.preventDefault();
-        setSearch(draftSearch.trim());
-        setPage(1);
-      }}>
-        <label htmlFor="incident-search">Search title, service or description</label>
-        <input id="incident-search" type="search" maxLength={100} value={draftSearch} onChange={(event) => setDraftSearch(event.target.value)} />
-        <button type="submit">Search</button>
-        {search && <button type="button" onClick={() => { setDraftSearch(""); setSearch(""); setPage(1); }}>Clear</button>}
+        <div className="m1-search-actions">
+          <button className="button button-primary" type="submit">Search</button>
+          {(search || status !== "all") && (
+            <button
+              className="button button-outline"
+              type="button"
+              onClick={() => {
+                setDraftSearch("");
+                setSearch("");
+                setStatus("all");
+                setPage(1);
+              }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </form>
       {current?.error ? <p className="m1-error" role="alert">{current.error} <button type="button" onClick={() => setRetryCount((count) => count + 1)}>Retry</button></p> : current?.data ? <><IncidentTable incidents={current.data.results}/><div className="m1-pagination"><span>{current.data.count} incidents</span><button type="button" disabled={page === 1} onClick={() => setPage(page - 1)}>Previous</button><span>Page {page}</span><button type="button" disabled={page * 20 >= current.data.count} onClick={() => setPage(page + 1)}>Next</button></div></> : <p role="status" className="m1-empty">Loading incidents…</p>}
     </section>

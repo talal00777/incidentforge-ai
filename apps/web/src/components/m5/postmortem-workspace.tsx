@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ChangeEvent } from "react";
 
+import { IncidentWorkflowNav } from "@/components/incident-workflow-nav";
+import { useAccount } from "@/components/m1/use-account";
 import { apiGet, apiWrite, describeApiFailure } from "@/lib/api-client";
 import { humanReviewPath, investigationReportPath } from "@/lib/investigation-routes";
 import { postmortemVersionPath } from "@/lib/postmortem-routes";
@@ -22,6 +24,7 @@ function readableDate(value: string): string {
 }
 
 export function PostmortemWorkspace({ incidentId }: { incidentId: string }) {
+  const account = useAccount();
   const router = useRouter();
   const root = `incidents/${encodeURIComponent(incidentId)}`;
   const [reports, setReports] = useState<PostmortemSummary[]>([]);
@@ -34,6 +37,7 @@ export function PostmortemWorkspace({ incidentId }: { incidentId: string }) {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (account.state !== "signed-in") return;
     let active = true;
     Promise.all([
       apiGet<PostmortemSummary[]>(`${root}/reports`),
@@ -51,17 +55,29 @@ export function PostmortemWorkspace({ incidentId }: { incidentId: string }) {
       if (active) setError(describeApiFailure(failure));
     }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [root]);
+  }, [account.state, root]);
 
   useEffect(() => {
-    if (!selected) return; 
+    if (account.state !== "signed-in" || !selected) return;
     let active = true;
     apiGet<SavedReview>(`${root}/investigations/${encodeURIComponent(selected)}/review`)
       .then((value) => { if (active) setReview(value); })
       .catch((failure: unknown) => { if (active) setError(describeApiFailure(failure)); })
       .finally(() => { if (active) setReviewLoading(false); });
     return () => { active = false; };
-  }, [root, selected]);
+  }, [account.state, root, selected]);
+
+  if (account.state === "loading") return <main className={styles.page}><p role="status" className={styles.muted}>Checking your session…</p></main>;
+  if (account.state === "error") return <main className={styles.page}><p className={styles.error} role="alert">{account.message}</p></main>;
+  if (account.state === "signed-out") {
+    return (
+      <main className={styles.page}>
+        <section className={styles.card}>
+          <p className={styles.muted}>Please <Link className="m1-table-link" href="/login">sign in</Link> to manage postmortems.</p>
+        </section>
+      </main>
+    );
+  }
 
   async function finalize() {
     if (!selected || !isFinalizedReview(review) || saving || !review) return;
@@ -81,19 +97,22 @@ export function PostmortemWorkspace({ incidentId }: { incidentId: string }) {
   }
 
   return <main className={styles.page}>
-    <nav aria-label="Breadcrumb" className={styles.breadcrumbs}>
-      <Link href="/">Home</Link><span aria-hidden="true">/</span>
-      <Link href={`/incidents/${encodeURIComponent(incidentId)}`}>Incident</Link>
-      <span aria-hidden="true">/</span><span aria-current="page">Postmortems</span>
-    </nav>
-    <div className={styles.heading}>
-      <div>
-        <p className={styles.eyebrow}>Incident reporting</p>
-        <h1>Postmortems</h1>
-        <p className={styles.muted}>Reviewed, versioned records of incident findings.</p>
+    <IncidentWorkflowNav incidentId={incidentId} current="reports" className="workflow-tabs m3-stage-tabs" />
+    <section className={styles.heroCard}>
+      <nav aria-label="Breadcrumb" className={styles.breadcrumbs}>
+        <Link href="/">Home</Link><span aria-hidden="true">/</span>
+        <Link href={`/incidents/${encodeURIComponent(incidentId)}`}>Incident</Link>
+        <span aria-hidden="true">/</span><span aria-current="page">Postmortems</span>
+      </nav>
+      <div className={styles.heading}>
+        <div>
+          <p className={styles.eyebrow}>Incident reporting</p>
+          <h1>Postmortems</h1>
+          <p className={styles.muted}>Reviewed, versioned records of incident findings.</p>
+        </div>
+        <Link className={styles.secondary} href={`/incidents/${encodeURIComponent(incidentId)}/investigations`}>AI investigations</Link>
       </div>
-      <Link className={styles.secondary} href={`/incidents/${encodeURIComponent(incidentId)}/investigations`}>AI investigations</Link>
-    </div>
+    </section>
 
     {error && <p className={styles.error} role="alert">{error}</p>}
     {loading ? <p role="status" className={styles.muted}>Loading postmortems…</p> : <div className={styles.grid}>
@@ -120,15 +139,19 @@ export function PostmortemWorkspace({ incidentId }: { incidentId: string }) {
           <span className={isFinalizedReview(review) ? styles.good : styles.pending}>{isFinalizedReview(review) ? "Ready to finalize" : "Review incomplete"}</span>
           <span className={styles.muted}>Review revision {review.revision}</span>
         </div>}
-        {selected && !reviewLoading && !isFinalizedReview(review) && <Link href={humanReviewPath(incidentId, selected)}>Complete human review</Link>}
         <button type="button" className={styles.primary} disabled={!isFinalizedReview(review) || saving || reviewLoading} onClick={() => void finalize()}>
           {saving ? "Finalizing…" : "Create report version"}
         </button>
-        {selected && <Link className={styles.minor} href={investigationReportPath(incidentId, selected)}>View AI findings</Link>}
+        {selected && (
+          <div className={styles.cardLinks}>
+            {!reviewLoading && !isFinalizedReview(review) && <Link className={styles.minor} href={humanReviewPath(incidentId, selected)}>Complete human review</Link>}
+            <Link className={styles.minor} href={investigationReportPath(incidentId, selected)}>View AI findings</Link>
+          </div>
+        )}
       </section>
 
       <section className={styles.card} aria-labelledby="history-title">
-        <div className={styles.sectionHead}><h2 id="history-title">Version history</h2><span className={styles.muted}>{reports.length} shown</span></div>
+        <div className={styles.sectionHead}><h2 id="history-title">Version history</h2><span className={styles.countPill}>{reports.length} shown</span></div>
         {reports.length === 0 ? <p className={styles.muted}>No finalized postmortems yet.</p> : <ol className={styles.versionList}>
           {reports.map((item) => <li key={item.id}>
             <Link href={postmortemVersionPath(incidentId, item.id)}>
