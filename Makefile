@@ -25,7 +25,7 @@ frontend-lint:
 	cd apps/web && npm run lint && npm run typecheck
 
 schema:
-	cd apps/api && python manage.py spectacular --file ../../contracts/openapi.yaml --validate
+	cd apps/api && python manage.py spectacular --file ../../contracts/generated/openapi.yaml --validate
 
 contract:
 	bash scripts/verify-contract.sh
