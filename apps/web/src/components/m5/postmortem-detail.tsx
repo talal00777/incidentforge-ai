@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { useAccount } from "@/components/m1/use-account";
 import { apiGet, describeApiFailure } from "@/lib/api-client";
 import { investigationReportPath } from "@/lib/investigation-routes";
 import { postmortemsPath } from "@/lib/postmortem-routes";
@@ -26,24 +27,38 @@ function citedEvents(ids: string[], sources: SourceReference[], sourceHref: stri
 }
 
 export function PostmortemDetail({ incidentId, versionId }: { incidentId: string; versionId: string }) {
+  const account = useAccount();
   const [version, setVersion] = useState<PostmortemVersion | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const root = `incidents/${encodeURIComponent(incidentId)}/reports/${encodeURIComponent(versionId)}`;
 
   useEffect(() => {
+    if (account.state !== "signed-in") return;
     let active = true;
     apiGet<PostmortemVersion>(root)
       .then((result) => { if (active) setVersion(result); })
       .catch((failure: unknown) => { if (active) setError(describeApiFailure(failure)); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [root]);
+  }, [account.state, root]);
+
+  if (account.state === "loading") return <div className={styles.page}><p role="status" className={styles.muted}>Checking your session…</p></div>;
+  if (account.state === "error") return <div className={styles.page}><p className={styles.error} role="alert">{account.message}</p></div>;
+  if (account.state === "signed-out") {
+    return (
+      <div className={styles.page}>
+        <section className={styles.card}>
+          <p className={styles.muted}>Please <Link className="m1-table-link" href="/login">sign in</Link> to view finalized postmortems.</p>
+        </section>
+      </div>
+    );
+  }
 
   const doc = version?.content;
   const findings = doc?.ai.findings;
   const sourceHref = doc ? investigationReportPath(incidentId, doc.ai.investigation_id) : "";
-  return <main className={styles.page}>
+  return <div className={styles.page}>
     <nav aria-label="Breadcrumb" className={styles.breadcrumbs}>
       <Link href="/">Home</Link><span aria-hidden="true">/</span>
       <Link href={`/incidents/${encodeURIComponent(incidentId)}`}>Incident</Link>
@@ -53,23 +68,27 @@ export function PostmortemDetail({ incidentId, versionId }: { incidentId: string
     </nav>
     {error && <p className={styles.error} role="alert">{error}</p>}
     {loading ? <p role="status" className={styles.muted}>Loading report…</p> : !doc || !findings || !version ? <p className={styles.muted}>Report unavailable.</p> : <>
-      <header className={styles.heading}>
-        <div>
-          <p className={styles.eyebrow}>Finalized incident postmortem · Version {version.version}</p>
-          <h1>{doc.incident.title}</h1>
-          <p className={styles.muted}>Created {formattedDate(version.created_at)} · Review revision {version.review_revision_number}</p>
+      <section className={styles.heroCard}>
+        <header className={styles.heading}>
+          <div>
+            <p className={styles.eyebrow}>Finalized incident postmortem · Version {version.version}</p>
+            <h1>{doc.incident.title}</h1>
+            <p className={styles.muted}>Created {formattedDate(version.created_at)} · Review revision {version.review_revision_number}</p>
+          </div>
+          <Link className={styles.secondary} href={investigationReportPath(incidentId, doc.ai.investigation_id)}>View source investigation</Link>
+        </header>
+        <div className={styles.heroBar}>
+          <PostmortemExports incidentId={incidentId} versionId={versionId} />
         </div>
-        <Link className={styles.secondary} href={investigationReportPath(incidentId, doc.ai.investigation_id)}>View source investigation</Link>
-      </header>
-      <PostmortemExports incidentId={incidentId} versionId={versionId} />
+      </section>
       <div className={styles.document}>
         <section className={styles.block} aria-labelledby="summary-title">
-          <div className={styles.sectionHead}><h2 id="summary-title">Incident summary</h2><span className={styles.origin}>AI-generated</span></div>
+          <div className={styles.sectionHead}><h2 id="summary-title">Incident summary</h2><span className={styles.originAi}>AI-generated</span></div>
           <p className={styles.summary}>{findings.incident_summary}</p>
         </section>
 
         <section className={styles.block} aria-labelledby="timeline-title">
-          <div className={styles.sectionHead}><h2 id="timeline-title">Evidence timeline</h2><span className={styles.origin}>Recorded events</span></div>
+          <div className={styles.sectionHead}><h2 id="timeline-title">Evidence timeline</h2><span className={styles.originEvidence}>Recorded events</span></div>
           <ol className={styles.readableList}>
             {doc.timeline.map((event) => <li key={event.event_id}>
               <strong>{event.occurred_at ? formattedDate(event.occurred_at) : "Time unknown"}</strong>
@@ -80,7 +99,7 @@ export function PostmortemDetail({ incidentId, versionId }: { incidentId: string
         </section>
 
         <section className={styles.block} aria-labelledby="observations-title">
-          <div className={styles.sectionHead}><h2 id="observations-title">Observed facts</h2><span className={styles.origin}>AI-generated</span></div>
+          <div className={styles.sectionHead}><h2 id="observations-title">Observed facts</h2><span className={styles.originAi}>AI-generated</span></div>
           {findings.observed_facts.length === 0 ? <p className={styles.muted}>No facts recorded.</p> : <ol className={styles.readableList}>
             {findings.observed_facts.map((fact, index) => <li key={index}>
               <p>{fact.statement}</p>
@@ -90,12 +109,12 @@ export function PostmortemDetail({ incidentId, versionId }: { incidentId: string
         </section>
 
         <section className={styles.block} aria-labelledby="hypotheses-title">
-          <div className={styles.sectionHead}><h2 id="hypotheses-title">Hypotheses and human decisions</h2><span className={styles.origin}>AI + Human</span></div>
+          <div className={styles.sectionHead}><h2 id="hypotheses-title">Hypotheses and human decisions</h2><span className={styles.originCombined}>AI + Human</span></div>
           {findings.hypotheses.length === 0 ? <p className={styles.muted}>No hypotheses recorded.</p> : <div className={styles.hypotheses}>
             {findings.hypotheses.map((hypothesis, index) => {
               const decision = doc.human.hypotheses.find((item) => item.index === index);
               return <article key={index} className={styles.hypothesis}>
-                <div className={styles.sectionHead}><h3>{index + 1}. {hypothesis.title}</h3><span className={styles.origin}>AI: {hypothesis.status.replaceAll("_", " ")}</span></div>
+                <div className={styles.sectionHead}><h3>{index + 1}. {hypothesis.title}</h3><span className={styles.originAi}>AI: {hypothesis.status.replaceAll("_", " ")}</span></div>
                 <p><strong>Human decision:</strong> {decision?.decision.replaceAll("_", " ") || "Not recorded"}</p>
                 {decision?.note && <p className={styles.note}>{decision.note}</p>}
                 <div className={styles.citationGroup}>
@@ -116,7 +135,7 @@ export function PostmortemDetail({ incidentId, versionId }: { incidentId: string
         </section>
 
         <section className={styles.block} aria-labelledby="assessment-title">
-          <div className={styles.sectionHead}><h2 id="assessment-title">Human assessment</h2><span className={styles.origin}>Human-authored</span></div>
+          <div className={styles.sectionHead}><h2 id="assessment-title">Human assessment</h2><span className={styles.originHuman}>Human-authored</span></div>
           <div className={styles.assessment}>
             <div><h3>Impact</h3><p>{doc.human.impact_notes || "Not recorded"}</p></div>
             <div><h3>Remediation</h3><p>{doc.human.remediation_notes || "Not recorded"}</p></div>
@@ -124,7 +143,7 @@ export function PostmortemDetail({ incidentId, versionId }: { incidentId: string
         </section>
 
         <section className={styles.block} aria-labelledby="checks-title">
-          <div className={styles.sectionHead}><h2 id="checks-title">Suggested checks</h2><span className={styles.origin}>AI-generated</span></div>
+          <div className={styles.sectionHead}><h2 id="checks-title">Suggested checks</h2><span className={styles.originAi}>AI-generated</span></div>
           {findings.suggested_actions.length === 0 ? <p className={styles.muted}>None recorded.</p> : <ol className={styles.readableList}>
             {findings.suggested_actions.map((item, index) => <li key={index}>
               <p>{item.action}</p>
@@ -134,7 +153,7 @@ export function PostmortemDetail({ incidentId, versionId }: { incidentId: string
         </section>
 
         {findings.limitations.length > 0 && <section className={styles.block} aria-labelledby="limitations-title">
-          <div className={styles.sectionHead}><h2 id="limitations-title">Limitations</h2><span className={styles.origin}>AI-generated</span></div>
+          <div className={styles.sectionHead}><h2 id="limitations-title">Limitations</h2><span className={styles.originAi}>AI-generated</span></div>
           <ul className={styles.readableList}>{findings.limitations.map((item, index) => <li key={index}>{item}</li>)}</ul>
         </section>}
 
@@ -155,5 +174,5 @@ export function PostmortemDetail({ incidentId, versionId }: { incidentId: string
         </details>
       </div>
     </>}
-  </main>;
+  </div>;
 }

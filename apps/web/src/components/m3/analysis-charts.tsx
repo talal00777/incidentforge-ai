@@ -18,14 +18,14 @@ type Timezone = "utc" | "local";
 type ChartRow = { key: string; label: string; count: number; color: string };
 
 const severityColors: Record<string, string> = {
-  DEBUG: "#94a3b8",
-  INFO: "#568bbb",
-  NOTICE: "#6479b8",
-  WARN: "#d19b4a",
-  WARNING: "#d19b4a",
-  ERROR: "#d36d66",
-  FATAL: "#a85168",
-  CRITICAL: "#a85168",
+  DEBUG: "#475569",
+  INFO: "#1559e3",
+  NOTICE: "#0284c7",
+  WARN: "#d97706",
+  WARNING: "#d97706",
+  ERROR: "#dc2626",
+  FATAL: "#991b1b",
+  CRITICAL: "#991b1b",
 };
 
 function HorizontalChart({ title, rows, empty }: { title: string; rows: ChartRow[]; empty: string }) {
@@ -168,13 +168,13 @@ export function AnalysisCharts({ data, bucket, zone }: { data: IncidentAnalysis;
     key: item.service,
     label: item.service || "Unknown service",
     count: item.error_events,
-    color: "#537cae",
+    color: "#1559e3",
   }));
   const fingerprints = data.fingerprint_groups.filter((item) => item.count > 1).slice(0, 8).map((item, index) => ({
     key: item.fingerprint,
     label: `Pattern ${index + 1}`,
     count: item.count,
-    color: "#488e87",
+    color: "#0891b2",
   }));
 
   return (

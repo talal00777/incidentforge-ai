@@ -85,22 +85,44 @@ export function IncidentDetail() {
   if (error && !incident) return <p className="m1-error" role="alert">{error} <Link href="/incidents">Back to incidents</Link></p>;
   if (!incident) return <p role="status">Loading incident…</p>;
 
-  return <section className="panel m1-form-panel" aria-labelledby="incident-detail-heading">
-    <h2 id="incident-detail-heading">Incident record</h2>
-    <p className="m1-hint">Created <time dateTime={incident.created_at}>{new Date(incident.created_at).toLocaleString()}</time> · {incident.environment} · {incident.severity}</p>
-    <form className="m1-form" onSubmit={update}>
-      <label htmlFor="detail-title">Title</label>
-      <input id="detail-title" required minLength={3} maxLength={160} value={title} onChange={(event) => setTitle(event.target.value)}/>
-      <label htmlFor="detail-description">Description</label>
-      <textarea id="detail-description" maxLength={4000} rows={4} value={description} onChange={(event) => setDescription(event.target.value)}/>
-      <label htmlFor="detail-impact">Impact notes</label>
-      <textarea id="detail-impact" maxLength={4000} rows={4} value={impact} onChange={(event) => setImpact(event.target.value)}/>
-      <label htmlFor="detail-status">Status</label>
-      <select id="detail-status" value={status} onChange={(event) => setStatus(event.target.value as Incident["status"])}>
-        <option value="open">Open</option><option value="investigating">Investigating</option><option value="resolved">Resolved</option><option value="archived">Archived</option>
-      </select>
-      {error && <p className="m1-error" role="alert">{error}</p>}
-      <div className="m1-actions"><button className="button button-primary" type="submit" disabled={busy}>Save changes</button><button className="button m1-danger" type="button" onClick={remove} disabled={busy}>Delete incident</button><Link className="button button-outline" href={`/incidents/${encodeURIComponent(params.id)}/sources`}>Evidence &amp; sources</Link><Link className="button button-outline" href="/incidents">Back</Link></div>
-    </form>
-  </section>;
+  return <div className="m1-detail-stack">
+    <section className="panel m1-form-panel" aria-labelledby="incident-detail-heading">
+      <h2 id="incident-detail-heading">Incident record</h2>
+      <div className="m1-meta-bar">
+        <span>Created <time dateTime={incident.created_at}>{new Date(incident.created_at).toLocaleString()}</time></span>
+        <span className="if-badge if-badge-neutral">{incident.environment}</span>
+        <span className={`if-badge if-badge-${incident.severity}`}>{incident.severity}</span>
+        <span className={`if-badge if-badge-${incident.status}`}>{incident.status}</span>
+      </div>
+      <form className="m1-form" onSubmit={update}>
+        <div className="m1-form-row">
+          <div className="m1-field">
+            <label htmlFor="detail-title">Title</label>
+            <input id="detail-title" required minLength={3} maxLength={160} value={title} onChange={(event) => setTitle(event.target.value)}/>
+          </div>
+          <div className="m1-field">
+            <label htmlFor="detail-status">Status</label>
+            <select id="detail-status" value={status} onChange={(event) => setStatus(event.target.value as Incident["status"])}>
+              <option value="open">Open</option><option value="investigating">Investigating</option><option value="resolved">Resolved</option><option value="archived">Archived</option>
+            </select>
+          </div>
+        </div>
+        <div className="m1-field">
+          <label htmlFor="detail-description">Description</label>
+          <textarea id="detail-description" maxLength={4000} rows={4} value={description} onChange={(event) => setDescription(event.target.value)}/>
+        </div>
+        <div className="m1-field">
+          <label htmlFor="detail-impact">Impact notes</label>
+          <textarea id="detail-impact" maxLength={4000} rows={4} value={impact} onChange={(event) => setImpact(event.target.value)}/>
+        </div>
+        {error && <p className="m1-error" role="alert">{error}</p>}
+        <div className="m1-actions">
+          <button className="button button-primary" type="submit" disabled={busy}>Save changes</button>
+          <Link className="button button-outline" href={`/incidents/${encodeURIComponent(params.id)}/sources`}>Evidence &amp; sources</Link>
+          <button className="button m1-danger" type="button" onClick={remove} disabled={busy}>Delete incident</button>
+          <Link className="button button-outline" href="/incidents">Back</Link>
+        </div>
+      </form>
+    </section>
+  </div>;
 }

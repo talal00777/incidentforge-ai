@@ -64,7 +64,7 @@ function frozenVersion(id: string, number: number, summary: string) {
             },
           ],
           suggested_actions: [
-            { action: "Check upstream latency metrics", safety: "read_only", rationale_event_ids: [eventId] },
+            { action: "Check upstream latency metrics", safety: "review_only", rationale_event_ids: [eventId] },
           ],
           limitations: ["The cause remains unconfirmed."],
         },

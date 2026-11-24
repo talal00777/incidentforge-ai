@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { useAccount } from "@/components/m1/use-account";
 import { apiGet, apiWrite, describeApiFailure } from "@/lib/api-client";
 import { isActiveJob, jobAttemptLabel, jobLabel, type AIJob } from "@/lib/ai-jobs";
 import { availableProviders, canInvestigate, firstModel, type ProviderOption } from "@/lib/investigation-options";
 import { distinctHypothesisChecks, hypothesisStatus, mergeSuggestedActions, readableInvestigationDate, type TimeDisplay } from "@/lib/investigation-presentation";
 import { InvestigationReview } from "./investigation-review";
 import { investigationPath, investigationReportPath, humanReviewPath } from "@/lib/investigation-routes";
+import { postmortemsPath } from "@/lib/postmortem-routes";
 import styles from "./investigation-workspace.module.css";
 
 type EvidenceEntry = {
@@ -64,7 +66,15 @@ type PromptProfile = "zero_shot" | "few_shot" | "decomposed_verified";
 
 type View = "manage" | "ai" | "human";
 
+function newIdempotencyKey(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `if-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
 export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }: { incidentId: string; reportId?: string; view?: View }) {
+  const account = useAccount();
   const router = useRouter();
   const root = `incidents/${encodeURIComponent(incidentId)}`;
   const [providers, setProviders] = useState<ProviderOption[]>([]);
@@ -83,6 +93,7 @@ export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }
   const [timeDisplay, setTimeDisplay] = useState<TimeDisplay>("local");
   const evidenceRef = useRef<HTMLElement | null>(null);
   const evidenceTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const idempotencyKeyRef = useRef<string | null>(null);
   const [loading, setLoading] = useState(!reportId);
   const [working, setWorking] = useState(Boolean(reportId));
   const [error, setError] = useState("");
@@ -92,11 +103,15 @@ export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }
   const actionTexts = useMemo(() => visibleActions.map((item) => item.action), [visibleActions]);
 
   useEffect(() => {
+    idempotencyKeyRef.current = null;
+  }, [snapshotId, provider, model, temperature, maxTokens, profile]);
+
+  useEffect(() => {
     if (selectedEvidence) evidenceRef.current?.focus();
   }, [selectedEvidence, snapshot]);
 
   useEffect(() => {
-    if (reportId) return;
+    if (account.state !== "signed-in" || reportId) return;
     let active = true;
     Promise.all([
       apiGet<ProviderOption[]>("investigation/providers"),
@@ -121,10 +136,10 @@ export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }
       if (active) setLoading(false);
     });
     return () => { active = false; };
-  }, [root, reportId]);
+  }, [account.state, root, reportId]);
 
   useEffect(() => {
-    if (!reportId) return;
+    if (account.state !== "signed-in" || !reportId) return;
     let active = true;
     apiGet<Report>(`${root}/investigations/${encodeURIComponent(reportId)}`)
       .then((result) => {
@@ -135,16 +150,16 @@ export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }
       .catch((failure: unknown) => { if (active) setError(describeApiFailure(failure)); })
       .finally(() => { if (active) setWorking(false); });
     return () => { active = false; };
-  }, [root, reportId, view]);
+  }, [account.state, root, reportId, view]);
 
   useEffect(() => {
-    if (!snapshotId || view === "human") return;
+    if (account.state !== "signed-in" || !snapshotId || view === "human") return;
     let active = true;
     apiGet<Snapshot>(`${root}/evidence/snapshots/${encodeURIComponent(snapshotId)}`)
       .then((result) => { if (active) setSnapshot(result); })
       .catch((failure: unknown) => { if (active) setError(describeApiFailure(failure)); });
     return () => { active = false; };
-  }, [root, snapshotId, view]);
+  }, [account.state, root, snapshotId, view]);
 
   const jobId = activeJob?.job_id;
   const jobState = activeJob?.state;
@@ -199,21 +214,30 @@ export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }
     setReport(null);
     setError("");
     try {
-      const result = await apiWrite<AIJob>(`${root}/ai-runs`, "POST", {
-        snapshot_id: snapshot.id,
-        provider,
-        model_id: model,
-        temperature: Number(temperature),
-        max_output_tokens: Number(maxTokens),
-        prompt_profile: profile,
-        transmission_consent: { accepted: true, snapshot_sha256: snapshot.sha256 },
-      });
+      const requestKey = idempotencyKeyRef.current ?? newIdempotencyKey();
+      idempotencyKeyRef.current = requestKey;
+      const result = await apiWrite<AIJob>(
+        `${root}/ai-runs`,
+        "POST",
+        {
+          snapshot_id: snapshot.id,
+          provider,
+          model_id: model,
+          temperature: Number(temperature),
+          max_output_tokens: Number(maxTokens),
+          prompt_profile: profile,
+          transmission_consent: { accepted: true, snapshot_sha256: snapshot.sha256 },
+        },
+        { "Idempotency-Key": requestKey },
+      );
+      idempotencyKeyRef.current = null;
       if (result.state === "succeeded" && result.report_id) {
         router.push(investigationReportPath(incidentId, result.report_id));
       } else {
         setActiveJob(result);
       }
     } catch (failure) {
+      idempotencyKeyRef.current = null;
       setError(describeApiFailure(failure));
     } finally {
       setWorking(false);
@@ -245,34 +269,49 @@ export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }
     ? snapshot.entries.find((item) => item.event_id === selectedEvidence)
     : undefined;
 
-  return <main className={styles.root}>
-    <header className={styles.header}>
-      <div className={styles.masthead}>
-        <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
-          <Link href="/">Home</Link><span aria-hidden="true">/</span>
-          <Link href={`/incidents/${encodeURIComponent(incidentId)}`}>Incident</Link><span aria-hidden="true">/</span>
-          <span aria-current="page">{view === "manage" ? "Investigations" : view === "ai" ? "AI findings" : "Human review"}</span>
-        </nav>
-        <span className={styles.stageKicker}>Incident investigation workspace</span>
-        <h1>{view === "manage" ? "AI investigations" : view === "ai" ? "AI findings" : "Human review"}</h1>
-        <p className={styles.pageSubtitle}>{view === "manage" ? "Generate an investigation or continue from a saved result." : view === "ai" ? "Explore the findings and trace each claim to its source events." : "Evaluate AI hypotheses and record human conclusions."}</p>
+  if (account.state === "loading") return <div className={styles.root}><p className={styles.empty} role="status">Checking your session…</p></div>;
+  if (account.state === "error") return <div className={styles.root}><p className={styles.error} role="alert">{account.message}</p></div>;
+  if (account.state === "signed-out") {
+    return (
+      <div className={styles.root}>
+        <section className={styles.card}>
+          <p className={styles.empty}>Please <Link className="m1-table-link" href="/login">sign in</Link> to run and inspect AI investigations.</p>
+        </section>
       </div>
-      <div className={styles.headerActions}>
-        {view !== "human" && <div className={styles.timeToggle} role="group" aria-label="Date and time display">
-          <button type="button" aria-pressed={timeDisplay === "local"} onClick={() => setTimeDisplay("local")}>Local</button>
-          <button type="button" aria-pressed={timeDisplay === "utc"} onClick={() => setTimeDisplay("utc")}>UTC</button>
-        </div>}
-        <nav className={styles.pageNav} aria-label="Related pages">
-          <Link href={`/incidents/${encodeURIComponent(incidentId)}/evidence-snapshots`}>View evidence</Link>
-          <Link href={`/incidents/${encodeURIComponent(incidentId)}`}>Incident overview</Link>
-        </nav>
-      </div>
-    </header>
-    <nav className={styles.workspaceTabs} aria-label="Investigation workflow">
-      <Link href={investigationPath(incidentId)} aria-current={view === "manage" ? "page" : undefined}>Investigations</Link>
-      {reportId && <Link href={investigationReportPath(incidentId, reportId)} aria-current={view === "ai" ? "page" : undefined}>AI findings</Link>}
-      {reportId && <Link href={humanReviewPath(incidentId, reportId)} aria-current={view === "human" ? "page" : undefined}>Human review</Link>}
-    </nav>
+    );
+  }
+
+  return <div className={styles.root}>
+    <div className={styles.headerStack}>
+      <header className={styles.header}>
+        <div className={styles.masthead}>
+          <nav className={styles.breadcrumbs} aria-label="Investigation trail">
+            <Link href="/">Home</Link><span aria-hidden="true">/</span>
+            <Link href={`/incidents/${encodeURIComponent(incidentId)}`}>Incident</Link><span aria-hidden="true">/</span>
+            <span aria-current="page">{view === "manage" ? "Investigations" : view === "ai" ? "AI findings" : "Human review"}</span>
+          </nav>
+          <span className={styles.stageKicker}>Incident investigation workspace</span>
+          <h1>{view === "manage" ? "AI investigations" : view === "ai" ? "AI findings" : "Human review"}</h1>
+          <p className={styles.pageSubtitle}>{view === "manage" ? "Generate an investigation or continue from a saved result." : view === "ai" ? "Explore the findings and trace each claim to its source events." : "Evaluate AI hypotheses and record human conclusions."}</p>
+        </div>
+        <div className={styles.headerActions}>
+          {view !== "human" && <div className={styles.timeToggle} role="group" aria-label="Date and time display">
+            <button type="button" aria-pressed={timeDisplay === "local"} onClick={() => setTimeDisplay("local")}>Local</button>
+            <button type="button" aria-pressed={timeDisplay === "utc"} onClick={() => setTimeDisplay("utc")}>UTC</button>
+          </div>}
+          <nav className={styles.pageNav} aria-label="Related pages">
+            <Link href={`/incidents/${encodeURIComponent(incidentId)}/evidence-snapshots`}>View evidence</Link>
+            <Link href={postmortemsPath(incidentId)}>Postmortems</Link>
+            <Link href={`/incidents/${encodeURIComponent(incidentId)}`}>Incident overview</Link>
+          </nav>
+        </div>
+      </header>
+      <nav className={styles.workspaceTabs} aria-label="Investigation workflow">
+        <Link href={investigationPath(incidentId)} aria-current={view === "manage" ? "page" : undefined}>Investigations</Link>
+        {reportId && <Link href={investigationReportPath(incidentId, reportId)} aria-current={view === "ai" ? "page" : undefined}>AI findings</Link>}
+        {reportId && <Link href={humanReviewPath(incidentId, reportId)} aria-current={view === "human" ? "page" : undefined}>Human review</Link>}
+      </nav>
+    </div>
 
     {error && <p className={styles.error} role="alert">{error}</p>}
     {loading ? <p className={styles.empty} role="status">Loading investigations…</p> : <>
@@ -346,7 +385,7 @@ export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }
             {activeJob && isActiveJob(activeJob) && <div role="status" className={styles.snapshotPreview}>
               <strong>{jobLabel(activeJob)}</strong>
               <span>{jobAttemptLabel(activeJob)}</span>
-              {!activeJob.cancel_requested && <button type="button" onClick={() => void cancelInvestigation()}>Cancel investigation</button>}
+              {!activeJob.cancel_requested && <button type="button" className={styles.cancelButton} onClick={() => void cancelInvestigation()}>Cancel investigation</button>}
             </div>}
           </div>
         </section>
@@ -476,5 +515,5 @@ export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }
         <InvestigationReview key={report.id} incidentId={incidentId} reportId={report.id} hypotheses={report.report.hypotheses.map((item) => item.title)} />
       </section>}
     </>}
-  </main>;
+  </div>;
 }

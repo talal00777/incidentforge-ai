@@ -13,9 +13,9 @@ export function IncidentTable({ incidents }: { incidents: readonly Incident[] })
         return <tr key={incident.id}>
         <td><Link className="m1-table-link" href={`/incidents/${incident.id}`}>{incident.title}</Link></td>
         <td>{incident.service_name || "—"}</td>
-        <td>{incident.severity}</td>
-        <td>{incident.status}</td>
-        <td>{updated ? <time dateTime={updated.iso} title={updated.label}>{updated.label}</time> : "Time unavailable"}</td>
+        <td><span className={`if-badge if-badge-${incident.severity}`}>{incident.severity}</span></td>
+        <td><span className={`if-badge if-badge-${incident.status}`}>{incident.status}</span></td>
+        <td className="m1-time">{updated ? <time dateTime={updated.iso} title={updated.label}>{updated.label}</time> : "Time unavailable"}</td>
       </tr>;
       })}</tbody>
     </table>

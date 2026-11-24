@@ -1,3 +1,5 @@
+import type { components } from "@/generated/api";
+
 export type AIJobState =
   | "queued"
   | "running"
@@ -7,17 +9,11 @@ export type AIJobState =
   | "succeeded"
   | "failed";
 
-export type AIJob = {
-  job_id: string;
+type GeneratedAIJob = components["schemas"]["AIJobStatus"];
+
+export type AIJob = Omit<GeneratedAIJob, "state" | "error"> & {
   state: AIJobState;
-  attempt_count: number;
-  cancel_requested: boolean;
-  report_id: string | null;
   error: { code: string; retryable: boolean; message: string } | null;
-  available_at: string;
-  requested_at: string;
-  started_at: string | null;
-  completed_at: string | null;
 };
 
 export function isActiveJob(job: AIJob): boolean {

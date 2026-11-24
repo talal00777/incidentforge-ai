@@ -3,10 +3,10 @@
  * the application's branding, logo, or layout definitions.
  */
 :root {
-  --a11y-text-secondary: #526278;
-  --a11y-text-subtle: #4b5c72;
-  --a11y-focus-ring: #1556a9;
-  --a11y-sidebar-focus: #f9de86;
+  --a11y-text-secondary: #334155;
+  --a11y-text-subtle: #3d4f66;
+  --a11y-focus-ring: #1559e3;
+  --a11y-sidebar-focus: #fde047;
 }
 
 /* Skip navigation becomes visible only when a keyboard user focuses it. */
@@ -55,7 +55,6 @@
 .metric-card h2,
 .metric-description,
 .empty-state p,
-.incident-table th,
 .chart-placeholder,
 .health-details dt,
 .breadcrumb,
@@ -109,7 +108,6 @@
 /* Keep the information hierarchy usable at increased text zoom. */
 .page-heading, .panel-header, .header-actions { flex-wrap: wrap; }
 .workspace-content, .panel, .metric-card, .app-main { min-width: 0; }
-.incident-table { min-width: 570px; } /* Data tables may scroll horizontally. */
 .table-scroll { overflow-x: auto; scrollbar-width: auto; }
 
 @media (max-width: 740px) {

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
+import { useAccount } from "@/components/m1/use-account";
 import { apiGet, describeApiFailure } from "@/lib/api-client";
 import styles from "./relationships.module.css";
 
@@ -87,6 +88,7 @@ function EventList({ events, zone, incidentId }: { events: RelatedEvent[]; zone:
 }
 
 export function RelationshipsPanel({ incidentId }: { incidentId: string }) {
+  const account = useAccount();
   const [data, setData] = useState<Relationships | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -96,13 +98,14 @@ export function RelationshipsPanel({ incidentId }: { incidentId: string }) {
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
+    if (account.state !== "signed-in") return;
     let alive = true;
     apiGet<Relationships>(`incidents/${encodeURIComponent(incidentId)}/relationships`)
       .then((result) => { if (alive) { setData(result); setError(""); } })
       .catch((failure) => { if (alive) setError(describeApiFailure(failure)); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
-  }, [incidentId]);
+  }, [account.state, incidentId]);
 
   const activeGroup = data?.groups.find((g) => g.key === selectedGroup) ?? null;
   const transition = selectedTransition === null ? null : data?.transitions[selectedTransition];
@@ -111,8 +114,20 @@ export function RelationshipsPanel({ incidentId }: { incidentId: string }) {
     return data.timeline.filter((event) => transition.event_ids.includes(event.id));
   }, [transition, data]);
 
+  if (account.state === "loading") return <div className={styles.root}><p role="status" className={styles.state}>Checking your session…</p></div>;
+  if (account.state === "error") return <div className={styles.root}><p role="alert" className={styles.errorBox}>{account.message}</p></div>;
+  if (account.state === "signed-out") {
+    return (
+      <div className={styles.root}>
+        <section className={styles.card}>
+          <p className={styles.state}>Please <Link className="m1-table-link" href="/login">sign in</Link> to inspect event relationships.</p>
+        </section>
+      </div>
+    );
+  }
+
   return (
-    <main className={styles.root} aria-busy={loading}>
+    <div className={styles.root} aria-busy={loading}>
       <header className={styles.header}>
         <h1>Event relationships</h1>
         <div className={styles.actions}>
@@ -185,6 +200,6 @@ export function RelationshipsPanel({ incidentId }: { incidentId: string }) {
           </section>
         </>
       )}
-    </main>
+    </div>
   );
 }
