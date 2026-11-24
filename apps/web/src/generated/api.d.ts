@@ -510,6 +510,7 @@ export interface components {
         CountByService: {
             service: string;
             count: number;
+            error_events: number;
         };
         CountBySeverity: {
             severity: string;
@@ -1398,9 +1399,15 @@ export interface operations {
     incidents_events_retrieve: {
         parameters: {
             query?: {
+                from?: string;
                 page?: number;
                 page_size?: number;
+                search?: string;
+                service?: string;
                 severity?: string;
+                sort?: "observed_desc" | "occurred_asc" | "occurred_desc" | "source";
+                source_id?: string;
+                to?: string;
             };
             header?: never;
             path: {
