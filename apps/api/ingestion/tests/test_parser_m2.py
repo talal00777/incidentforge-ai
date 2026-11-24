@@ -170,3 +170,31 @@ def test_pretty_standalone_json_document_with_source_line_span():
 def test_excessively_nested_json_is_reported_as_invalid_not_a_worker_crash():
     data = b"{" + (b'"nested":{' * 1100) + b'"message":"hi"' + (b"}" * 1101)
     assert parse(data)[0][1] == "json_too_deep"
+
+
+def test_fingerprint_normalizes_variable_ids_ips_and_numbers():
+    first = accepted(
+        b'{"timestamp":"2026-10-25T12:00:00Z","level":"ERROR",'
+        b'"message":"Timeout on 10.0.1.4:5432 for request_id=req-abc12345 '
+        b'order 550e8400-e29b-41d4-a716-446655440000 after 5012ms"}\n'
+    )[0]
+    second = accepted(
+        b'{"timestamp":"2026-10-25T12:00:01Z","level":"ERROR",'
+        b'"message":"Timeout on 10.0.2.9:5432 for request_id=req-xyz98765 '
+        b'order 123e4567-e89b-12d3-a456-426614174000 after 6100ms"}\n'
+    )[0]
+    assert first["fingerprint"] == second["fingerprint"]
+    assert first["redacted_message"] != second["redacted_message"]
+
+
+def test_multiline_json_object_with_key_on_first_line_and_plain_kv_metadata():
+    pretty = b'{"timestamp": "2026-10-25T10:00:00Z",\n  "level": "ERROR",\n  "message": "ok"}\n'
+    events = accepted(pretty)
+    assert len(events) == 1
+    assert (events[0]["line_start"], events[0]["line_end"]) == (1, 3)
+
+    plain = accepted(
+        b"2026-10-25T10:00:00Z ERROR service=payments-api trace_id=tr-12345678 timeout\n"
+    )
+    assert plain[0]["service"] == "payments-api"
+    assert plain[0]["trace_id"] == "tr-12345678"
