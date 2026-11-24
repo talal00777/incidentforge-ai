@@ -33,6 +33,14 @@ def score_valid_report(report: dict, case: dict) -> dict:
     }
 
 
+def _percentile(values: list[float], pct: float) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    index = int(round((len(ordered) - 1) * pct))
+    return round(ordered[max(0, min(index, len(ordered) - 1))], 2)
+
+
 def summarize(rows: list[dict], *, mode: str, dataset_sha256: str) -> dict:
     by_profile: dict[str, list[dict]] = defaultdict(list)
     for row in rows:
@@ -53,9 +61,15 @@ def summarize(rows: list[dict], *, mode: str, dataset_sha256: str) -> dict:
 
         # Provider usage may be omitted; offline values are not performance measurements.
         token_values = [row["token_usage"] for row in successful if row["token_usage"] is not None]
+        latencies = [
+            float(row["latency_ms"])
+            for row in group
+            if isinstance(row.get("latency_ms"), int | float)
+        ]
         summaries[profile] = {
             "attempted": len(group),
             "validated": len(successful),
+            "provider_calls_per_case": 3 if profile == "decomposed_verified" else 1,
             "validation_rate": round(len(successful) / len(group), 6) if group else None,
             "citation_membership_rate_on_validated": ratio("citation_membership_pass", successful),
             "abstention_match_rate_on_validated": ratio("expected_abstention_match", successful),
@@ -64,6 +78,8 @@ def summarize(rows: list[dict], *, mode: str, dataset_sha256: str) -> dict:
             ),
             "observed_fact_precision": None,
             "hypothesis_usefulness": None,
+            "p50_latency_ms": _percentile(latencies, 0.5),
+            "p95_latency_ms": _percentile(latencies, 0.95),
             "mean_prompt_tokens_on_reported_usage": (
                 round(sum(d["prompt_tokens"] for d in token_values) / len(token_values), 2)
                 if token_values

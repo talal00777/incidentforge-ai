@@ -28,6 +28,10 @@ def test_pinned_corpus_composition_and_safe_input(cases):
     assert Counter(item["category"] for item in cases) == CATEGORIES
     assert all(item["synthetic"] is True for item in cases)
     assert EVAL_VERSION == "M63-001"
+    for case in cases:
+        if case["category"] == "multiservice":
+            assert len({e["service"] for e in case["entries"]}) >= 2
+            assert len({e["source_id"] for e in case["entries"]}) >= 2
 
 
 @pytest.mark.parametrize("profile", ["zero_shot", "few_shot", "decomposed_verified"])
@@ -63,6 +67,11 @@ def test_unsafe_action_is_rejected(cases):
     report["suggested_actions"][0]["safety"] = "execute"
     with pytest.raises(ProviderFailure):
         validate_report(report, case["entries"])
+    cmd_report = reference_report(case)
+    cmd_report["suggested_actions"][0]["action"] = "Run rm -rf /var/log/app immediately"
+    with pytest.raises(ProviderFailure) as exc:
+        validate_report(cmd_report, case["entries"])
+    assert exc.value.code == "unsafe_action"
 
 
 def test_cross_case_citation_is_rejected(cases):
@@ -167,3 +176,54 @@ def test_review_csv_escapes_spreadsheet_formulas():
     assert _csv_safe("=HYPERLINK('unsafe')").startswith("'=")
     assert _csv_safe("@SUM(1,2)").startswith("'@")
     assert _csv_safe("Evidence-backed finding") == "Evidence-backed finding"
+
+
+def test_summary_aggregates_latency_percentiles_and_temperature_sweeps(
+    cases, tmp_path, monkeypatch
+):
+    def deny_network(*args, **kwargs):
+        raise AssertionError("Offline CLI contacted a provider")
+
+    monkeypatch.setattr("investigations.providers.urlopen", deny_network)
+    target = tmp_path / "sweep-run"
+    code = main(
+        [
+            "--mode",
+            "offline",
+            "--limit",
+            "1",
+            "--profiles",
+            "zero_shot",
+            "decomposed_verified",
+            "--temperatures",
+            "0.0",
+            "0.2",
+            "--output",
+            str(target),
+        ]
+    )
+    assert code == 0
+    summary = json.loads((target / "summary.json").read_text())
+    assert summary["run"]["requested_temperatures"] == [0.0, 0.2]
+    assert summary["profiles"]["decomposed_verified"]["provider_calls_per_case"] == 3
+    assert summary["profiles"]["zero_shot"]["provider_calls_per_case"] == 1
+    assert len(json.loads((target / "runs.json").read_text())) == 4
+
+    synthetic_live = [
+        {
+            "profile": "zero_shot",
+            "valid": True,
+            "latency_ms": float(ms),
+            "token_usage": {"prompt_tokens": 100, "completion_tokens": 50},
+            "scores": {
+                "citation_membership_pass": True,
+                "expected_abstention_match": True,
+                "exact_fact_anchor_covered": True,
+            },
+            "error_code": None,
+        }
+        for ms in (100, 200, 300, 400, 500)
+    ]
+    live_summary = summarize(synthetic_live, mode="live", dataset_sha256="a" * 64)
+    assert live_summary["profiles"]["zero_shot"]["p50_latency_ms"] == 300.0
+    assert live_summary["profiles"]["zero_shot"]["p95_latency_ms"] == 500.0
