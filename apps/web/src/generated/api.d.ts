@@ -84,6 +84,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/dashboard/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["dashboard_summary_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/demo/scenarios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["demo_scenarios_list"];
+        put?: never;
+        post: operations["demo_scenarios_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/incidents": {
         parameters: {
             query?: never;
@@ -516,6 +548,72 @@ export interface components {
             severity: string;
             count: number;
         };
+        DashboardActivity: {
+            id: string;
+            kind: string;
+            summary: string;
+            /** Format: uuid */
+            incident_id: string;
+            incident_title: string;
+            /** Format: date-time */
+            occurred_at: string;
+        };
+        DashboardCounts: {
+            total: number;
+            open: number;
+            investigating: number;
+            resolved: number;
+            archived: number;
+            critical_open: number;
+            high_open: number;
+        };
+        DashboardRecentIncident: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            service_name: string;
+            environment: string;
+            severity: string;
+            status: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            source_count: number;
+            event_count: number;
+            error_count: number;
+            investigation_count: number;
+            postmortem_count: number;
+        };
+        DashboardServiceHealth: {
+            service: string;
+            incident_count: number;
+            event_count: number;
+            error_events: number;
+        };
+        DashboardSeverity: {
+            severity: string;
+            count: number;
+            open_count: number;
+        };
+        DashboardSummary: {
+            counts: components["schemas"]["DashboardCounts"];
+            severity_breakdown: components["schemas"]["DashboardSeverity"][];
+            telemetry_totals: components["schemas"]["DashboardTelemetryTotals"];
+            /** Format: double */
+            mttr_minutes: number | null;
+            service_health: components["schemas"]["DashboardServiceHealth"][];
+            recent_incidents: components["schemas"]["DashboardRecentIncident"][];
+            recent_activity: components["schemas"]["DashboardActivity"][];
+        };
+        DashboardTelemetryTotals: {
+            total_sources: number;
+            total_events: number;
+            total_error_events: number;
+            total_snapshots: number;
+            total_investigations: number;
+            total_postmortems: number;
+        };
         /**
          * @description * `needs_review` - needs_review
          *     * `reviewed` - reviewed
@@ -524,6 +622,27 @@ export interface components {
          * @enum {string}
          */
         DecisionEnum: "needs_review" | "reviewed" | "accepted_as_working_hypothesis" | "rejected";
+        DemoScenario: {
+            id: string;
+            title: string;
+            subtitle: string;
+            service_name: string;
+            environment: string;
+            severity: string;
+            services: string[];
+            expected_signals: string[];
+        };
+        DemoSeedRequestRequest: {
+            scenario_id: components["schemas"]["ScenarioIdEnum"];
+        };
+        DemoSeedResult: {
+            scenario_id: string;
+            incident: components["schemas"]["Incident"];
+            sources_created: number;
+            events_created: number;
+            /** Format: uuid */
+            snapshot_id: string;
+        };
         /**
          * @description * `production` - Production
          *     * `staging` - Staging
@@ -902,6 +1021,13 @@ export interface components {
             remediation_notes: string;
             hypotheses: components["schemas"]["ReviewHypothesisRequest"][];
         };
+        /**
+         * @description * `checkout-db-pool` - checkout-db-pool
+         *     * `auth-jwt-rotation` - auth-jwt-rotation
+         *     * `redis-cache-stampede` - redis-cache-stampede
+         * @enum {string}
+         */
+        ScenarioIdEnum: "checkout-db-pool" | "auth-jwt-rotation" | "redis-cache-stampede";
         ServiceTransition: {
             from_service: string;
             to_service: string;
@@ -1121,6 +1247,69 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["User"];
+                };
+            };
+        };
+    };
+    dashboard_summary_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardSummary"];
+                };
+            };
+        };
+    };
+    demo_scenarios_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemoScenario"][];
+                };
+            };
+        };
+    };
+    demo_scenarios_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemoSeedRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["DemoSeedRequestRequest"];
+                "multipart/form-data": components["schemas"]["DemoSeedRequestRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DemoSeedResult"];
                 };
             };
         };

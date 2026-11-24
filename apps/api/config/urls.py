@@ -13,6 +13,7 @@ from evidence.views import (
     EvidenceSnapshotDetailView,
     EvidenceSnapshotListCreateView,
 )
+from incidents.dashboard_views import DashboardSummaryView, DemoScenarioListCreateView
 from incidents.views import IncidentDetailView, IncidentListCreateView
 from ingestion.views import EventsView, JobsView, SourcesView, UploadView
 from investigations.async_views import AIJobCancelView, AIJobDetailView, AIJobListCreateView
@@ -112,6 +113,8 @@ urlpatterns = [
     path("api/v1/auth/login", LoginView.as_view(), name="auth-login"),
     path("api/v1/auth/logout", LogoutView.as_view(), name="auth-logout"),
     path("api/v1/auth/me", CurrentUserView.as_view(), name="auth-me"),
+    path("api/v1/dashboard/summary", DashboardSummaryView.as_view(), name="dashboard-summary"),
+    path("api/v1/demo/scenarios", DemoScenarioListCreateView.as_view(), name="demo-scenarios"),
     path("api/v1/incidents", IncidentListCreateView.as_view(), name="incident-list"),
     path("api/v1/incidents/<uuid:id>", IncidentDetailView.as_view(), name="incident-detail"),
     path(
