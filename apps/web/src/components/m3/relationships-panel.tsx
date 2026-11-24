@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import { IncidentWorkflowNav } from "@/components/incident-workflow-nav";
 import { useAccount } from "@/components/m1/use-account";
 import { apiGet, describeApiFailure } from "@/lib/api-client";
 import styles from "./relationships.module.css";
@@ -115,20 +114,20 @@ export function RelationshipsPanel({ incidentId }: { incidentId: string }) {
     return data.timeline.filter((event) => transition.event_ids.includes(event.id));
   }, [transition, data]);
 
-  if (account.state === "loading") return <main className={styles.root}><p role="status" className={styles.state}>Checking your session…</p></main>;
-  if (account.state === "error") return <main className={styles.root}><p role="alert" className={styles.errorBox}>{account.message}</p></main>;
+  if (account.state === "loading") return <div className={styles.root}><p role="status" className={styles.state}>Checking your session…</p></div>;
+  if (account.state === "error") return <div className={styles.root}><p role="alert" className={styles.errorBox}>{account.message}</p></div>;
   if (account.state === "signed-out") {
     return (
-      <main className={styles.root}>
+      <div className={styles.root}>
         <section className={styles.card}>
           <p className={styles.state}>Please <Link className="m1-table-link" href="/login">sign in</Link> to inspect event relationships.</p>
         </section>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className={styles.root} aria-busy={loading}>
+    <div className={styles.root} aria-busy={loading}>
       <header className={styles.header}>
         <h1>Event relationships</h1>
         <div className={styles.actions}>
@@ -140,8 +139,6 @@ export function RelationshipsPanel({ incidentId }: { incidentId: string }) {
           <Link className={styles.back} href={`/incidents/${encodeURIComponent(incidentId)}/analysis`}>Incident analysis</Link>
         </div>
       </header>
-
-      <IncidentWorkflowNav incidentId={incidentId} current="relationships" className="workflow-tabs m3-stage-tabs" />
 
       {loading && <p role="status" className={styles.state}>Loading relationships…</p>}
       {error && <p role="alert" className={styles.errorBox}>{error}</p>}
@@ -203,6 +200,6 @@ export function RelationshipsPanel({ incidentId }: { incidentId: string }) {
           </section>
         </>
       )}
-    </main>
+    </div>
   );
 }

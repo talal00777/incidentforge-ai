@@ -43,22 +43,22 @@ export function PostmortemDetail({ incidentId, versionId }: { incidentId: string
     return () => { active = false; };
   }, [account.state, root]);
 
-  if (account.state === "loading") return <main className={styles.page}><p role="status" className={styles.muted}>Checking your session…</p></main>;
-  if (account.state === "error") return <main className={styles.page}><p className={styles.error} role="alert">{account.message}</p></main>;
+  if (account.state === "loading") return <div className={styles.page}><p role="status" className={styles.muted}>Checking your session…</p></div>;
+  if (account.state === "error") return <div className={styles.page}><p className={styles.error} role="alert">{account.message}</p></div>;
   if (account.state === "signed-out") {
     return (
-      <main className={styles.page}>
+      <div className={styles.page}>
         <section className={styles.card}>
           <p className={styles.muted}>Please <Link className="m1-table-link" href="/login">sign in</Link> to view finalized postmortems.</p>
         </section>
-      </main>
+      </div>
     );
   }
 
   const doc = version?.content;
   const findings = doc?.ai.findings;
   const sourceHref = doc ? investigationReportPath(incidentId, doc.ai.investigation_id) : "";
-  return <main className={styles.page}>
+  return <div className={styles.page}>
     <nav aria-label="Breadcrumb" className={styles.breadcrumbs}>
       <Link href="/">Home</Link><span aria-hidden="true">/</span>
       <Link href={`/incidents/${encodeURIComponent(incidentId)}`}>Incident</Link>
@@ -174,5 +174,5 @@ export function PostmortemDetail({ incidentId, versionId }: { incidentId: string
         </details>
       </div>
     </>}
-  </main>;
+  </div>;
 }

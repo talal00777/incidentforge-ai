@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ChangeEvent } from "react";
 
-import { IncidentWorkflowNav } from "@/components/incident-workflow-nav";
 import { useAccount } from "@/components/m1/use-account";
 import { apiGet, apiWrite, describeApiFailure } from "@/lib/api-client";
 import { humanReviewPath, investigationReportPath } from "@/lib/investigation-routes";
@@ -67,15 +66,15 @@ export function PostmortemWorkspace({ incidentId }: { incidentId: string }) {
     return () => { active = false; };
   }, [account.state, root, selected]);
 
-  if (account.state === "loading") return <main className={styles.page}><p role="status" className={styles.muted}>Checking your session…</p></main>;
-  if (account.state === "error") return <main className={styles.page}><p className={styles.error} role="alert">{account.message}</p></main>;
+  if (account.state === "loading") return <div className={styles.page}><p role="status" className={styles.muted}>Checking your session…</p></div>;
+  if (account.state === "error") return <div className={styles.page}><p className={styles.error} role="alert">{account.message}</p></div>;
   if (account.state === "signed-out") {
     return (
-      <main className={styles.page}>
+      <div className={styles.page}>
         <section className={styles.card}>
           <p className={styles.muted}>Please <Link className="m1-table-link" href="/login">sign in</Link> to manage postmortems.</p>
         </section>
-      </main>
+      </div>
     );
   }
 
@@ -96,10 +95,9 @@ export function PostmortemWorkspace({ incidentId }: { incidentId: string }) {
     }
   }
 
-  return <main className={styles.page}>
-    <IncidentWorkflowNav incidentId={incidentId} current="reports" className="workflow-tabs m3-stage-tabs" />
+  return <div className={styles.page}>
     <section className={styles.heroCard}>
-      <nav aria-label="Breadcrumb" className={styles.breadcrumbs}>
+      <nav aria-label="Postmortem trail" className={styles.breadcrumbs}>
         <Link href="/">Home</Link><span aria-hidden="true">/</span>
         <Link href={`/incidents/${encodeURIComponent(incidentId)}`}>Incident</Link>
         <span aria-hidden="true">/</span><span aria-current="page">Postmortems</span>
@@ -163,5 +161,5 @@ export function PostmortemWorkspace({ incidentId }: { incidentId: string }) {
         </ol>}
       </section>
     </div>}
-  </main>;
+  </div>;
 }

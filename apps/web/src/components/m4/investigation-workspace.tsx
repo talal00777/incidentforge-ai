@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { IncidentWorkflowNav } from "@/components/incident-workflow-nav";
 import { useAccount } from "@/components/m1/use-account";
 import { apiGet, apiWrite, describeApiFailure } from "@/lib/api-client";
 import { isActiveJob, jobAttemptLabel, jobLabel, type AIJob } from "@/lib/ai-jobs";
@@ -270,24 +269,23 @@ export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }
     ? snapshot.entries.find((item) => item.event_id === selectedEvidence)
     : undefined;
 
-  if (account.state === "loading") return <main className={styles.root}><p className={styles.empty} role="status">Checking your session…</p></main>;
-  if (account.state === "error") return <main className={styles.root}><p className={styles.error} role="alert">{account.message}</p></main>;
+  if (account.state === "loading") return <div className={styles.root}><p className={styles.empty} role="status">Checking your session…</p></div>;
+  if (account.state === "error") return <div className={styles.root}><p className={styles.error} role="alert">{account.message}</p></div>;
   if (account.state === "signed-out") {
     return (
-      <main className={styles.root}>
+      <div className={styles.root}>
         <section className={styles.card}>
           <p className={styles.empty}>Please <Link className="m1-table-link" href="/login">sign in</Link> to run and inspect AI investigations.</p>
         </section>
-      </main>
+      </div>
     );
   }
 
-  return <main className={styles.root}>
-    <IncidentWorkflowNav incidentId={incidentId} current="investigations" className="workflow-tabs m3-stage-tabs" />
+  return <div className={styles.root}>
     <div className={styles.headerStack}>
       <header className={styles.header}>
         <div className={styles.masthead}>
-          <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
+          <nav className={styles.breadcrumbs} aria-label="Investigation trail">
             <Link href="/">Home</Link><span aria-hidden="true">/</span>
             <Link href={`/incidents/${encodeURIComponent(incidentId)}`}>Incident</Link><span aria-hidden="true">/</span>
             <span aria-current="page">{view === "manage" ? "Investigations" : view === "ai" ? "AI findings" : "Human review"}</span>
@@ -517,5 +515,5 @@ export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }
         <InvestigationReview key={report.id} incidentId={incidentId} reportId={report.id} hypotheses={report.report.hypotheses.map((item) => item.title)} />
       </section>}
     </>}
-  </main>;
+  </div>;
 }

@@ -4,7 +4,6 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Incident, apiGet, apiWrite, describeApiFailure } from "@/lib/api-client";
-import { IncidentWorkflowNav } from "@/components/incident-workflow-nav";
 import { useAccount } from "@/components/m1/use-account";
 
 export function IncidentDetail() {
@@ -87,7 +86,6 @@ export function IncidentDetail() {
   if (!incident) return <p role="status">Loading incident…</p>;
 
   return <div className="m1-detail-stack">
-    <IncidentWorkflowNav incidentId={params.id} current="overview" />
     <section className="panel m1-form-panel" aria-labelledby="incident-detail-heading">
       <h2 id="incident-detail-heading">Incident record</h2>
       <div className="m1-meta-bar">

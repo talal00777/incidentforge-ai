@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { IncidentWorkflowNav } from "@/components/incident-workflow-nav";
 import { useAccount } from "@/components/m1/use-account";
 import { AnalysisCharts } from "@/components/m3/analysis-charts";
 import { apiGet, describeApiFailure } from "@/lib/api-client";
@@ -95,8 +94,6 @@ export function AnalysisPanel({ incidentId }: { incidentId: string }) {
           </Link>
         </div>
       </header>
-
-      <IncidentWorkflowNav incidentId={incidentId} current="analysis" className="workflow-tabs m3-stage-tabs" />
 
       {loading && <div className={styles.loading} role="status">Loading analysis…</div>}
       {error && <div className={styles.alert} role="alert">{error}</div>}

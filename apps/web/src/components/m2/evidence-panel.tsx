@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { IncidentWorkflowNav } from "@/components/incident-workflow-nav";
 import { useAccount } from "@/components/m1/use-account";
 import { apiGet, describeApiFailure } from "@/lib/api-client";
 import {
@@ -209,8 +208,6 @@ export function EvidencePanel({ incidentId }: { incidentId: string }) {
 
   return (
     <div className="m2-panel">
-      <IncidentWorkflowNav incidentId={incidentId} current="sources" />
-
       <section className="m2-card" aria-labelledby="evidence-heading">
         <div className="m2-card-header">
           <div>

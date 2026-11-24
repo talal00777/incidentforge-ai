@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { IncidentWorkflowNav } from "@/components/incident-workflow-nav";
 import { useAccount } from "@/components/m1/use-account";
 import { apiGet, apiWrite, describeApiFailure } from "@/lib/api-client";
 import { evidenceTime, MAX_SELECTED_EVENTS, selectionKey, toggleEvidenceSelection } from "@/lib/evidence-selection";
@@ -188,20 +187,20 @@ export function EvidenceSnapshotsPanel({ incidentId }: { incidentId: string }) {
     }
   }
 
-  if (account.state === "loading") return <main className={styles.root}><p className={styles.state} role="status">Checking your session…</p></main>;
-  if (account.state === "error") return <main className={styles.root}><p className={styles.error} role="alert">{account.message}</p></main>;
+  if (account.state === "loading") return <div className={styles.root}><p className={styles.state} role="status">Checking your session…</p></div>;
+  if (account.state === "error") return <div className={styles.root}><p className={styles.error} role="alert">{account.message}</p></div>;
   if (account.state === "signed-out") {
     return (
-      <main className={styles.root}>
+      <div className={styles.root}>
         <section className={styles.card}>
           <p className={styles.state}>Please <Link className="m1-table-link" href="/login">sign in</Link> to manage evidence snapshots.</p>
         </section>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className={styles.root}>
+    <div className={styles.root}>
       <header className={styles.header}>
         <h1>Evidence selection</h1>
         <div className={styles.headerActions}>
@@ -213,8 +212,6 @@ export function EvidenceSnapshotsPanel({ incidentId }: { incidentId: string }) {
           <Link className={styles.secondaryLink} href={`/incidents/${encodeURIComponent(incidentId)}/relationships`}>Relationships</Link>
         </div>
       </header>
-
-      <IncidentWorkflowNav incidentId={incidentId} current="snapshots" className="workflow-tabs m3-stage-tabs" />
 
       {error && <p className={styles.error} role="alert">{error}</p>}
       {loading ? <p className={styles.state} role="status">Loading evidence…</p> : (
@@ -317,6 +314,6 @@ export function EvidenceSnapshotsPanel({ incidentId }: { incidentId: string }) {
           </div>
         </div>
       )}
-    </main>
+    </div>
   );
 }

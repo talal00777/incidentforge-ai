@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/app-shell";
+import { IncidentWorkspaceHeader } from "@/components/incident-workspace-header";
 import { EvidencePanel } from "@/components/m2/evidence-panel";
 
 export default async function SourcesPage({ params }: { params: Promise<{ id: string }> }) {
@@ -8,6 +9,7 @@ export default async function SourcesPage({ params }: { params: Promise<{ id: st
     <>
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <AppShell>
+        <IncidentWorkspaceHeader incidentId={id} current="sources" />
         <header className="page-heading">
           <div>
             <p className="page-overline">Incidents</p>
