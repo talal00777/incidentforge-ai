@@ -50,6 +50,7 @@ def test_analysis_scoped_and_read_only():
     assert response.status_code == 200
     body = response.json()
     assert body["total_events"] == body["error_events"] == 1
+    assert body["service_counts"] == [{"service": "checkout", "count": 1, "error_events": 1}]
     assert body["fingerprint_groups"][0]["event_ids"] == [str(event.pk)]
     assert client.get(url + "?bucket_minutes=2").status_code == 400
     assert LogEvent.objects.count() == 1

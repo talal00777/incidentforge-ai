@@ -146,7 +146,12 @@ def correlate(events: list[CorrelationEvent]) -> dict:
     ]
     timed = [event for event in ordered if event.occurred_at is not None]
     untimed = [event for event in ordered if event.occurred_at is None]
-    visible = timed[-MAX_TIMELINE_EVENTS:]
+    if len(timed) > MAX_TIMELINE_EVENTS:
+        head_count = MAX_TIMELINE_EVENTS // 2
+        tail_count = MAX_TIMELINE_EVENTS - head_count
+        visible = timed[:head_count] + timed[-tail_count:]
+    else:
+        visible = list(timed)
     remaining = MAX_TIMELINE_EVENTS - len(visible)
     if remaining > 0:
         visible += untimed[:remaining]

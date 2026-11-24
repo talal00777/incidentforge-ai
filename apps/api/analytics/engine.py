@@ -43,6 +43,7 @@ def analyze(events: list[EventFact], *, bucket_minutes: int = BUCKET_MINUTES) ->
 
     severity = Counter()
     service = Counter()
+    service_errors = Counter()
     fingerprints: dict[str, dict] = {}
     buckets: dict[datetime, dict] = defaultdict(lambda: {"total": 0, "errors": 0})
     missing_time = 0
@@ -53,6 +54,8 @@ def analyze(events: list[EventFact], *, bucket_minutes: int = BUCKET_MINUTES) ->
         is_error = level in {"ERROR", "FATAL", "CRITICAL"}
         severity[level] += 1
         service[name] += 1
+        if is_error:
+            service_errors[name] += 1
         errors += int(is_error)
         if event.fingerprint:
             group = fingerprints.setdefault(
@@ -76,19 +79,21 @@ def analyze(events: list[EventFact], *, bucket_minutes: int = BUCKET_MINUTES) ->
         "buckets": [],
     }
     if len(counts) >= 6:
-        baseline = counts[:-1]
-        center = median(baseline)
-        mad = median(abs(n - center) for n in baseline)
-        threshold = center + max(3, 6 * 1.4826 * mad)
-        outliers = [
-            t.isoformat().replace("+00:00", "Z")
-            for t in ordered_slots
-            if buckets[t]["total"] > threshold
-        ]
+        full_center = median(counts)
+        full_mad = median(abs(n - full_center) for n in counts)
+        summary_threshold = full_center + max(3, 6 * 1.4826 * full_mad)
+        outliers = []
+        for idx, slot_time in enumerate(ordered_slots):
+            baseline = counts[:idx] + counts[idx + 1 :]
+            center = median(baseline)
+            mad = median(abs(n - center) for n in baseline)
+            threshold = center + max(3, 6 * 1.4826 * mad)
+            if counts[idx] > threshold:
+                outliers.append(slot_time.isoformat().replace("+00:00", "Z"))
         anomaly = {
             "status": "evaluated",
-            "method": "median_mad",
-            "threshold": round(threshold, 3),
+            "method": "median_mad_loo",
+            "threshold": round(summary_threshold, 3),
             "buckets": outliers,
         }
 
@@ -100,7 +105,7 @@ def analyze(events: list[EventFact], *, bucket_minutes: int = BUCKET_MINUTES) ->
         "missing_event_time": missing_time,
         "severity_counts": [{"severity": k, "count": v} for k, v in sorted(severity.items())],
         "service_counts": [
-            {"service": k, "count": v}
+            {"service": k, "count": v, "error_events": service_errors[k]}
             for k, v in sorted(service.items(), key=lambda x: (-x[1], x[0]))[:MAX_GROUPS]
         ],
         "fingerprint_groups": sorted(
