@@ -7,12 +7,23 @@ from django.test import Client
 def test_system_endpoint_contract():
     response = Client().get("/api/v1/system")
     assert response.status_code == 200
-    assert response.json() == {
-        "name": "IncidentForge AI",
-        "api_version": "v1",
-        "milestone": "M0",
-        "capabilities": ["health", "openapi"],
-    }
+    body = response.json()
+    assert body["name"] == "IncidentForge AI"
+    assert body["api_version"] == "v1"
+    assert body["milestone"] == "M6.3"
+    assert {
+        "health",
+        "openapi",
+        "auth",
+        "incidents",
+        "ingestion",
+        "analytics",
+        "evidence",
+        "investigations",
+        "reviews",
+        "postmortems",
+        "evaluations",
+    }.issubset(set(body["capabilities"]))
 
 
 def test_openapi_schema_is_served():
