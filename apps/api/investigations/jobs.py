@@ -37,20 +37,25 @@ class ClaimCancelled(Exception):
 
 
 def ensure_claim_active(job_id, token):
-    current = (
-        AIInvestigationJob.objects.filter(pk=job_id)
-        .values("claim_token", "state", "cancel_requested", "lease_until")
-        .first()
-    )
-    if (
-        current is None
-        or current["claim_token"] != token
-        or current["lease_until"] is None
-        or current["lease_until"] <= timezone.now()
-    ):
-        raise ClaimAbandoned
-    if current["cancel_requested"] or current["state"] == "cancelling":
-        raise ClaimCancelled
+    now = timezone.now()
+    with transaction.atomic():
+        job = (
+            AIInvestigationJob.objects.select_for_update()
+            .select_related("incident")
+            .filter(pk=job_id)
+            .first()
+        )
+        if (
+            job is None
+            or job.claim_token != token
+            or job.lease_until is None
+            or job.lease_until <= now
+        ):
+            raise ClaimAbandoned
+        if job.cancel_requested or job.state == "cancelling" or job.incident.deleted_at is not None:
+            raise ClaimCancelled
+        job.lease_until = now + _lease()
+        job.save(update_fields=["lease_until"])
 
 
 def request_fingerprint(*, snapshot, fields):
@@ -66,15 +71,22 @@ def request_fingerprint(*, snapshot, fields):
     return hashlib.sha256(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
 
 
-def job_data(job):
-    report = InvestigationReport.objects.filter(attempt_id=job.attempt_id).first()
+_UNSET = object()
+
+
+def job_data(job, *, report_id=_UNSET):
+    if report_id is _UNSET:
+        report = InvestigationReport.objects.filter(attempt_id=job.attempt_id).first()
+        resolved_report_id = str(report.id) if report else None
+    else:
+        resolved_report_id = str(report_id) if report_id else None
     code = job.error_code or ""
     return {
         "job_id": str(job.id),
         "state": job.state,
         "attempt_count": job.attempt_count,
         "cancel_requested": job.cancel_requested,
-        "report_id": str(report.id) if report else None,
+        "report_id": resolved_report_id,
         "error": (
             {"code": code, "retryable": job.state == "retry_wait", "message": error_message(code)}
             if code
@@ -156,16 +168,34 @@ def cancel_job(job_id, *, actor=None):
         return job
 
 
+def _fail_deleted_locked(job, now):
+    job.state = AIInvestigationJob.State.FAILED
+    job.error_code = "incident_deleted"
+    job.claim_token = None
+    job.lease_until = None
+    job.completed_at = now
+    job.save(update_fields=["state", "error_code", "claim_token", "lease_until", "completed_at"])
+    job.attempt.status = "failed"
+    job.attempt.failure_code = "incident_deleted"
+    job.attempt.save(update_fields=["status", "failure_code", "updated_at"])
+    _event(job, AIJobEvent.Action.FAILED, error_code="incident_deleted")
+
+
 def _claim(job_id):
     now = timezone.now()
     with transaction.atomic():
         job = (
-            AIInvestigationJob.objects.select_for_update().select_related("attempt").get(pk=job_id)
+            AIInvestigationJob.objects.select_for_update()
+            .select_related("attempt", "incident")
+            .get(pk=job_id)
         )
         if job.state not in ("queued", "retry_wait") or job.available_at > now:
             return None
-        if job.cancel_requested or job.incident.deleted_at is not None:
+        if job.cancel_requested:
             _cancel_locked(job, now)
+            return None
+        if job.incident.deleted_at is not None:
+            _fail_deleted_locked(job, now)
             return None
         if job.attempt_count >= settings.AI_JOB_MAX_ATTEMPTS:
             job.state = AIInvestigationJob.State.FAILED
@@ -218,9 +248,13 @@ def _finish(job_id, token, *, output=None, failure=None):
         execution = AIJobExecution.objects.select_for_update().get(
             job=job, number=job.attempt_count
         )
-        if job.cancel_requested or job.incident.deleted_at is not None:
+        if job.cancel_requested:
             _cancel_locked(job, now)
             execution.state = "cancelled"
+        elif job.incident.deleted_at is not None:
+            _fail_deleted_locked(job, now)
+            execution.state = "failed"
+            execution.error_code = "incident_deleted"
         elif failure is None and output is not None:
             report_body, usage, version = output
             InvestigationReport.objects.get_or_create(
@@ -273,7 +307,7 @@ def _finish(job_id, token, *, output=None, failure=None):
         execution.save(update_fields=["state", "error_code", "completed_at"])
         if job.state == AIInvestigationJob.State.SUCCEEDED:
             _event(job, AIJobEvent.Action.COMPLETED)
-        elif job.state == AIInvestigationJob.State.FAILED:
+        elif job.state == AIInvestigationJob.State.FAILED and job.error_code != "incident_deleted":
             _event(job, AIJobEvent.Action.FAILED, error_code=job.error_code)
         elif job.state == AIInvestigationJob.State.RETRY_WAIT:
             _event(job, AIJobEvent.Action.RETRY_SCHEDULED, error_code=job.error_code)
@@ -329,7 +363,10 @@ def reconcile_investigations():
     now = timezone.now()
     pending = []
     with transaction.atomic():
-        due = Q(state__in=["queued", "retry_wait"], available_at__lte=now)
+        queued_cutoff = now - timedelta(seconds=30)
+        due = Q(state="queued", requested_at__lte=queued_cutoff, available_at__lte=now) | Q(
+            state="retry_wait", available_at__lte=now
+        )
         expired = Q(state__in=["running", "cancelling"]) & (
             Q(lease_until__lte=now) | Q(lease_until__isnull=True)
         )

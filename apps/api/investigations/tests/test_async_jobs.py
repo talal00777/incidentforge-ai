@@ -288,3 +288,34 @@ def test_decomposed_generation_checks_cancellation_between_calls():
             check_cancel=check_cancel,
         )
     assert len(calls) == 1
+
+
+@pytest.mark.django_db
+def test_deleted_incident_fails_with_incident_deleted_code(record, monkeypatch):
+    incident, snapshot, _, client = record
+    monkeypatch.setenv("GROQ_API_KEY", "test-provider-token")
+    job_id = create_job(client, incident, snapshot).json()["job_id"]
+    incident.deleted_at = timezone.now()
+    incident.save(update_fields=["deleted_at"])
+    assert _claim(job_id) is None
+    job = AIInvestigationJob.objects.get(pk=job_id)
+    assert job.state == "failed"
+    assert job.error_code == "incident_deleted"
+    assert job.cancel_requested is False
+    assert job.attempt.failure_code == "incident_deleted"
+
+
+@pytest.mark.django_db
+def test_sync_investigation_respects_active_async_job_lock(record, monkeypatch):
+    incident, snapshot, _, client = record
+    monkeypatch.setenv("GROQ_API_KEY", "test-provider-token")
+    assert create_job(client, incident, snapshot).status_code == 202
+    with patch("investigations.views.run_investigation") as sync_call:
+        blocked = client.post(
+            f"/api/v1/incidents/{incident.id}/investigations",
+            payload(snapshot),
+            content_type="application/json",
+        )
+        assert blocked.status_code == 409
+        assert blocked.json()["code"] == "investigation_active"
+        sync_call.assert_not_called()

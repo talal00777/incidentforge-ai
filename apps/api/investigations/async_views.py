@@ -17,7 +17,12 @@ from rest_framework.views import APIView
 from evidence.models import EvidenceSnapshot
 from incidents.models import Incident
 from investigations.jobs import ACTIVE, cancel_job, enqueue_job, job_data, request_fingerprint
-from investigations.models import AIInvestigationJob, AIJobEvent, InvestigationAttempt
+from investigations.models import (
+    AIInvestigationJob,
+    AIJobEvent,
+    InvestigationAttempt,
+    InvestigationReport,
+)
 from investigations.providers import ProviderFailure, select_provider
 from investigations.serializers import InvestigationCreateSerializer
 from investigations.validation import snapshot_entries
@@ -57,10 +62,19 @@ class AIJobListCreateView(PrivateAIJobView):
     @extend_schema(responses={200: AIJobStatusSerializer(many=True)}, tags=["investigations"])
     def get(self, request, incident_id):
         incident = self.owned_incident(request, incident_id)
-        jobs = AIInvestigationJob.objects.filter(incident=incident, owner=request.user).order_by(
-            "-requested_at"
-        )[:20]
-        response = Response([job_data(job) for job in jobs])
+        jobs = list(
+            AIInvestigationJob.objects.filter(incident=incident, owner=request.user).order_by(
+                "-requested_at"
+            )[:20]
+        )
+        reports_by_attempt = dict(
+            InvestigationReport.objects.filter(
+                attempt_id__in=[job.attempt_id for job in jobs]
+            ).values_list("attempt_id", "id")
+        )
+        response = Response(
+            [job_data(job, report_id=reports_by_attempt.get(job.attempt_id)) for job in jobs]
+        )
         response["Cache-Control"] = "private, no-store"
         return response
 
