@@ -15,4 +15,4 @@ Generate TypeScript declarations from `apps/web`:
 npm run generate:api
 ```
 
-Run `bash scripts/verify-contract.sh` from the repository root for contract verification. Generated declarations and schemas are ignored by Git.
+Run `bash scripts/verify-contract.sh` from the repository root for contract verification. `contracts/generated/openapi.yaml` is generated on demand and ignored by Git, while `apps/web/src/generated/api.d.ts` is kept synchronized for frontend TypeScript checks.
