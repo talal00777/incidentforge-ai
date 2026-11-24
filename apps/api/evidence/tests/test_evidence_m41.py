@@ -174,3 +174,44 @@ def test_bounds_duplicates_and_unsupported_citations():
         validate_citations(package["entries"], [str(event1.pk)] * 2)
     with pytest.raises(SelectionFailure):
         validate_citations(package["entries"], [])
+
+
+@pytest.mark.django_db
+def test_snapshot_transmitted_reflects_external_investigation_attempt():
+    from investigations.models import InvestigationAttempt
+
+    owner = get_user_model().objects.create_user(
+        "transmit-owner@example.org", "safe-test-password-18"
+    )
+    incident = Incident.objects.create(owner=owner, title="Transfer audit")
+    event = fixture_events(incident, owner, count=1)[0]
+    bundle = build_package(str(incident.pk), [event])
+    snapshot = EvidenceSnapshot.objects.create(
+        incident=incident,
+        created_by=owner,
+        entries=bundle["entries"],
+        sha256=bundle["sha256"],
+        item_count=bundle["event_count"],
+        characters=bundle["characters"],
+        payload_bytes=bundle["payload_bytes"],
+        selection_version=bundle["selection_version"],
+        privacy_policy_version=bundle["privacy_policy_version"],
+        consent_accepted_at=timezone.now(),
+    )
+    client = Client()
+    client.force_login(owner)
+    url = f"/api/v1/incidents/{incident.pk}/evidence/snapshots"
+    assert client.get(url).json()[0]["transmitted"] is False
+    assert client.get(f"{url}/{snapshot.pk}").json()["transmitted"] is False
+    InvestigationAttempt.objects.create(
+        incident=incident,
+        snapshot=snapshot,
+        created_by=owner,
+        snapshot_sha256=snapshot.sha256,
+        provider="openai",
+        model_id="gpt-4o-mini",
+        prompt_profile="zero_shot",
+        consent_accepted_at=timezone.now(),
+    )
+    assert client.get(url).json()[0]["transmitted"] is True
+    assert client.get(f"{url}/{snapshot.pk}").json()["transmitted"] is True
