@@ -27,6 +27,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--provider", choices=("groq", "openai", "openrouter"))
     parser.add_argument("--model", help="Server-allowlisted exact model identifier")
     parser.add_argument("--temperature", type=float, default=0.2)
+    parser.add_argument(
+        "--temperatures",
+        nargs="+",
+        type=float,
+        default=None,
+        help="Optional temperature sweep values (e.g. 0.0 0.2 0.7)",
+    )
     parser.add_argument("--max-tokens", type=int, default=2048)
     parser.add_argument("--max-live-calls", type=int, default=4)
     parser.add_argument("--confirm-synthetic-transfer", action="store_true")
@@ -36,10 +43,15 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _temperatures(args) -> list[float]:
+    return list(args.temperatures) if args.temperatures else [args.temperature]
+
+
 def _validate_options(args, case_count: int) -> None:
     if args.limit is not None and not 1 <= args.limit <= case_count:
         raise ValueError("--limit must be between 1 and 30")
-    if not 0 <= args.temperature <= 1 or not 256 <= args.max_tokens <= 4096:
+    temps = _temperatures(args)
+    if any(not 0 <= temp <= 1 for temp in temps) or not 256 <= args.max_tokens <= 4096:
         raise ValueError("Unsupported evaluation parameter values")
     if args.mode == "live":
         if not (args.confirm_synthetic_transfer and os.getenv("INCIDENTFORGE_EVAL_LIVE") == "1"):
@@ -48,8 +60,11 @@ def _validate_options(args, case_count: int) -> None:
             )
         if not args.provider or not args.model or args.limit is None:
             raise ValueError("Live mode requires --provider, --model and --limit")
-        calls_per_case = sum(2 if item == "decomposed_verified" else 1 for item in args.profiles)
-        if args.max_live_calls < 1 or args.limit * calls_per_case > args.max_live_calls:
+        calls_per_case = sum(3 if item == "decomposed_verified" else 1 for item in args.profiles)
+        if (
+            args.max_live_calls < 1
+            or args.limit * calls_per_case * len(temps) > args.max_live_calls
+        ):
             raise ValueError("Live provider call count exceeds explicit --max-live-calls budget")
     elif args.provider or args.model or args.confirm_synthetic_transfer:
         raise ValueError("Offline mode must not receive provider settings or network consent")
@@ -147,6 +162,7 @@ def main(argv=None) -> int:
 
             provider = select_provider(args.provider, args.model)
         selected = cases[: args.limit] if args.limit is not None else cases
+        temps = _temperatures(args)
         results = [
             run_case(
                 case,
@@ -154,9 +170,10 @@ def main(argv=None) -> int:
                 mode=args.mode,
                 provider=provider,
                 model=args.model,
-                temperature=args.temperature,
+                temperature=temp,
                 max_tokens=args.max_tokens,
             )
+            for temp in temps
             for case in selected
             for profile in args.profiles
         ]
@@ -166,7 +183,8 @@ def main(argv=None) -> int:
             "dataset_sha256": digest,
             "provider": args.provider if args.mode == "live" else None,
             "model": args.model if args.mode == "live" else None,
-            "requested_temperature": args.temperature,
+            "requested_temperature": temps[0],
+            "requested_temperatures": temps,
             "requested_max_tokens": args.max_tokens,
             "model_effective_parameters_unverified": args.mode == "live",
             "case_count": len(selected),

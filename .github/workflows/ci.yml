@@ -63,7 +63,16 @@ jobs:
           python manage.py makemigrations --check --dry-run
       - name: Backend tests
         working-directory: apps/api
-        run: pytest --cov=core --cov-report=term-missing
+        run: >-
+          pytest
+          --cov=core
+          --cov=accounts
+          --cov=incidents
+          --cov=ingestion
+          --cov=analytics
+          --cov=evidence
+          --cov=investigations
+          --cov-report=term-missing
       - name: Contract policy unit tests
         run: python -m unittest discover -s scripts -p "test_*.py"
       - name: Install frontend
@@ -73,6 +82,7 @@ jobs:
         working-directory: apps/web
         run: |
           npm run lint
+          npm run typecheck
           npm test
       - name: Generate and validate API contracts
         run: bash scripts/verify-contract.sh

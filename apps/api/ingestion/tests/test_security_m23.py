@@ -79,6 +79,18 @@ def test_redaction_masks_structured_credentials_and_emails():
     assert "[REDACTED_EMAIL]" in sanitized
 
 
+def test_redaction_masks_jwts_pem_keys_and_provider_tokens():
+    jwt_val = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+    pem = "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEAsecretkeymaterial\n-----END RSA PRIVATE KEY-----"
+    provider_tok = "sk-proj-abcdefghijklmnopqrstuvwxyz123456"
+    gcp_tok = "AIzaSyD-1234567890abcdefghijklmnopqrstuv"
+    sample = f"jwt={jwt_val} key={provider_tok} gcp={gcp_tok}\n{pem}"
+    sanitized = redact_message(sample)
+    for raw in (jwt_val, "MIIEowIBAAKCAQEAsecretkeymaterial", provider_tok, gcp_tok):
+        assert raw not in sanitized
+    assert "[REDACTED_PRIVATE_KEY]" in sanitized
+
+
 def test_parser_redacts_structured_metadata_and_message():
     records = list(
         iter_records(

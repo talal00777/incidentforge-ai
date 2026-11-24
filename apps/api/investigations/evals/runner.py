@@ -30,6 +30,9 @@ class ReferenceAdapter:
                 "observed_facts": copy.deepcopy(report["observed_facts"]),
                 "limitations": copy.deepcopy(report["limitations"]),
             }, {}
+        if supplied.get("task") == "verify":
+            if "draft_report" not in supplied or "extracted_facts" not in supplied:
+                raise ValueError("Verification stage must receive extracted_facts and draft_report")
         return reference_report(self.case), {}
 
 
@@ -83,6 +86,7 @@ def run_case(
     max_tokens: int = 2048,
 ) -> dict:
     from investigations.evals.dataset import PROFILES
+    from investigations.prompts import prompt_sha256
     from investigations.providers import ProviderFailure
     from investigations.service import run_investigation
 
@@ -97,6 +101,8 @@ def run_case(
         "case_id": case["case_id"],
         "category": case["category"],
         "profile": profile,
+        "temperature": temperature,
+        "provider_calls": 3 if profile == "decomposed_verified" else 1,
         "valid": False,
         "error_code": None,
         "latency_ms": None,
@@ -104,6 +110,7 @@ def run_case(
         "token_usage": None,
         "report": None,
         "prompt_version": None,
+        "prompt_sha256": prompt_sha256(profile),
     }
     try:
         report, usage, prompt_version = run_investigation(

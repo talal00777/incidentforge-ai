@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import Exists, OuterRef
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
@@ -17,6 +18,7 @@ from evidence.serializers import (
 )
 from incidents.models import Incident
 from ingestion.models import LogEvent
+from investigations.models import InvestigationAttempt
 
 
 class ScopedEvidenceView(APIView):
@@ -63,8 +65,20 @@ class EvidenceSnapshotListCreateView(ScopedEvidenceView):
     )
     def get(self, request, incident_id):
         incident = self.owned_incident(incident_id)
-        snapshots = EvidenceSnapshot.objects.filter(incident=incident)[:30]
-        return Response([snapshot_data(snapshot, include_entries=False) for snapshot in snapshots])
+        transmitted_subquery = InvestigationAttempt.objects.filter(snapshot_id=OuterRef("pk"))
+        snapshots = EvidenceSnapshot.objects.filter(incident=incident).annotate(
+            was_transmitted=Exists(transmitted_subquery)
+        )[:30]
+        return Response(
+            [
+                snapshot_data(
+                    snapshot,
+                    include_entries=False,
+                    transmitted=bool(snapshot.was_transmitted),
+                )
+                for snapshot in snapshots
+            ]
+        )
 
     @extend_schema(
         request=EvidenceSnapshotCreateSerializer,
@@ -100,7 +114,7 @@ class EvidenceSnapshotListCreateView(ScopedEvidenceView):
                 )
         except SelectionFailure as exc:
             return Response({"code": exc.code, "detail": exc.message}, status=exc.status_code)
-        return Response(snapshot_data(snapshot), status=201)
+        return Response(snapshot_data(snapshot, transmitted=False), status=201)
 
 
 class EvidenceSnapshotDetailView(ScopedEvidenceView):
@@ -108,10 +122,11 @@ class EvidenceSnapshotDetailView(ScopedEvidenceView):
     def get(self, request, incident_id, snapshot_id):
         incident = self.owned_incident(incident_id)
         snapshot = get_object_or_404(EvidenceSnapshot, id=snapshot_id, incident=incident)
-        return Response(snapshot_data(snapshot))
+        transmitted = InvestigationAttempt.objects.filter(snapshot=snapshot).exists()
+        return Response(snapshot_data(snapshot, transmitted=transmitted))
 
 
-def snapshot_data(snapshot, *, include_entries=True):
+def snapshot_data(snapshot, *, include_entries=True, transmitted=False):
     result = {
         "id": str(snapshot.id),
         "sha256": snapshot.sha256,
@@ -122,7 +137,7 @@ def snapshot_data(snapshot, *, include_entries=True):
         "privacy_policy_version": snapshot.privacy_policy_version,
         "consent_accepted_at": snapshot.consent_accepted_at,
         "created_at": snapshot.created_at,
-        "transmitted": False,
+        "transmitted": bool(transmitted),
     }
     if include_entries:
         result["entries"] = snapshot.entries

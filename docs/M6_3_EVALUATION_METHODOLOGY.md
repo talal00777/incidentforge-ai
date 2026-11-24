@@ -33,7 +33,7 @@ INCIDENTFORGE_EVAL_LIVE=1 python -m investigations.evals.cli \
   --limit 1 --max-live-calls 4
 ```
 
-Use the actual model identifier from your provider allowlist. The profile comparison should keep the *same provider, model, pinned corpus, prompts, evidence, supported temperature, output-token budget and run environment*. A decomposed run uses two provider calls; quota and latency must be compared on that basis. The service logs requested parameters, not provider-guaranteed effective values. If unsupported, provider rejection is recorded as an error, not silently reinterpreted.
+Use the actual model identifier from your provider allowlist. The profile comparison should keep the *same provider, model, pinned corpus, prompts, evidence, supported temperature, output-token budget and run environment*. A `decomposed_verified` run uses three provider calls (fact extraction, report synthesis, and independent grounded critique); quota and latency must be compared on that basis. Use `--temperatures 0.0 0.2 0.7` for controlled temperature sweeps where supported. The service logs requested parameters, not provider-guaranteed effective values. If unsupported, provider rejection is recorded as an error, not silently reinterpreted.
 
 ## Metrics and interpretation
 

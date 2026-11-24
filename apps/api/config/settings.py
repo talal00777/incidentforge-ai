@@ -100,7 +100,13 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
-    "DEFAULT_THROTTLE_RATES": {"login": "10/min", "registration": "5/hour"},
+    "DEFAULT_THROTTLE_RATES": {
+        "login": "10/min",
+        "registration": "5/hour",
+        "upload": "60/hour",
+        "analytics": "120/min",
+        "export": "60/hour",
+    },
 }
 SPECTACULAR_SETTINGS = {
     "TITLE": "IncidentForge API",
@@ -149,8 +155,14 @@ if RETENTION_CLEANUP_ENABLED:
                 "task": "incidents.tasks.purge_deleted_reports",
                 "schedule": 86400.0,
             },
+            "purge-deleted-evidence": {
+                "task": "incidents.tasks.purge_deleted_evidence",
+                "schedule": 86400.0,
+            },
         }
     )
+
+ENABLE_DJANGO_ADMIN = env_bool("DJANGO_ENABLE_ADMIN", DEBUG)
 
 CSRF_TRUSTED_ORIGINS = env_csv("DJANGO_CSRF_TRUSTED_ORIGINS")
 CSRF_COOKIE_SECURE = not DEBUG
@@ -214,6 +226,7 @@ AI_JOB_MAX_ATTEMPTS = bounded_env_int("AI_JOB_MAX_ATTEMPTS", 3, 1, 5)
 AI_JOB_LEASE_SECONDS = bounded_env_int("AI_JOB_LEASE_SECONDS", 180, 30, 900)
 AI_JOB_MAX_ACTIVE_PER_OWNER = bounded_env_int("AI_JOB_MAX_ACTIVE_PER_OWNER", 2, 1, 5)
 AI_JOB_RECONCILE_BATCH_SIZE = bounded_env_int("AI_JOB_RECONCILE_BATCH_SIZE", 50, 1, 250)
+AI_PROVIDER_TIMEOUT_SECONDS = bounded_env_int("AI_PROVIDER_TIMEOUT_SECONDS", 16, 5, 120)
 CELERY_BEAT_SCHEDULE["reconcile-investigations"] = {
     "task": "investigations.jobs.reconcile_investigations",
     "schedule": 60.0,

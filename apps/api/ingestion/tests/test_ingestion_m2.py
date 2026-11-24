@@ -132,3 +132,45 @@ def test_version_upgrade_replaces_only_incomplete_source_events(tmp_path):
         assert len(events) == 1
         assert events[0].parser_version == VERSION
         assert events[0].redacted_message == "replayed"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_events_endpoint_supports_service_search_source_time_and_sort_filters(tmp_path):
+    with override_settings(INGESTION_STORAGE_ROOT=str(tmp_path)):
+        owner = get_user_model().objects.create_user(
+            "filter-owner@example.org", "test-passphrase-long-169"
+        )
+        incident = Incident.objects.create(owner=owner, title="Filter events")
+        client = Client()
+        client.force_login(owner)
+        contents = (
+            b'{"timestamp":"2026-10-25T10:00:00Z","level":"ERROR","service":"checkout","message":"pool exhausted"}\n'
+            b'{"timestamp":"2026-10-25T10:05:00Z","level":"WARN","service":"payments","message":"retry scheduled"}\n'
+            b'{"timestamp":"2026-10-25T10:10:00Z","level":"ERROR","service":"payments","message":"upstream timeout"}\n'
+        )
+        with patch("ingestion.views.process_ingestion.delay"):
+            upload_resp = client.post(
+                f"/api/v1/incidents/{incident.id}/uploads",
+                {"files": SimpleUploadedFile("events.jsonl", contents)},
+            )
+        process_ingestion(upload_resp.json()["job_id"])
+        source_id = upload_resp.json()["source_ids"][0]
+        url = f"/api/v1/incidents/{incident.id}/events"
+
+        by_service = client.get(f"{url}?service=payments&severity=ERROR").json()
+        assert by_service["count"] == 1
+        assert by_service["results"][0]["message"] == "upstream timeout"
+
+        by_search = client.get(f"{url}?search=exhausted&source_id={source_id}").json()
+        assert by_search["count"] == 1
+        assert by_search["results"][0]["service"] == "checkout"
+
+        by_window = client.get(
+            f"{url}?from=2026-10-25T10:04:00Z&to=2026-10-25T10:06:00Z&sort=occurred_asc"
+        ).json()
+        assert by_window["count"] == 1
+        assert by_window["results"][0]["message"] == "retry scheduled"
+
+        assert client.get(f"{url}?source_id=not-a-uuid").status_code == 400
+        assert client.get(f"{url}?from=2026-10-25T10:00:00").status_code == 400
+        assert client.get(f"{url}?sort=unknown").status_code == 400

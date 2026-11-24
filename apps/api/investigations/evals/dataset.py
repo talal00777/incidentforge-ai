@@ -101,12 +101,17 @@ def _check_case(case: dict) -> None:
         ):
             raise DatasetError("Invalid source lines")
         if entry["occurred_at"] is None:
-            if entry["timestamp_quality"] != "missing":
+            if entry["timestamp_quality"] not in {"missing", "unknown_timezone", "invalid"}:
                 raise DatasetError("Missing timestamps must be marked explicitly")
         elif not isinstance(entry["occurred_at"], str) or not entry["occurred_at"].endswith("Z"):
             raise DatasetError("Expected UTC timestamp")
-        if entry["timestamp_quality"] not in {"parsed", "missing", "assumed_utc"}:
+        if entry["timestamp_quality"] not in {"explicit", "missing", "unknown_timezone", "invalid"}:
             raise DatasetError("Invalid timestamp quality")
+    if case["category"] == "multiservice":
+        services = {entry["service"] for entry in entries if entry["service"]}
+        sources = {entry["source_id"] for entry in entries}
+        if len(services) < 2 or len(sources) < 2:
+            raise DatasetError("Multiservice cases must span multiple services and sources")
     gold = case["gold"]
     if not isinstance(gold, dict) or set(gold) != {
         "observed_fact",

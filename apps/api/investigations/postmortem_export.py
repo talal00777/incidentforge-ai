@@ -4,8 +4,10 @@ This module does not query the database or accept mutable review state. Callers 
 verify the stored content checksum and authorize the incident before invoking it.
 """
 
+import atexit
 import io
 import os
+import shutil
 import tempfile
 from collections import Counter
 from datetime import UTC
@@ -144,14 +146,26 @@ def _styles() -> dict[str, ParagraphStyle]:
     }
 
 
+_MPL_TEMP_DIR: str | None = None
+
+
+def _ensure_mpl_config_dir() -> None:
+    global _MPL_TEMP_DIR
+    if os.environ.get("MPLCONFIGDIR"):
+        return
+    if _MPL_TEMP_DIR is None:
+        _MPL_TEMP_DIR = tempfile.mkdtemp(prefix="incidentforge-matplotlib-")
+        atexit.register(shutil.rmtree, _MPL_TEMP_DIR, True)
+    os.environ["MPLCONFIGDIR"] = _MPL_TEMP_DIR
+
+
 def _service_chart(timeline: list[dict]) -> io.BytesIO | None:
     """A reproducible, source-bounded chart of selected evidence, not all incident events."""
     counts = Counter(item.get("service") or "Unspecified" for item in timeline)
     if not counts:
         return None
     # A backend-only Agg renderer; native interactive web charts remain separate.
-    if not os.environ.get("MPLCONFIGDIR"):
-        os.environ["MPLCONFIGDIR"] = tempfile.mkdtemp(prefix="incidentforge-matplotlib-")
+    _ensure_mpl_config_dir()
     from matplotlib.backends.backend_agg import FigureCanvasAgg
     from matplotlib.figure import Figure
 

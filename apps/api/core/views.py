@@ -42,7 +42,19 @@ class SystemInfoView(APIView):
             {
                 "name": "IncidentForge AI",
                 "api_version": "v1",
-                "milestone": "M0",
-                "capabilities": ["health", "openapi"],
+                "milestone": "M6.3",
+                "capabilities": [
+                    "health",
+                    "openapi",
+                    "auth",
+                    "incidents",
+                    "ingestion",
+                    "analytics",
+                    "evidence",
+                    "investigations",
+                    "reviews",
+                    "postmortems",
+                    "evaluations",
+                ],
             }
         )

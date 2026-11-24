@@ -1,11 +1,15 @@
 import logging
+from datetime import UTC, datetime
+from uuid import UUID
 
 from django.conf import settings
 from django.db import transaction
+from django.db.models import F, Q
 from django.shortcuts import get_object_or_404
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import pagination, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -142,6 +146,19 @@ class EventPagination(pagination.PageNumberPagination):
     page_size_query_param = "page_size"
 
 
+def _parse_iso_utc(value: str, field: str) -> datetime:
+    try:
+        normalized = value.strip()
+        if normalized.endswith("Z"):
+            normalized = normalized[:-1] + "+00:00"
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError as exc:
+        raise ValidationError({field: "Enter a valid ISO-8601 timestamp with timezone."}) from exc
+    if parsed.tzinfo is None:
+        raise ValidationError({field: "Timestamp filter must include a timezone offset."})
+    return parsed.astimezone(UTC)
+
+
 class EventsView(OwnedIncidentView):
     @extend_schema(
         request=None,
@@ -149,15 +166,62 @@ class EventsView(OwnedIncidentView):
             OpenApiParameter("page", OpenApiTypes.INT, required=False),
             OpenApiParameter("page_size", OpenApiTypes.INT, required=False),
             OpenApiParameter("severity", OpenApiTypes.STR, required=False),
+            OpenApiParameter("service", OpenApiTypes.STR, required=False),
+            OpenApiParameter("source_id", OpenApiTypes.UUID, required=False),
+            OpenApiParameter("search", OpenApiTypes.STR, required=False),
+            OpenApiParameter("from", OpenApiTypes.DATETIME, required=False),
+            OpenApiParameter("to", OpenApiTypes.DATETIME, required=False),
+            OpenApiParameter(
+                "sort",
+                OpenApiTypes.STR,
+                required=False,
+                enum=["observed_desc", "occurred_desc", "occurred_asc", "source"],
+            ),
         ],
         responses={200: PaginatedEventsSerializer},
     )
     def get(self, request, incident_id):
         incident = self.incident(incident_id)
-        events = LogEvent.objects.filter(incident=incident).order_by("-observed_at", "-id")
+        events = LogEvent.objects.filter(incident=incident)
         severity = request.query_params.get("severity")
         if severity:
-            events = events.filter(severity=severity.upper()[:16])
+            events = events.filter(severity=severity.strip().upper()[:16])
+        service = request.query_params.get("service", "").strip()
+        if service:
+            events = events.filter(service__iexact=service[:120])
+        source_id = request.query_params.get("source_id", "").strip()
+        if source_id:
+            try:
+                parsed_source = UUID(source_id)
+            except ValueError as exc:
+                raise ValidationError({"source_id": "Enter a valid source UUID."}) from exc
+            events = events.filter(source_id=parsed_source)
+        search = request.query_params.get("search", "").strip()
+        if len(search) > 100:
+            raise ValidationError({"search": "Search must be 100 characters or fewer."})
+        if search:
+            events = events.filter(
+                Q(redacted_message__icontains=search) | Q(service__icontains=search)
+            )
+        from_raw = request.query_params.get("from", "").strip()
+        if from_raw:
+            events = events.filter(occurred_at__gte=_parse_iso_utc(from_raw, "from"))
+        to_raw = request.query_params.get("to", "").strip()
+        if to_raw:
+            events = events.filter(occurred_at__lte=_parse_iso_utc(to_raw, "to"))
+        sort = request.query_params.get("sort", "observed_desc").strip()
+        if sort == "observed_desc":
+            events = events.order_by("-observed_at", "-id")
+        elif sort == "occurred_desc":
+            events = events.order_by(F("occurred_at").desc(nulls_last=True), "-id")
+        elif sort == "occurred_asc":
+            events = events.order_by(F("occurred_at").asc(nulls_last=True), "id")
+        elif sort == "source":
+            events = events.order_by("source_id", "line_start", "id")
+        else:
+            raise ValidationError(
+                {"sort": "Choose observed_desc, occurred_desc, occurred_asc, or source."}
+            )
         page = EventPagination()
         records = page.paginate_queryset(events, request, view=self)
         return page.get_paginated_response(

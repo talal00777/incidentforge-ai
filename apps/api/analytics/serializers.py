@@ -9,6 +9,7 @@ class CountBySeveritySerializer(serializers.Serializer):
 class CountByServiceSerializer(serializers.Serializer):
     service = serializers.CharField()
     count = serializers.IntegerField()
+    error_events = serializers.IntegerField()
 
 
 class FingerprintGroupSerializer(serializers.Serializer):

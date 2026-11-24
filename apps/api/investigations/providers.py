@@ -3,9 +3,29 @@
 import json
 import os
 from dataclasses import dataclass
+from typing import Protocol
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
+
+
+class LLMAdapter(Protocol):
+    """Provider-neutral contract so LLM backends remain interchangeable."""
+
+    def complete(
+        self, *, model: str, messages: list[dict], schema: dict, temperature: float, max_tokens: int
+    ) -> tuple[dict, dict]: ...
+
+
+def configured_timeout(default: int = 16) -> int:
+    raw = os.getenv("AI_PROVIDER_TIMEOUT_SECONDS")
+    if not raw:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        return default
+    return value if 5 <= value <= 120 else default
 
 
 @dataclass(frozen=True)
@@ -124,8 +144,9 @@ def _reasoning_payload(payload: dict, profile: ProviderProfile, model: str) -> d
 class ChatCompletionsAdapter:
     """Network boundary; replaceable with fake adapter in application tests."""
 
-    def __init__(self, profile: ProviderProfile):
+    def __init__(self, profile: ProviderProfile, *, timeout: int | None = None):
         self.profile = profile
+        self.timeout = configured_timeout() if timeout is None else timeout
 
     def complete(
         self, *, model: str, messages: list[dict], schema: dict, temperature: float, max_tokens: int
@@ -180,7 +201,7 @@ class ChatCompletionsAdapter:
             },
         )
         try:
-            with urlopen(request, timeout=16) as response:  # noqa: S310 - fixed operator-owned HTTPS endpoints
+            with urlopen(request, timeout=self.timeout) as response:  # noqa: S310 - fixed operator-owned HTTPS endpoints
                 if response.status != 200:
                     raise ProviderFailure(
                         "provider_error", "The AI provider returned an unexpected response."

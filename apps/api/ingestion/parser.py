@@ -26,6 +26,28 @@ TRACE_CONTINUATION = re.compile(
     r"|at\s+|\.{3}\s+\d+\s+more|[\w.]+(?:Error|Exception):)",
     re.I,
 )
+PLAIN_SERVICE = re.compile(r"(?<![\w-])service\s*[:=]\s*([A-Za-z0-9._:/-]{1,120})(?![\w-])", re.I)
+PLAIN_TRACE = re.compile(r"(?<![\w-])trace[_-]?id\s*[:=]\s*([A-Za-z0-9._:-]{6,128})(?![\w-])", re.I)
+FP_UUID = re.compile(r"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b", re.I)
+FP_ISO_TIME = re.compile(r"\b\d{4}-\d\d-\d\d[T ]\d\d:\d\d:\d\d(?:[.,]\d+)?(?:Z|[+-]\d\d:?\d\d)?\b")
+FP_IPV4 = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}(?::\d+)?\b")
+FP_KV_ID = re.compile(
+    r"(?i)\b(request[_-]?id|req[_-]?id|trace[_-]?id|span[_-]?id|correlation[_-]?id|tx[_-]?id)"
+    r"(\s*[:=]\s*)[A-Za-z0-9._:-]+"
+)
+FP_HEX = re.compile(r"\b(?:0x)?[0-9a-f]{8,}\b", re.I)
+FP_NUMBER = re.compile(r"(?<![A-Za-z0-9_])\d+(?:\.\d+)?(?=(?:ms|us|ns|s|kb|mb|gb|b)?\b)", re.I)
+
+
+def normalize_fingerprint_message(message: str) -> str:
+    """Normalize high-cardinality tokens so related error templates share a fingerprint."""
+    normalized = FP_UUID.sub("<UUID>", message)
+    normalized = FP_ISO_TIME.sub("<TS>", normalized)
+    normalized = FP_IPV4.sub("<IP>", normalized)
+    normalized = FP_KV_ID.sub(r"\1\2<ID>", normalized)
+    normalized = FP_HEX.sub("<HEX>", normalized)
+    normalized = FP_NUMBER.sub("<NUM>", normalized)
+    return " ".join(normalized.split())
 
 
 def redact(message: str) -> str:
@@ -96,6 +118,7 @@ def _event(
     message: str,
 ) -> dict:
     safe = redact(message)
+    template = normalize_fingerprint_message(safe)
     return {
         "line_start": start,
         "line_end": end,
@@ -105,7 +128,7 @@ def _event(
         "service": service,
         "trace_id": trace,
         "redacted_message": safe,
-        "fingerprint": hashlib.sha256((severity + ":" + safe).encode()).hexdigest(),
+        "fingerprint": hashlib.sha256((severity + ":" + template).encode()).hexdigest(),
         "parser_version": VERSION,
     }
 
@@ -135,7 +158,11 @@ def parse_line(
     message = match.group("body") if match else text
     found = SEVERITIES.search(message)
     severity = found.group(1).upper() if found else ""
-    return _event(number, end, occurred, quality, severity, "", "", message), None
+    service_match = PLAIN_SERVICE.search(message)
+    service = redact(service_match.group(1))[:120] if service_match else ""
+    trace_match = PLAIN_TRACE.search(message)
+    trace = redact(trace_match.group(1))[:128] if trace_match else ""
+    return _event(number, end, occurred, quality, severity, service, trace, message), None
 
 
 def _bounded_lines(handle: BinaryIO) -> Iterator[tuple[bytes | None, int, str | None]]:
@@ -320,6 +347,30 @@ def _single_json_document(handle: BinaryIO) -> Iterator[tuple[dict | None, str |
     yield parse_line(raw, 1, line_end=end)
 
 
+def _is_multiline_json_object(handle: BinaryIO, prefix: bytes) -> bool:
+    if not prefix.startswith(b"{"):
+        return False
+    first_line = prefix.split(b"\n", 1)[0].strip()
+    if first_line == b"{":
+        return True
+    try:
+        json.loads(first_line.decode("utf-8-sig"))
+        return False
+    except (ValueError, UnicodeDecodeError):
+        pass
+    sample = handle.read(MAX_RECORD_BYTES + 1)
+    handle.seek(0)
+    if len(sample) > MAX_RECORD_BYTES:
+        return False
+    try:
+        text = sample.decode("utf-8-sig").strip()
+        if not _json_depth_ok(text):
+            return False
+        return isinstance(json.loads(text), dict)
+    except (ValueError, UnicodeDecodeError, RecursionError):
+        return False
+
+
 def iter_records(handle: BinaryIO) -> Iterator[tuple[dict | None, str | None]]:
     """Yield accepted events or bounded rejection diagnostics from a seekable binary stream."""
     prefix = handle.read(4096).lstrip(b"\xef\xbb\xbf \t\r\n")
@@ -328,7 +379,7 @@ def iter_records(handle: BinaryIO) -> Iterator[tuple[dict | None, str | None]]:
         if handle.read(3) != b"\xef\xbb\xbf":
             handle.seek(0)
         yield from _array_records(handle)
-    elif prefix.startswith(b"{") and prefix.split(b"\n", 1)[0].strip() == b"{":
+    elif _is_multiline_json_object(handle, prefix):
         yield from _single_json_document(handle)
     else:
         yield from _plain_records(handle)

@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema
@@ -8,7 +10,8 @@ from rest_framework.views import APIView
 
 from evidence.models import EvidenceSnapshot
 from incidents.models import Incident
-from investigations.models import InvestigationAttempt, InvestigationReport
+from investigations.jobs import ACTIVE
+from investigations.models import AIInvestigationJob, InvestigationAttempt, InvestigationReport
 from investigations.providers import ProviderFailure, public_profiles, select_provider
 from investigations.serializers import (
     InvestigationCreateSerializer,
@@ -102,16 +105,34 @@ class InvestigationListCreateView(ScopedInvestigationView):
             return Response({"code": exc.code, "detail": exc.message}, status=exc.status)
 
         consent_time = timezone.now()
-        attempt = InvestigationAttempt.objects.create(
-            incident=incident,
-            snapshot=snapshot,
-            created_by=request.user,
-            snapshot_sha256=snapshot.sha256,
-            provider=profile.name,
-            model_id=data["model_id"],
-            prompt_profile=data["prompt_profile"],
-            consent_accepted_at=consent_time,
-        )
+        with transaction.atomic():
+            Incident.objects.select_for_update().get(pk=incident.pk)
+            if AIInvestigationJob.objects.filter(incident=incident, state__in=ACTIVE).exists():
+                return Response(
+                    {
+                        "code": "investigation_active",
+                        "detail": "An investigation is already running for this incident.",
+                    },
+                    status=409,
+                )
+            if (
+                AIInvestigationJob.objects.filter(owner=request.user, state__in=ACTIVE).count()
+                >= settings.AI_JOB_MAX_ACTIVE_PER_OWNER
+            ):
+                return Response(
+                    {"code": "investigation_limit", "detail": "Too many active investigations."},
+                    status=429,
+                )
+            attempt = InvestigationAttempt.objects.create(
+                incident=incident,
+                snapshot=snapshot,
+                created_by=request.user,
+                snapshot_sha256=snapshot.sha256,
+                provider=profile.name,
+                model_id=data["model_id"],
+                prompt_profile=data["prompt_profile"],
+                consent_accepted_at=consent_time,
+            )
         try:
             # Only redacted immutable entries are transmitted; never raw source files.
             report, usage, version = run_investigation(
