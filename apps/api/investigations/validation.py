@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import re
 from uuid import UUID
 
 from evidence.selection import (
@@ -16,6 +17,21 @@ from evidence.selection import (
 from investigations.providers import ProviderFailure
 
 MAX_TEXT = 850
+DISALLOWED_SCRIPT_SCHEME = re.compile(r"(?i)\b(?:javascript|data|vbscript)\s*:")
+EMBEDDED_URL = re.compile(r"(?i)\bhttps?://\S+")
+UNSAFE_COMMAND = re.compile(
+    r"(?i)(?:"
+    r"\brm\s+-[a-z]*[rf][a-z]*\b|"
+    r"\b(?:curl|wget)\b[^|]*\|\s*(?:sh|bash|zsh|python|pwsh)\b|"
+    r"\bkubectl\s+(?:delete|apply|exec|patch|scale|rollout\s+restart)\b|"
+    r"\b(?:drop\s+(?:table|database|schema)|truncate\s+table)\b|"
+    r"\bchmod\s+777\b|"
+    r"\bsudo\s+\S|"
+    r"\b(?:bash|sh)\s+-c\b|"
+    r"\bpowershell(?:\.exe)?\s+-[a-z]*enc|"
+    r"\beval\s*\("
+    r")"
+)
 
 
 def snapshot_entries(snapshot) -> list[dict]:
@@ -67,12 +83,25 @@ def _validate_text(value, *, allow_empty=False) -> str:
         or (not value.strip() and not allow_empty)
     ):
         raise ProviderFailure("ungrounded_output", "The AI result failed evidence validation.", 422)
+    if DISALLOWED_SCRIPT_SCHEME.search(value):
+        raise ProviderFailure("unsafe_action", "The AI result failed safety validation.", 422)
     try:
         return _safe_text(value)
     except SelectionFailure as exc:
         raise ProviderFailure(
             "ungrounded_output", "The AI result failed privacy validation.", 422
         ) from exc
+
+
+def _validate_action_text(value) -> str:
+    text = _validate_text(value)
+    if UNSAFE_COMMAND.search(text) or EMBEDDED_URL.search(text):
+        raise ProviderFailure(
+            "unsafe_action",
+            "The AI result contained an unsafe or executable suggestion.",
+            422,
+        )
+    return text
 
 
 def _strings(items, limit):
@@ -199,6 +228,6 @@ def validate_report(data: dict, entries: list[dict]) -> dict:
             raise ProviderFailure(
                 "invalid_response", "The AI result failed safety validation.", 422
             )
-        _validate_text(item["action"])
+        _validate_action_text(item["action"])
         _references(item["rationale_event_ids"], entries, required=True)
     return data

@@ -35,13 +35,27 @@ def run_investigation(
                 usage_total[field] += value
         return result
 
-    observed = None
     if prompt_profile == "decomposed_verified":
         observed = validate_facts(
             call(messages_for("extract", entries), FACTS_SCHEMA, min(max_tokens, 1024)), entries
         )
+        draft = validate_report(
+            call(
+                messages_for("decomposed_verified", entries, observed=observed),
+                REPORT_SCHEMA,
+                max_tokens,
+            ),
+            entries,
+        )
+        verified = validate_report(
+            call(
+                messages_for("verify", entries, observed=observed, draft=draft),
+                REPORT_SCHEMA,
+                max_tokens,
+            ),
+            entries,
+        )
+        return verified, usage_total, PROMPT_VERSION
 
-    report = call(
-        messages_for(prompt_profile, entries, observed=observed), REPORT_SCHEMA, max_tokens
-    )
+    report = call(messages_for(prompt_profile, entries), REPORT_SCHEMA, max_tokens)
     return validate_report(report, entries), usage_total, PROMPT_VERSION
