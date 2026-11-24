@@ -17,11 +17,16 @@ describe("API client", () => {
       .mockResolvedValueOnce(new Response(JSON.stringify({ csrf_token: "csrf-example" }), { status: 200 }))
       .mockResolvedValueOnce(new Response(JSON.stringify({ id: "incident-1" }), { status: 201 }));
     vi.stubGlobal("fetch", fetchMock);
-    await apiWrite("incidents", "POST", { title: "Incident title" });
+    await apiWrite("incidents", "POST", { title: "Incident title" }, { "Idempotency-Key": "req-key-12345678" });
     expect(fetchMock.mock.calls[0][0]).toBe("/api/v1/auth/csrf");
     expect(fetchMock.mock.calls[1][0]).toBe("/api/v1/incidents");
     expect(fetchMock.mock.calls[1][1]).toEqual(expect.objectContaining({
-      method: "POST", credentials: "same-origin", headers: expect.objectContaining({ "X-CSRFToken": "csrf-example" }),
+      method: "POST",
+      credentials: "same-origin",
+      headers: expect.objectContaining({
+        "X-CSRFToken": "csrf-example",
+        "Idempotency-Key": "req-key-12345678",
+      }),
     }));
   });
 

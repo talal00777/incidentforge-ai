@@ -1,19 +1,16 @@
-export type Account = Readonly<{
-  id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-}>;
+import type { components } from "@/generated/api";
+
+export type Account = Readonly<components["schemas"]["User"]>;
 
 export type Incident = Readonly<{
   id: string;
   title: string;
   description: string;
   service_name: string;
-  environment: "production" | "staging" | "development" | "other";
+  environment: NonNullable<components["schemas"]["Incident"]["environment"]>;
   timezone: string;
-  severity: "low" | "medium" | "high" | "critical";
-  status: "open" | "investigating" | "resolved" | "archived";
+  severity: NonNullable<components["schemas"]["Incident"]["severity"]>;
+  status: NonNullable<components["schemas"]["Incident"]["status"]>;
   impact_notes: string;
   created_at: string;
   updated_at: string;
@@ -73,6 +70,7 @@ export async function apiWrite<T>(
   path: string,
   method: "POST" | "PUT" | "PATCH" | "DELETE",
   payload?: unknown,
+  extraHeaders?: Record<string, string>,
 ): Promise<T> {
   const csrf = await apiGet<{ csrf_token: string }>("auth/csrf");
   const response = await fetch(`/api/v1/${path}`, {
@@ -83,6 +81,7 @@ export async function apiWrite<T>(
       Accept: "application/json",
       "Content-Type": "application/json",
       "X-CSRFToken": csrf.csrf_token,
+      ...extraHeaders,
     },
     ...(payload !== undefined ? { body: JSON.stringify(payload) } : {}),
   });

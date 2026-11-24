@@ -1,21 +1,10 @@
-export type AnalysisBucket = { start: string; total: number; errors: number };
-export type AnalysisSeverity = { severity: string; count: number };
-export type AnalysisService = { service: string; count: number; error_events: number };
-export type AnalysisGroup = { fingerprint: string; count: number; event_ids: string[] };
+import type { components } from "@/generated/api";
 
-export type IncidentAnalysis = {
-  algorithm_version: string;
-  input_sha256: string;
-  total_events: number;
-  error_events: number;
-  missing_event_time: number;
-  severity_counts: AnalysisSeverity[];
-  service_counts: AnalysisService[];
-  fingerprint_groups: AnalysisGroup[];
-  timeline: AnalysisBucket[];
-  anomaly: { status: string; reason?: string; buckets: string[] };
-  limitations: string[];
-};
+export type AnalysisBucket = components["schemas"]["TimelineBucket"];
+export type AnalysisSeverity = components["schemas"]["CountBySeverity"];
+export type AnalysisService = components["schemas"]["CountByService"];
+export type AnalysisGroup = components["schemas"]["FingerprintGroup"];
+export type IncidentAnalysis = components["schemas"]["Analysis"];
 
 export const CHART_PAGE_SIZE = 36;
 
