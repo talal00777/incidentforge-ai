@@ -200,6 +200,126 @@
       "path": "/api/v1/incidents/{incident_id}/reports/{version_id}/download",
       "method": "get",
       "status": "200"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/events/facets",
+      "method": "get",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/events/{event_id}/context",
+      "method": "get",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/timeline",
+      "method": "get",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/timeline",
+      "method": "post",
+      "status": "201"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/timeline/{entry_id}",
+      "method": "delete",
+      "status": "204"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/action-items",
+      "method": "get",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/action-items",
+      "method": "post",
+      "status": "201"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/action-items/{item_id}",
+      "method": "patch",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/incidents/{incident_id}/action-items/{item_id}",
+      "method": "delete",
+      "status": "204"
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "get",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/workspaces",
+      "method": "post",
+      "status": "201"
+    },
+    {
+      "path": "/api/v1/workspaces/{workspace_id}",
+      "method": "get",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/workspaces/{workspace_id}",
+      "method": "patch",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/workspaces/{workspace_id}",
+      "method": "delete",
+      "status": "204"
+    },
+    {
+      "path": "/api/v1/workspaces/{workspace_id}/members",
+      "method": "get",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/workspaces/{workspace_id}/members",
+      "method": "post",
+      "status": "201"
+    },
+    {
+      "path": "/api/v1/workspaces/{workspace_id}/members/{membership_id}",
+      "method": "patch",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/workspaces/{workspace_id}/members/{membership_id}",
+      "method": "delete",
+      "status": "204"
+    },
+    {
+      "path": "/api/v1/workspaces/{workspace_id}/webhooks",
+      "method": "get",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/workspaces/{workspace_id}/webhooks",
+      "method": "post",
+      "status": "201"
+    },
+    {
+      "path": "/api/v1/workspaces/{workspace_id}/webhooks/{webhook_id}",
+      "method": "patch",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/workspaces/{workspace_id}/webhooks/{webhook_id}",
+      "method": "delete",
+      "status": "204"
+    },
+    {
+      "path": "/api/v1/workspaces/{workspace_id}/webhooks/{webhook_id}/test",
+      "method": "post",
+      "status": "200"
+    },
+    {
+      "path": "/api/v1/workspaces/{workspace_id}/webhooks/{webhook_id}/deliveries",
+      "method": "get",
+      "status": "200"
     }
   ],
   "system_response_properties": [
@@ -217,11 +337,25 @@
     "/api/v1/auth/me",
     "/api/v1/dashboard/summary",
     "/api/v1/demo/scenarios",
+    "/api/v1/workspaces",
+    "/api/v1/workspaces/{workspace_id}",
+    "/api/v1/workspaces/{workspace_id}/members",
+    "/api/v1/workspaces/{workspace_id}/members/{membership_id}",
+    "/api/v1/workspaces/{workspace_id}/webhooks",
+    "/api/v1/workspaces/{workspace_id}/webhooks/{webhook_id}",
+    "/api/v1/workspaces/{workspace_id}/webhooks/{webhook_id}/test",
+    "/api/v1/workspaces/{workspace_id}/webhooks/{webhook_id}/deliveries",
     "/api/v1/incidents",
     "/api/v1/incidents/{id}",
+    "/api/v1/incidents/{incident_id}/timeline",
+    "/api/v1/incidents/{incident_id}/timeline/{entry_id}",
+    "/api/v1/incidents/{incident_id}/action-items",
+    "/api/v1/incidents/{incident_id}/action-items/{item_id}",
     "/api/v1/incidents/{incident_id}/uploads",
     "/api/v1/incidents/{incident_id}/sources",
     "/api/v1/incidents/{incident_id}/events",
+    "/api/v1/incidents/{incident_id}/events/facets",
+    "/api/v1/incidents/{incident_id}/events/{event_id}/context",
     "/api/v1/incidents/{incident_id}/jobs/{job_id}",
     "/api/v1/incidents/{incident_id}/analysis",
     "/api/v1/incidents/{incident_id}/analysis/charts/{chart_type}",

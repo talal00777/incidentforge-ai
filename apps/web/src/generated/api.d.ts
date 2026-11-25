@@ -148,6 +148,38 @@ export interface paths {
         patch: operations["incidents_partial_update"];
         trace?: never;
     };
+    "/api/v1/incidents/{incident_id}/action-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["incidents_action_items_list"];
+        put?: never;
+        post: operations["incidents_action_items_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/incidents/{incident_id}/action-items/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["incidents_action_items_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["incidents_action_items_partial_update"];
+        trace?: never;
+    };
     "/api/v1/incidents/{incident_id}/ai-runs": {
         parameters: {
             query?: never;
@@ -236,6 +268,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["incidents_events_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/incidents/{incident_id}/events/{event_id}/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["incidents_events_context_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/incidents/{incident_id}/events/facets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["incidents_events_facets_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
@@ -437,6 +501,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/incidents/{incident_id}/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["incidents_timeline_list"];
+        put?: never;
+        post: operations["incidents_timeline_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/incidents/{incident_id}/timeline/{entry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["incidents_timeline_destroy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/incidents/{incident_id}/uploads": {
         parameters: {
             query?: never;
@@ -485,6 +581,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/workspaces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["workspaces_list"];
+        put?: never;
+        post: operations["workspaces_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspace_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["workspaces_retrieve"];
+        put?: never;
+        post?: never;
+        delete: operations["workspaces_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["workspaces_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspace_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["workspaces_members_list"];
+        put?: never;
+        post: operations["workspaces_members_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspace_id}/members/{membership_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["workspaces_members_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["workspaces_members_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspace_id}/webhooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["workspaces_webhooks_list"];
+        put?: never;
+        post: operations["workspaces_webhooks_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspace_id}/webhooks/{webhook_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["workspaces_webhooks_destroy"];
+        options?: never;
+        head?: never;
+        patch: operations["workspaces_webhooks_partial_update"];
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspace_id}/webhooks/{webhook_id}/deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["workspaces_webhooks_deliveries_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspace_id}/webhooks/{webhook_id}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["workspaces_webhooks_test_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -506,6 +730,65 @@ export interface components {
             started_at: string | null;
             /** Format: date-time */
             completed_at: string | null;
+        };
+        ActionItemCreateRequest: {
+            title: string;
+            owner_label?: string;
+            /** @default p1 */
+            priority: components["schemas"]["PriorityEnum"];
+            /** @default open */
+            status: components["schemas"]["StatusD6aEnum"];
+            /** Format: date-time */
+            due_at?: string | null;
+        };
+        ActionItemResponse: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            owner_label: string;
+            priority: components["schemas"]["PriorityEnum"];
+            status: components["schemas"]["StatusD6aEnum"];
+            /** Format: date-time */
+            due_at: string | null;
+            /** Format: date-time */
+            completed_at: string | null;
+            /** Format: email */
+            created_by_email: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        AlertWebhookCreateRequest: {
+            name: string;
+            /** @default generic */
+            provider: components["schemas"]["ProviderEnum"];
+            /** Format: uri */
+            target_url: string;
+            event_types?: components["schemas"]["EventTypesEnum"][];
+            /** @default low */
+            min_severity: components["schemas"]["MinSeverityEnum"];
+            /** @default true */
+            is_active: boolean;
+        };
+        AlertWebhookResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            provider: components["schemas"]["ProviderEnum"];
+            /** Format: uri */
+            target_url: string;
+            signing_secret_preview: string;
+            signing_secret?: string;
+            event_types: string[];
+            min_severity: components["schemas"]["MinSeverityEnum"];
+            is_active: boolean;
+            delivery_count: number;
+            last_delivery_status: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
         };
         Analysis: {
             algorithm_version: string;
@@ -644,6 +927,15 @@ export interface components {
             snapshot_id: string;
         };
         /**
+         * @description * `note` - Operator note
+         *     * `milestone` - Milestone
+         *     * `mitigation` - Mitigation
+         *     * `decision` - Decision
+         *     * `handoff` - Shift handoff
+         * @enum {string}
+         */
+        EntryTypeEnum: "note" | "milestone" | "mitigation" | "decision" | "handoff";
+        /**
          * @description * `production` - Production
          *     * `staging` - Staging
          *     * `development` - Development
@@ -651,6 +943,42 @@ export interface components {
          * @enum {string}
          */
         EnvironmentEnum: "production" | "staging" | "development" | "other";
+        EventContextDetail: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            source_id: string;
+            line_start: number;
+            line_end: number;
+            /** Format: date-time */
+            occurred_at: string | null;
+            /** Format: date-time */
+            observed_at: string;
+            timestamp_quality: string;
+            severity: string;
+            service: string;
+            trace_id: string;
+            message: string;
+            fingerprint: string;
+            source_filename: string;
+            source_sha256: string;
+            parser_version: string;
+        };
+        EventContextResponse: {
+            event: components["schemas"]["EventContextDetail"];
+            before: components["schemas"]["EventRecord"][];
+            after: components["schemas"]["EventRecord"][];
+            window: number;
+            related_trace_count: number;
+            same_fingerprint_count: number;
+        };
+        EventFacetsResponse: {
+            total_events: number;
+            severities: components["schemas"]["FacetCount"][];
+            services: components["schemas"]["FacetCount"][];
+            sources: components["schemas"]["SourceFacet"][];
+            top_fingerprints: components["schemas"]["FingerprintFacet"][];
+        };
         EventRecord: {
             /** Format: uuid */
             id: string;
@@ -665,9 +993,18 @@ export interface components {
             timestamp_quality: string;
             severity: string;
             service: string;
+            trace_id: string;
             message: string;
             fingerprint: string;
         };
+        /**
+         * @description * `incident.created` - incident.created
+         *     * `incident.status_changed` - incident.status_changed
+         *     * `postmortem.finalized` - postmortem.finalized
+         *     * `webhook.test` - webhook.test
+         * @enum {string}
+         */
+        EventTypesEnum: "incident.created" | "incident.status_changed" | "postmortem.finalized" | "webhook.test";
         EvidenceEntry: {
             /** Format: uuid */
             event_id: string;
@@ -732,9 +1069,20 @@ export interface components {
             created_at: string;
             transmitted: boolean;
         };
+        FacetCount: {
+            value: string;
+            count: number;
+        };
         Fact: {
             statement: string;
             event_ids: string[];
+        };
+        FingerprintFacet: {
+            fingerprint: string;
+            count: number;
+            sample_message: string;
+            severity: string;
+            service: string;
         };
         FingerprintGroup: {
             fingerprint: string;
@@ -760,6 +1108,10 @@ export interface components {
             severity?: components["schemas"]["SeverityEnum"];
             status?: components["schemas"]["IncidentStatusEnum"];
             impact_notes?: string;
+            /** Format: uuid */
+            workspace_id?: string | null;
+            readonly workspace_name: string;
+            readonly user_role: string;
             /** Format: date-time */
             readonly created_at: string;
             /** Format: date-time */
@@ -774,6 +1126,8 @@ export interface components {
             severity?: components["schemas"]["SeverityEnum"];
             status?: components["schemas"]["IncidentStatusEnum"];
             impact_notes?: string;
+            /** Format: uuid */
+            workspace_id?: string | null;
         };
         /**
          * @description * `open` - Open
@@ -864,6 +1218,21 @@ export interface components {
          * @enum {integer}
          */
         MaxOutputTokensEnum: 512 | 1024 | 2048 | 4096;
+        /**
+         * @description * `low` - Low
+         *     * `medium` - Medium
+         *     * `high` - High
+         *     * `critical` - Critical
+         * @enum {string}
+         */
+        MinSeverityEnum: "low" | "medium" | "high" | "critical";
+        /**
+         * @description * `owner` - Owner
+         *     * `responder` - Responder
+         *     * `viewer` - Viewer
+         * @enum {string}
+         */
+        MyRoleEnum: "owner" | "responder" | "viewer";
         PaginatedEvents: {
             count: number;
             /** Format: uri */
@@ -887,6 +1256,23 @@ export interface components {
             previous?: string | null;
             results: components["schemas"]["Incident"][];
         };
+        PatchedActionItemUpdateRequest: {
+            title?: string;
+            owner_label?: string;
+            priority?: components["schemas"]["PriorityEnum"];
+            status?: components["schemas"]["StatusD6aEnum"];
+            /** Format: date-time */
+            due_at?: string | null;
+        };
+        PatchedAlertWebhookUpdateRequest: {
+            name?: string;
+            provider?: components["schemas"]["ProviderEnum"];
+            /** Format: uri */
+            target_url?: string;
+            event_types?: components["schemas"]["EventTypesEnum"][];
+            min_severity?: components["schemas"]["MinSeverityEnum"];
+            is_active?: boolean;
+        };
         PatchedIncidentRequest: {
             title?: string;
             description?: string;
@@ -896,10 +1282,20 @@ export interface components {
             severity?: components["schemas"]["SeverityEnum"];
             status?: components["schemas"]["IncidentStatusEnum"];
             impact_notes?: string;
+            /** Format: uuid */
+            workspace_id?: string | null;
         };
         PatchedProfileUpdateRequest: {
             first_name?: string;
             last_name?: string;
+        };
+        PatchedWorkspaceCreateUpdateRequest: {
+            name?: string;
+            slug?: string;
+            description?: string;
+        };
+        PatchedWorkspaceMemberRoleUpdateRequest: {
+            role?: components["schemas"]["RoleEnum"];
         };
         /**
          * @description * `1.0` - 1.0
@@ -936,6 +1332,14 @@ export interface components {
             /** Format: date-time */
             created_at: string;
         };
+        /**
+         * @description * `p0` - P0 · Immediate
+         *     * `p1` - P1 · High
+         *     * `p2` - P2 · Medium
+         *     * `p3` - P3 · Follow-up
+         * @enum {string}
+         */
+        PriorityEnum: "p0" | "p1" | "p2" | "p3";
         PrivacyConsentRequest: {
             accepted: boolean;
             policy_version: components["schemas"]["PolicyVersionEnum"];
@@ -947,6 +1351,14 @@ export interface components {
          * @enum {string}
          */
         PromptProfileEnum: "zero_shot" | "few_shot" | "decomposed_verified";
+        /**
+         * @description * `generic` - Generic JSON
+         *     * `slack` - Slack
+         *     * `discord` - Discord
+         *     * `pagerduty` - PagerDuty
+         * @enum {string}
+         */
+        ProviderEnum: "generic" | "slack" | "discord" | "pagerduty";
         ProviderOption: {
             name: string;
             models: string[];
@@ -1022,6 +1434,13 @@ export interface components {
             hypotheses: components["schemas"]["ReviewHypothesisRequest"][];
         };
         /**
+         * @description * `owner` - Owner
+         *     * `responder` - Responder
+         *     * `viewer` - Viewer
+         * @enum {string}
+         */
+        RoleEnum: "owner" | "responder" | "viewer";
+        /**
          * @description * `checkout-db-pool` - checkout-db-pool
          *     * `auth-jwt-rotation` - auth-jwt-rotation
          *     * `redis-cache-stampede` - redis-cache-stampede
@@ -1042,6 +1461,22 @@ export interface components {
          * @enum {string}
          */
         SeverityEnum: "low" | "medium" | "high" | "critical";
+        SourceFacet: {
+            /** Format: uuid */
+            id: string;
+            filename: string;
+            count: number;
+        };
+        /**
+         * @description * `operator` - operator
+         *     * `audit` - audit
+         *     * `source` - source
+         *     * `snapshot` - snapshot
+         *     * `ai` - ai
+         *     * `postmortem` - postmortem
+         * @enum {string}
+         */
+        SourceKindEnum: "operator" | "audit" | "source" | "snapshot" | "ai" | "postmortem";
         SourceSummary: {
             /** Format: uuid */
             id: string;
@@ -1074,6 +1509,13 @@ export interface components {
          * @enum {string}
          */
         Status9e9Enum: "draft" | "reviewed";
+        /**
+         * @description * `open` - Open
+         *     * `in_progress` - In progress
+         *     * `done` - Done
+         * @enum {string}
+         */
+        StatusD6aEnum: "open" | "in_progress" | "done";
         SuggestedAction: {
             action: string;
             safety: string;
@@ -1091,9 +1533,26 @@ export interface components {
             total: number;
             errors: number;
         };
+        TimelineEntryCreateRequest: {
+            /** @default note */
+            entry_type: components["schemas"]["EntryTypeEnum"];
+            body: string;
+            /** Format: date-time */
+            occurred_at?: string;
+        };
         TransferConsentRequest: {
             accepted: boolean;
             snapshot_sha256: string;
+        };
+        UnifiedTimelineItem: {
+            id: string;
+            source_kind: components["schemas"]["SourceKindEnum"];
+            entry_type: string;
+            body: string;
+            actor_label: string;
+            /** Format: date-time */
+            occurred_at: string;
+            deletable: boolean;
         };
         UploadAccepted: {
             /** Format: uuid */
@@ -1111,6 +1570,72 @@ export interface components {
             readonly email: string;
             readonly first_name: string;
             readonly last_name: string;
+        };
+        WebhookDelivery: {
+            /** Format: uuid */
+            id: string;
+            event_type: string;
+            /** Format: uuid */
+            incident_id: string | null;
+            status: components["schemas"]["WebhookDeliveryStatusEnum"];
+            http_status: number | null;
+            latency_ms: number | null;
+            request_payload: unknown;
+            response_excerpt: string;
+            error_message: string;
+            /** Format: date-time */
+            created_at: string;
+        };
+        /**
+         * @description * `delivered` - Delivered
+         *     * `failed` - Failed
+         *     * `blocked` - Blocked
+         *     * `dry_run` - Dry-run preview
+         * @enum {string}
+         */
+        WebhookDeliveryStatusEnum: "delivered" | "failed" | "blocked" | "dry_run";
+        WebhookTestRequestRequest: {
+            /** @default true */
+            dry_run: boolean;
+        };
+        WorkspaceCreateUpdateRequest: {
+            name: string;
+            slug?: string;
+            description?: string;
+        };
+        WorkspaceMember: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            user_id: string;
+            /** Format: email */
+            email: string;
+            first_name: string;
+            last_name: string;
+            role: components["schemas"]["RoleEnum"];
+            /** Format: date-time */
+            created_at: string;
+        };
+        WorkspaceMemberAddRequest: {
+            /** Format: email */
+            email: string;
+            /** @default responder */
+            role: components["schemas"]["RoleEnum"];
+        };
+        WorkspaceSummary: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            description: string;
+            my_role: components["schemas"]["MyRoleEnum"];
+            member_count: number;
+            incident_count: number;
+            webhook_count: number;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
         };
     };
     responses: never;
@@ -1431,6 +1956,103 @@ export interface operations {
             };
         };
     };
+    incidents_action_items_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionItemResponse"][];
+                };
+            };
+        };
+    };
+    incidents_action_items_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ActionItemCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ActionItemCreateRequest"];
+                "multipart/form-data": components["schemas"]["ActionItemCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionItemResponse"];
+                };
+            };
+        };
+    };
+    incidents_action_items_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    incidents_action_items_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedActionItemUpdateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedActionItemUpdateRequest"];
+                "multipart/form-data": components["schemas"]["PatchedActionItemUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionItemResponse"];
+                };
+            };
+        };
+    };
     incidents_ai_runs_list: {
         parameters: {
             query?: never;
@@ -1588,15 +2210,18 @@ export interface operations {
     incidents_events_retrieve: {
         parameters: {
             query?: {
+                fingerprint?: string;
                 from?: string;
                 page?: number;
                 page_size?: number;
+                regex?: boolean;
                 search?: string;
                 service?: string;
                 severity?: string;
                 sort?: "observed_desc" | "occurred_asc" | "occurred_desc" | "source";
                 source_id?: string;
                 to?: string;
+                trace_id?: string;
             };
             header?: never;
             path: {
@@ -1612,6 +2237,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PaginatedEvents"];
+                };
+            };
+        };
+    };
+    incidents_events_context_retrieve: {
+        parameters: {
+            query?: {
+                /** @description Number of surrounding log records before and after (1-25, default 10). */
+                window?: number;
+            };
+            header?: never;
+            path: {
+                event_id: string;
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventContextResponse"];
+                };
+            };
+        };
+    };
+    incidents_events_facets_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventFacetsResponse"];
                 };
             };
         };
@@ -2001,6 +2672,75 @@ export interface operations {
             };
         };
     };
+    incidents_timeline_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnifiedTimelineItem"][];
+                };
+            };
+        };
+    };
+    incidents_timeline_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimelineEntryCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["TimelineEntryCreateRequest"];
+                "multipart/form-data": components["schemas"]["TimelineEntryCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UnifiedTimelineItem"];
+                };
+            };
+        };
+    };
+    incidents_timeline_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+                incident_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     incidents_uploads_create: {
         parameters: {
             query?: never;
@@ -2060,6 +2800,362 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SystemInfo"];
+                };
+            };
+        };
+    };
+    workspaces_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceSummary"][];
+                };
+            };
+        };
+    };
+    workspaces_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkspaceCreateUpdateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["WorkspaceCreateUpdateRequest"];
+                "multipart/form-data": components["schemas"]["WorkspaceCreateUpdateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceSummary"];
+                };
+            };
+        };
+    };
+    workspaces_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceSummary"];
+                };
+            };
+        };
+    };
+    workspaces_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    workspaces_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedWorkspaceCreateUpdateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedWorkspaceCreateUpdateRequest"];
+                "multipart/form-data": components["schemas"]["PatchedWorkspaceCreateUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceSummary"];
+                };
+            };
+        };
+    };
+    workspaces_members_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceMember"][];
+                };
+            };
+        };
+    };
+    workspaces_members_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkspaceMemberAddRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["WorkspaceMemberAddRequest"];
+                "multipart/form-data": components["schemas"]["WorkspaceMemberAddRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceMember"];
+                };
+            };
+        };
+    };
+    workspaces_members_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                membership_id: string;
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    workspaces_members_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                membership_id: string;
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedWorkspaceMemberRoleUpdateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedWorkspaceMemberRoleUpdateRequest"];
+                "multipart/form-data": components["schemas"]["PatchedWorkspaceMemberRoleUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceMember"];
+                };
+            };
+        };
+    };
+    workspaces_webhooks_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertWebhookResponse"][];
+                };
+            };
+        };
+    };
+    workspaces_webhooks_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AlertWebhookCreateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["AlertWebhookCreateRequest"];
+                "multipart/form-data": components["schemas"]["AlertWebhookCreateRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertWebhookResponse"];
+                };
+            };
+        };
+    };
+    workspaces_webhooks_destroy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                webhook_id: string;
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No response body */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    workspaces_webhooks_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                webhook_id: string;
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedAlertWebhookUpdateRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedAlertWebhookUpdateRequest"];
+                "multipart/form-data": components["schemas"]["PatchedAlertWebhookUpdateRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AlertWebhookResponse"];
+                };
+            };
+        };
+    };
+    workspaces_webhooks_deliveries_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                webhook_id: string;
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookDelivery"][];
+                };
+            };
+        };
+    };
+    workspaces_webhooks_test_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                webhook_id: string;
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["WebhookTestRequestRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["WebhookTestRequestRequest"];
+                "multipart/form-data": components["schemas"]["WebhookTestRequestRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WebhookDelivery"];
                 };
             };
         };

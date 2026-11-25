@@ -12,7 +12,12 @@ from django.utils import timezone
 
 from evidence.models import EvidenceSnapshot
 from evidence.selection import build_package
-from incidents.models import Incident, IncidentAuditEvent
+from incidents.models import (
+    Incident,
+    IncidentActionItem,
+    IncidentAuditEvent,
+    IncidentTimelineEntry,
+)
 from ingestion.models import IngestionJob, LogEvent, LogSource
 from ingestion.parser import VERSION as PARSER_VERSION
 from ingestion.parser import iter_records
@@ -478,6 +483,53 @@ def seed_demo_scenario(user, scenario_id: str) -> dict:
         selection_version=package["selection_version"],
         privacy_policy_version=package["privacy_policy_version"],
         consent_accepted_at=now,
+    )
+
+    IncidentTimelineEntry.objects.bulk_create(
+        [
+            IncidentTimelineEntry(
+                incident=incident,
+                author=user,
+                entry_type=IncidentTimelineEntry.EntryType.MILESTONE,
+                body=f"Alert triggered on {spec.service_name} ({spec.environment}); paged on-call SRE.",
+                occurred_at=base_time + timedelta(minutes=16),
+            ),
+            IncidentTimelineEntry(
+                incident=incident,
+                author=user,
+                entry_type=IncidentTimelineEntry.EntryType.MITIGATION,
+                body=f"Correlated multi-service logs across {', '.join(spec.services)} and froze redacted evidence snapshot.",
+                occurred_at=base_time + timedelta(minutes=34),
+            ),
+        ]
+    )
+    IncidentActionItem.objects.bulk_create(
+        [
+            IncidentActionItem(
+                incident=incident,
+                created_by=user,
+                title=f"Inspect saturated resource limits and timeouts on {spec.service_name}",
+                owner_label=user.email,
+                priority=IncidentActionItem.Priority.P0,
+                status=IncidentActionItem.Status.IN_PROGRESS,
+            ),
+            IncidentActionItem(
+                incident=incident,
+                created_by=user,
+                title=f"Add automated alert threshold on {spec.services[-1]} saturation metrics",
+                owner_label="platform-sre",
+                priority=IncidentActionItem.Priority.P1,
+                status=IncidentActionItem.Status.OPEN,
+            ),
+            IncidentActionItem(
+                incident=incident,
+                created_by=user,
+                title="Complete human hypothesis adjudication and export postmortem PDF",
+                owner_label=user.email,
+                priority=IncidentActionItem.Priority.P2,
+                status=IncidentActionItem.Status.OPEN,
+            ),
+        ]
     )
 
     return {

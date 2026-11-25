@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "accounts",
     "incidents",
     "ingestion",
+    "workspaces",
 ]
 
 MIDDLEWARE = [

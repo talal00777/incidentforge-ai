@@ -15,7 +15,20 @@ from evidence.views import (
 )
 from incidents.dashboard_views import DashboardSummaryView, DemoScenarioListCreateView
 from incidents.views import IncidentDetailView, IncidentListCreateView
-from ingestion.views import EventsView, JobsView, SourcesView, UploadView
+from incidents.warroom_views import (
+    IncidentActionItemDetailView,
+    IncidentActionItemsView,
+    IncidentTimelineDetailView,
+    IncidentTimelineView,
+)
+from ingestion.views import (
+    EventContextView,
+    EventFacetsView,
+    EventsView,
+    JobsView,
+    SourcesView,
+    UploadView,
+)
 from investigations.async_views import AIJobCancelView, AIJobDetailView, AIJobListCreateView
 from investigations.postmortem_export_views import PostmortemDownloadView
 from investigations.postmortem_views import PostmortemDetailView, PostmortemListCreateView
@@ -24,6 +37,16 @@ from investigations.views import (
     InvestigationDetailView,
     InvestigationListCreateView,
     ProviderListView,
+)
+from workspaces.views import (
+    WorkspaceDetailView,
+    WorkspaceListCreateView,
+    WorkspaceMemberDetailView,
+    WorkspaceMembersView,
+    WorkspaceWebhookDeliveriesView,
+    WorkspaceWebhookDetailView,
+    WorkspaceWebhooksView,
+    WorkspaceWebhookTestView,
 )
 
 urlpatterns = [
@@ -115,8 +138,64 @@ urlpatterns = [
     path("api/v1/auth/me", CurrentUserView.as_view(), name="auth-me"),
     path("api/v1/dashboard/summary", DashboardSummaryView.as_view(), name="dashboard-summary"),
     path("api/v1/demo/scenarios", DemoScenarioListCreateView.as_view(), name="demo-scenarios"),
+    path("api/v1/workspaces", WorkspaceListCreateView.as_view(), name="workspace-list"),
+    path(
+        "api/v1/workspaces/<uuid:workspace_id>",
+        WorkspaceDetailView.as_view(),
+        name="workspace-detail",
+    ),
+    path(
+        "api/v1/workspaces/<uuid:workspace_id>/members",
+        WorkspaceMembersView.as_view(),
+        name="workspace-members",
+    ),
+    path(
+        "api/v1/workspaces/<uuid:workspace_id>/members/<uuid:membership_id>",
+        WorkspaceMemberDetailView.as_view(),
+        name="workspace-member-detail",
+    ),
+    path(
+        "api/v1/workspaces/<uuid:workspace_id>/webhooks",
+        WorkspaceWebhooksView.as_view(),
+        name="workspace-webhooks",
+    ),
+    path(
+        "api/v1/workspaces/<uuid:workspace_id>/webhooks/<uuid:webhook_id>",
+        WorkspaceWebhookDetailView.as_view(),
+        name="workspace-webhook-detail",
+    ),
+    path(
+        "api/v1/workspaces/<uuid:workspace_id>/webhooks/<uuid:webhook_id>/test",
+        WorkspaceWebhookTestView.as_view(),
+        name="workspace-webhook-test",
+    ),
+    path(
+        "api/v1/workspaces/<uuid:workspace_id>/webhooks/<uuid:webhook_id>/deliveries",
+        WorkspaceWebhookDeliveriesView.as_view(),
+        name="workspace-webhook-deliveries",
+    ),
     path("api/v1/incidents", IncidentListCreateView.as_view(), name="incident-list"),
     path("api/v1/incidents/<uuid:id>", IncidentDetailView.as_view(), name="incident-detail"),
+    path(
+        "api/v1/incidents/<uuid:incident_id>/timeline",
+        IncidentTimelineView.as_view(),
+        name="incident-timeline",
+    ),
+    path(
+        "api/v1/incidents/<uuid:incident_id>/timeline/<uuid:entry_id>",
+        IncidentTimelineDetailView.as_view(),
+        name="incident-timeline-detail",
+    ),
+    path(
+        "api/v1/incidents/<uuid:incident_id>/action-items",
+        IncidentActionItemsView.as_view(),
+        name="incident-action-items",
+    ),
+    path(
+        "api/v1/incidents/<uuid:incident_id>/action-items/<uuid:item_id>",
+        IncidentActionItemDetailView.as_view(),
+        name="incident-action-item-detail",
+    ),
     path(
         "api/v1/incidents/<uuid:incident_id>/uploads", UploadView.as_view(), name="ingestion-upload"
     ),
@@ -124,6 +203,16 @@ urlpatterns = [
         "api/v1/incidents/<uuid:incident_id>/sources",
         SourcesView.as_view(),
         name="ingestion-sources",
+    ),
+    path(
+        "api/v1/incidents/<uuid:incident_id>/events/facets",
+        EventFacetsView.as_view(),
+        name="ingestion-event-facets",
+    ),
+    path(
+        "api/v1/incidents/<uuid:incident_id>/events/<uuid:event_id>/context",
+        EventContextView.as_view(),
+        name="ingestion-event-context",
     ),
     path(
         "api/v1/incidents/<uuid:incident_id>/events", EventsView.as_view(), name="ingestion-events"
