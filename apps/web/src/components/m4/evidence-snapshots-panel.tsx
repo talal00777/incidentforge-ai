@@ -201,15 +201,13 @@ export function EvidenceSnapshotsPanel({ incidentId }: { incidentId: string }) {
 
   return (
     <div className={styles.root}>
-      <header className={styles.header}>
-        <h1>Evidence selection</h1>
-        <div className={styles.headerActions}>
-          <div className={styles.zone} role="group" aria-label="Display timezone">
-            <button type="button" aria-pressed={zone === "utc"} onClick={() => setZone("utc")}>UTC</button>
-            <button type="button" aria-pressed={zone === "local"} onClick={() => setZone("local")}>Local</button>
+      <header className="stage-toolbar">
+        <h1 className="stage-title">Evidence snapshots</h1>
+        <div className="stage-toolbar-controls">
+          <div className="dash-filter-tabs" role="group" aria-label="Display timezone">
+            <button type="button" aria-pressed={zone === "utc"} className={zone === "utc" ? "dash-filter-tab is-active" : "dash-filter-tab"} onClick={() => setZone("utc")}>UTC</button>
+            <button type="button" aria-pressed={zone === "local"} className={zone === "local" ? "dash-filter-tab is-active" : "dash-filter-tab"} onClick={() => setZone("local")}>Local</button>
           </div>
-          <Link className={styles.secondaryLink} href={`/incidents/${encodeURIComponent(incidentId)}/investigations`}>AI investigation</Link>
-          <Link className={styles.secondaryLink} href={`/incidents/${encodeURIComponent(incidentId)}/relationships`}>Relationships</Link>
         </div>
       </header>
 

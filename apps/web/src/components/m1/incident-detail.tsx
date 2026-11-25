@@ -87,12 +87,11 @@ export function IncidentDetail() {
 
   return <div className="m1-detail-stack">
     <section className="panel m1-form-panel" aria-labelledby="incident-detail-heading">
-      <h2 id="incident-detail-heading">Incident record</h2>
-      <div className="m1-meta-bar">
-        <span>Created <time dateTime={incident.created_at}>{new Date(incident.created_at).toLocaleString()}</time></span>
-        <span className="if-badge if-badge-neutral">{incident.environment}</span>
-        <span className={`if-badge if-badge-${incident.severity}`}>{incident.severity}</span>
-        <span className={`if-badge if-badge-${incident.status}`}>{incident.status}</span>
+      <div className="stage-card-head">
+        <h1 id="incident-detail-heading" className="stage-title">Incident details</h1>
+        <span className="inc-ctx-age">
+          Created <time dateTime={incident.created_at}>{new Date(incident.created_at).toLocaleString()}</time>
+        </span>
       </div>
       <form className="m1-form" onSubmit={update}>
         <div className="m1-form-row">
@@ -113,14 +112,12 @@ export function IncidentDetail() {
         </div>
         <div className="m1-field">
           <label htmlFor="detail-impact">Impact notes</label>
-          <textarea id="detail-impact" maxLength={4000} rows={4} value={impact} onChange={(event) => setImpact(event.target.value)}/>
+          <textarea id="detail-impact" maxLength={4000} rows={3} value={impact} onChange={(event) => setImpact(event.target.value)}/>
         </div>
         {error && <p className="m1-error" role="alert">{error}</p>}
         <div className="m1-actions">
           <button className="button button-primary" type="submit" disabled={busy}>Save changes</button>
-          <Link className="button button-outline" href={`/incidents/${encodeURIComponent(params.id)}/sources`}>Evidence &amp; sources</Link>
           <button className="button m1-danger" type="button" onClick={remove} disabled={busy}>Delete incident</button>
-          <Link className="button button-outline" href="/incidents">Back</Link>
         </div>
       </form>
     </section>

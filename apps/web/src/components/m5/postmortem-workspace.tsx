@@ -96,21 +96,12 @@ export function PostmortemWorkspace({ incidentId }: { incidentId: string }) {
   }
 
   return <div className={styles.page}>
-    <section className={styles.heroCard}>
-      <nav aria-label="Postmortem trail" className={styles.breadcrumbs}>
-        <Link href="/">Home</Link><span aria-hidden="true">/</span>
-        <Link href={`/incidents/${encodeURIComponent(incidentId)}`}>Incident</Link>
-        <span aria-hidden="true">/</span><span aria-current="page">Postmortems</span>
-      </nav>
-      <div className={styles.heading}>
-        <div>
-          <p className={styles.eyebrow}>Incident reporting</p>
-          <h1>Postmortems</h1>
-          <p className={styles.muted}>Reviewed, versioned records of incident findings.</p>
-        </div>
-        <Link className={styles.secondary} href={`/incidents/${encodeURIComponent(incidentId)}/investigations`}>AI investigations</Link>
+    <header className="stage-toolbar">
+      <div>
+        <h1 className="stage-title">Postmortems</h1>
       </div>
-    </section>
+      <span className="inc-ctx-age">Frozen, checksummed records of reviewed findings</span>
+    </header>
 
     {error && <p className={styles.error} role="alert">{error}</p>}
     {loading ? <p role="status" className={styles.muted}>Loading postmortems…</p> : <div className={styles.grid}>

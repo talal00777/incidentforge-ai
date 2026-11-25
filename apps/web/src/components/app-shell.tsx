@@ -52,6 +52,7 @@ function NavigationGroup({
 
 function breadcrumbTrail(pathname: string): Array<{ label: string; href?: string }> {
   if (pathname === "/") return [{ label: "Overview" }];
+  if (pathname === "/workspaces") return [{ label: "Workspaces & Webhooks" }];
   if (pathname === "/profile") return [{ label: "Profile" }];
   if (pathname === "/incidents") return [{ label: "Incidents" }];
   if (pathname === "/incidents/new") {
@@ -66,13 +67,14 @@ function breadcrumbTrail(pathname: string): Array<{ label: string; href?: string
       { label: "Incidents", href: "/incidents" },
       { label: `INC-${incidentId.slice(0, 6).toUpperCase()}`, href: rest ? base : undefined },
     ];
-    if (rest === "sources") trail.push({ label: "Logs & sources" });
+    if (rest === "war-room") trail.push({ label: "War room" });
+    else if (rest === "sources") trail.push({ label: "Logs" });
     else if (rest === "analysis") trail.push({ label: "Analysis" });
-    else if (rest === "relationships") trail.push({ label: "Relationships" });
+    else if (rest === "relationships") trail.push({ label: "Topology" });
     else if (rest === "evidence-snapshots") trail.push({ label: "Snapshots" });
     else if (rest.endsWith("/review")) trail.push({ label: "Human review" });
     else if (rest.startsWith("investigations/")) trail.push({ label: "AI findings" });
-    else if (rest === "investigations") trail.push({ label: "AI investigations" });
+    else if (rest === "investigations") trail.push({ label: "AI" });
     else if (rest.startsWith("reports/")) trail.push({ label: "Postmortem version" });
     else if (rest === "reports") trail.push({ label: "Postmortems" });
     return trail;
@@ -162,7 +164,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="sidebar-bottom">
-          {collapsed ? (
+          {collapsed && (
             <button
               type="button"
               className="sidebar-cmd-icon"
@@ -172,11 +174,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               ⌘K
             </button>
-          ) : (
-            <div className="sidebar-meta-row">
-              <span>Local workbench</span>
-              <kbd className="sidebar-kbd">Ctrl K</kbd>
-            </div>
           )}
         </div>
       </aside>
@@ -184,10 +181,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="app-main">
         <header className="app-header">
           <nav className="breadcrumb" aria-label="Breadcrumb">
-            <Link href="/" className="breadcrumb-root">Workspace</Link>
-            {trail.map((crumb) => (
+            {trail.map((crumb, idx) => (
               <span key={crumb.label} className="breadcrumb-segment">
-                <span aria-hidden="true" className="breadcrumb-sep">/</span>
+                {idx > 0 && <span aria-hidden="true" className="breadcrumb-sep">/</span>}
                 {crumb.href ? (
                   <Link href={crumb.href} className="breadcrumb-link">{crumb.label}</Link>
                 ) : (
@@ -245,7 +241,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
             ) : account.state === "signed-out" ? (
               <Link href="/login" className="header-signin-link">
-                Sign in
+                Log in
               </Link>
             ) : null}
           </div>

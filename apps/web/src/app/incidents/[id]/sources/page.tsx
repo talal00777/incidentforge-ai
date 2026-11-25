@@ -10,13 +10,6 @@ export default async function SourcesPage({ params }: { params: Promise<{ id: st
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <AppShell>
         <IncidentWorkspaceHeader incidentId={id} current="sources" />
-        <header className="page-heading">
-          <div>
-            <p className="page-overline">Incidents</p>
-            <h1>Incident evidence</h1>
-            <p className="page-subtitle">Upload and inspect evidence associated with this incident.</p>
-          </div>
-        </header>
         <EvidencePanel incidentId={id} />
       </AppShell>
     </>
