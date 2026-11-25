@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { useAccount } from "@/components/m1/use-account";
+import { ServiceTopologyGraph } from "@/components/m3/service-topology-graph";
 import { apiGet, describeApiFailure } from "@/lib/api-client";
 import styles from "./relationships.module.css";
 
@@ -95,6 +96,7 @@ export function RelationshipsPanel({ incidentId }: { incidentId: string }) {
   const [zone, setZone] = useState<Zone>("utc");
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
   const [selectedTransition, setSelectedTransition] = useState<number | null>(null);
+  const [selectedService, setSelectedService] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
@@ -113,6 +115,10 @@ export function RelationshipsPanel({ incidentId }: { incidentId: string }) {
     if (!transition || !data) return [];
     return data.timeline.filter((event) => transition.event_ids.includes(event.id));
   }, [transition, data]);
+  const serviceEvents = useMemo(() => {
+    if (!selectedService || !data) return [];
+    return data.timeline.filter((event) => event.service === selectedService);
+  }, [selectedService, data]);
 
   if (account.state === "loading") return <div className={styles.root}><p role="status" className={styles.state}>Checking your session…</p></div>;
   if (account.state === "error") return <div className={styles.root}><p role="alert" className={styles.errorBox}>{account.message}</p></div>;
@@ -128,15 +134,13 @@ export function RelationshipsPanel({ incidentId }: { incidentId: string }) {
 
   return (
     <div className={styles.root} aria-busy={loading}>
-      <header className={styles.header}>
-        <h1>Event relationships</h1>
-        <div className={styles.actions}>
-          <div role="group" aria-label="Display timezone" className={styles.zone}>
-            <button type="button" aria-pressed={zone === "utc"} onClick={() => setZone("utc")}>UTC</button>
-            <button type="button" aria-pressed={zone === "local"} onClick={() => setZone("local")}>Local</button>
+      <header className="stage-toolbar">
+        <h1 className="stage-title">Topology &amp; traces</h1>
+        <div className="stage-toolbar-controls">
+          <div className="dash-filter-tabs" role="group" aria-label="Display timezone">
+            <button type="button" aria-pressed={zone === "utc"} className={zone === "utc" ? "dash-filter-tab is-active" : "dash-filter-tab"} onClick={() => setZone("utc")}>UTC</button>
+            <button type="button" aria-pressed={zone === "local"} className={zone === "local" ? "dash-filter-tab is-active" : "dash-filter-tab"} onClick={() => setZone("local")}>Local</button>
           </div>
-          <Link className={styles.back} href={`/incidents/${encodeURIComponent(incidentId)}/evidence-snapshots`}>Evidence selection</Link>
-          <Link className={styles.back} href={`/incidents/${encodeURIComponent(incidentId)}/analysis`}>Incident analysis</Link>
         </div>
       </header>
 
@@ -151,6 +155,21 @@ export function RelationshipsPanel({ incidentId }: { incidentId: string }) {
             <div><span>Unknown time</span><strong>{data.unknown_time.toLocaleString()}</strong></div>
           </section>
 
+          <ServiceTopologyGraph
+            transitions={data.transitions}
+            timeline={data.timeline}
+            selectedTransition={selectedTransition}
+            selectedService={selectedService}
+            onSelectTransition={(next) => {
+              setSelectedTransition(next);
+              setSelectedGroup(null);
+            }}
+            onSelectService={(next) => {
+              setSelectedService(next);
+              setSelectedGroup(null);
+            }}
+          />
+
           <div className={styles.grid}>
             <section className={styles.card} aria-labelledby="relationship-groups">
               <div className={styles.cardHeading}><h2 id="relationship-groups">Shared identifiers</h2><span>{data.groups.length}</span></div>
@@ -158,7 +177,7 @@ export function RelationshipsPanel({ incidentId }: { incidentId: string }) {
                 <div className={styles.groupList} role="group" aria-label="Linked event groups">
                   {data.groups.map((group, index) => (
                     <button key={group.key} type="button" className={`${styles.groupButton} ${selectedGroup === group.key ? styles.selected : ""}`}
-                      aria-pressed={selectedGroup === group.key} onClick={() => { setSelectedGroup(group.key === selectedGroup ? null : group.key); setSelectedTransition(null); }}>
+                      aria-pressed={selectedGroup === group.key} onClick={() => { setSelectedGroup(group.key === selectedGroup ? null : group.key); setSelectedTransition(null); setSelectedService(null); }}>
                       <span className={styles.groupTitle}>{group.kind === "trace" ? "Trace" : "Request"} {index + 1}</span>
                       <span className={styles.groupMeta}>{group.event_count} events · {group.service_count} services</span>
                       <span className={styles.groupServices}>{group.services.join(" · ") || "Unknown service"}</span>
@@ -173,7 +192,7 @@ export function RelationshipsPanel({ incidentId }: { incidentId: string }) {
                 <div className={styles.transitionList} role="group" aria-label="Service transitions">
                   {data.transitions.map((edge, index) => (
                     <button className={`${styles.transitionButton} ${selectedTransition === index ? styles.selected : ""}`} type="button" key={`${edge.from_service}-${edge.to_service}`}
-                      aria-pressed={selectedTransition === index} onClick={() => { setSelectedTransition(selectedTransition === index ? null : index); setSelectedGroup(null); }}>
+                      aria-pressed={selectedTransition === index} onClick={() => { setSelectedTransition(selectedTransition === index ? null : index); setSelectedGroup(null); setSelectedService(null); }}>
                       <span>{edge.from_service}<span className={styles.arrow} aria-hidden="true">→</span>{edge.to_service}</span>
                       <strong>{edge.count}</strong>
                     </button>
@@ -185,13 +204,35 @@ export function RelationshipsPanel({ incidentId }: { incidentId: string }) {
 
           <section className={styles.card} aria-labelledby="relationship-timeline">
             <div className={styles.cardHeading}>
-              <h2 id="relationship-timeline">{activeGroup ? "Linked events" : transition ? "Transition evidence" : "Event timeline"}</h2>
-              {(activeGroup || transition) && <button className={styles.clear} type="button" onClick={() => { setSelectedGroup(null); setSelectedTransition(null); }}>Clear selection</button>}
+              <h2 id="relationship-timeline">
+                {activeGroup
+                  ? "Linked events"
+                  : transition
+                    ? "Transition evidence"
+                    : selectedService
+                      ? `Events for ${selectedService}`
+                      : "Event timeline"}
+              </h2>
+              {(activeGroup || transition || selectedService) && (
+                <button
+                  className={styles.clear}
+                  type="button"
+                  onClick={() => {
+                    setSelectedGroup(null);
+                    setSelectedTransition(null);
+                    setSelectedService(null);
+                  }}
+                >
+                  Clear selection
+                </button>
+              )}
             </div>
             {activeGroup ? (
               <><EventList key={activeGroup.key} events={activeGroup.events} zone={zone} incidentId={incidentId} />{activeGroup.truncated && <p className={styles.more}>First 30 linked events shown</p>}</>
             ) : transition ? (
               transitionEvents.length ? <EventList key={selectedTransition} events={transitionEvents} zone={zone} incidentId={incidentId} /> : <p className={styles.empty}>Evidence is outside the current timeline sample</p>
+            ) : selectedService ? (
+              serviceEvents.length ? <EventList key={selectedService} events={serviceEvents} zone={zone} incidentId={incidentId} /> : <p className={styles.empty}>No events for {selectedService} in the current sample</p>
             ) : data.timeline.length ? (
               <><EventList key="timeline" events={showAll ? data.timeline : data.timeline.slice(0, 15)} zone={zone} incidentId={incidentId} />
               {data.timeline.length > 15 && <button className={styles.moreButton} type="button" onClick={() => setShowAll(!showAll)}>{showAll ? "Show fewer" : `Show ${data.timeline.length - 15} more`}</button>}

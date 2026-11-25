@@ -12,6 +12,9 @@ export type Incident = Readonly<{
   severity: NonNullable<components["schemas"]["Incident"]["severity"]>;
   status: NonNullable<components["schemas"]["Incident"]["status"]>;
   impact_notes: string;
+  workspace_id?: string | null;
+  workspace_name?: string;
+  user_role?: "owner" | "responder" | "viewer" | string;
   created_at: string;
   updated_at: string;
 }>;
@@ -19,7 +22,9 @@ export type Incident = Readonly<{
 export type IncidentInput = Pick<
   Incident,
   "title" | "description" | "service_name" | "environment" | "timezone" | "severity"
->;
+> & {
+  workspace_id?: string | null;
+};
 
 export type IncidentPage = Readonly<{
   count: number;
