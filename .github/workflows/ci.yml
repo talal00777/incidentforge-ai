@@ -72,6 +72,7 @@ jobs:
           --cov=analytics
           --cov=evidence
           --cov=investigations
+          --cov=workspaces
           --cov-report=term-missing
       - name: Contract policy unit tests
         run: python -m unittest discover -s scripts -p "test_*.py"

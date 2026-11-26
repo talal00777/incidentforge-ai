@@ -1,4 +1,3 @@
-from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -6,8 +5,8 @@ from rest_framework.views import APIView
 
 from analytics.correlation import MAX_INPUT_EVENTS, CorrelationEvent, correlate
 from analytics.correlation_serializers import CorrelationSerializer
-from incidents.models import Incident
 from ingestion.models import LogEvent
+from workspaces.permissions import get_accessible_incident_or_404
 
 
 class IncidentRelationshipsView(APIView):
@@ -15,9 +14,7 @@ class IncidentRelationshipsView(APIView):
 
     @extend_schema(request=None, responses={200: CorrelationSerializer})
     def get(self, request, incident_id):
-        incident = get_object_or_404(
-            Incident, pk=incident_id, owner=request.user, deleted_at__isnull=True
-        )
+        incident = get_accessible_incident_or_404(request.user, incident_id)
         rows = list(
             LogEvent.objects.filter(incident=incident)
             .order_by("id")

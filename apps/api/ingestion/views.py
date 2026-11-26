@@ -1,10 +1,11 @@
 import logging
+import re
 from datetime import UTC, datetime
 from uuid import UUID
 
 from django.conf import settings
 from django.db import transaction
-from django.db.models import F, Q
+from django.db.models import Count, F, Q
 from django.shortcuts import get_object_or_404
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -19,6 +20,8 @@ from incidents.models import Incident
 from ingestion.models import IngestionJob, LogEvent, LogSource
 from ingestion.security import UploadRejected, validate_upload
 from ingestion.serializers import (
+    EventContextResponseSerializer,
+    EventFacetsResponseSerializer,
     IngestionJobStatusSerializer,
     PaginatedEventsSerializer,
     SourceSummarySerializer,
@@ -27,8 +30,11 @@ from ingestion.serializers import (
 )
 from ingestion.storage import path_for, store
 from ingestion.tasks import process_ingestion
+from workspaces.permissions import get_accessible_incident_or_404
 
 logger = logging.getLogger(__name__)
+
+NESTED_QUANTIFIER_RE = re.compile(r"\([^)]*[+*][^)]*\)[+*?{]")
 
 
 def enqueue_ingestion(job_id):
@@ -38,12 +44,41 @@ def enqueue_ingestion(job_id):
         logger.warning("Unable to enqueue ingestion job %s; reconciliation will retry", job_id)
 
 
+def _serialize_event(item: LogEvent) -> dict:
+    return {
+        "id": str(item.id),
+        "source_id": str(item.source_id),
+        "line_start": item.line_start,
+        "line_end": item.line_end,
+        "occurred_at": item.occurred_at,
+        "observed_at": item.observed_at,
+        "timestamp_quality": item.timestamp_quality,
+        "severity": item.severity,
+        "service": item.service,
+        "trace_id": item.trace_id,
+        "message": item.redacted_message,
+        "fingerprint": item.fingerprint,
+    }
+
+
+def _validate_safe_regex(pattern: str) -> str:
+    if len(pattern) > 80:
+        raise ValidationError({"search": "Regex search must be 80 characters or fewer."})
+    if NESTED_QUANTIFIER_RE.search(pattern):
+        raise ValidationError({"search": "Nested quantifiers are not allowed in regex search."})
+    try:
+        re.compile(pattern)
+    except re.error as exc:
+        raise ValidationError({"search": f"Invalid regular expression: {exc}."}) from exc
+    return pattern
+
+
 class OwnedIncidentView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def incident(self, incident_id):
-        return get_object_or_404(
-            Incident, id=incident_id, owner=self.request.user, deleted_at__isnull=True
+    def incident(self, incident_id, *, require_write: bool = False):
+        return get_accessible_incident_or_404(
+            self.request.user, incident_id, require_write=require_write
         )
 
 
@@ -55,7 +90,7 @@ class UploadView(OwnedIncidentView):
         responses={202: UploadAcceptedSerializer},
     )
     def post(self, request, incident_id):
-        incident = self.incident(incident_id)
+        incident = self.incident(incident_id, require_write=True)
         files = request.FILES.getlist("files")
         if not 1 <= len(files) <= settings.INGESTION_MAX_FILES:
             return Response({"detail": "Upload between 1 and 5 files."}, status=400)
@@ -168,7 +203,10 @@ class EventsView(OwnedIncidentView):
             OpenApiParameter("severity", OpenApiTypes.STR, required=False),
             OpenApiParameter("service", OpenApiTypes.STR, required=False),
             OpenApiParameter("source_id", OpenApiTypes.UUID, required=False),
+            OpenApiParameter("trace_id", OpenApiTypes.STR, required=False),
+            OpenApiParameter("fingerprint", OpenApiTypes.STR, required=False),
             OpenApiParameter("search", OpenApiTypes.STR, required=False),
+            OpenApiParameter("regex", OpenApiTypes.BOOL, required=False),
             OpenApiParameter("from", OpenApiTypes.DATETIME, required=False),
             OpenApiParameter("to", OpenApiTypes.DATETIME, required=False),
             OpenApiParameter(
@@ -196,13 +234,26 @@ class EventsView(OwnedIncidentView):
             except ValueError as exc:
                 raise ValidationError({"source_id": "Enter a valid source UUID."}) from exc
             events = events.filter(source_id=parsed_source)
+        trace_id = request.query_params.get("trace_id", "").strip()
+        if trace_id:
+            events = events.filter(trace_id=trace_id[:128])
+        fingerprint = request.query_params.get("fingerprint", "").strip()
+        if fingerprint:
+            events = events.filter(fingerprint=fingerprint[:64])
         search = request.query_params.get("search", "").strip()
-        if len(search) > 100:
-            raise ValidationError({"search": "Search must be 100 characters or fewer."})
+        use_regex = request.query_params.get("regex", "").strip().lower() in ("1", "true", "yes")
         if search:
-            events = events.filter(
-                Q(redacted_message__icontains=search) | Q(service__icontains=search)
-            )
+            if use_regex:
+                pattern = _validate_safe_regex(search)
+                events = events.filter(redacted_message__iregex=pattern)
+            else:
+                if len(search) > 100:
+                    raise ValidationError({"search": "Search must be 100 characters or fewer."})
+                events = events.filter(
+                    Q(redacted_message__icontains=search)
+                    | Q(service__icontains=search)
+                    | Q(trace_id__icontains=search)
+                )
         from_raw = request.query_params.get("from", "").strip()
         if from_raw:
             events = events.filter(occurred_at__gte=_parse_iso_utc(from_raw, "from"))
@@ -224,21 +275,151 @@ class EventsView(OwnedIncidentView):
             )
         page = EventPagination()
         records = page.paginate_queryset(events, request, view=self)
-        return page.get_paginated_response(
-            [
-                {
-                    "id": str(item.id),
-                    "source_id": str(item.source_id),
-                    "line_start": item.line_start,
-                    "line_end": item.line_end,
-                    "occurred_at": item.occurred_at,
-                    "observed_at": item.observed_at,
-                    "timestamp_quality": item.timestamp_quality,
-                    "severity": item.severity,
-                    "service": item.service,
-                    "message": item.redacted_message,
-                    "fingerprint": item.fingerprint,
-                }
-                for item in records
-            ]
+        return page.get_paginated_response([_serialize_event(item) for item in records])
+
+
+class EventFacetsView(OwnedIncidentView):
+    @extend_schema(
+        tags=["ingestion"],
+        request=None,
+        responses={200: EventFacetsResponseSerializer},
+    )
+    def get(self, request, incident_id):
+        incident = self.incident(incident_id)
+        base = LogEvent.objects.filter(incident=incident)
+        total = base.count()
+
+        severities = [
+            {"value": row["severity"] or "UNKNOWN", "count": row["count"]}
+            for row in base.values("severity")
+            .annotate(count=Count("id"))
+            .order_by("-count", "severity")[:12]
+        ]
+        services = [
+            {"value": row["service"], "count": row["count"]}
+            for row in base.exclude(service="")
+            .values("service")
+            .annotate(count=Count("id"))
+            .order_by("-count", "service")[:16]
+        ]
+        sources = [
+            {
+                "id": str(row["source_id"]),
+                "filename": row["source__filename"],
+                "count": row["count"],
+            }
+            for row in base.values("source_id", "source__filename")
+            .annotate(count=Count("id"))
+            .order_by("-count", "source__filename")[:20]
+        ]
+
+        fp_rows = list(
+            base.exclude(fingerprint="")
+            .values("fingerprint")
+            .annotate(count=Count("id"))
+            .order_by("-count", "fingerprint")[:8]
+        )
+        top_fingerprints = []
+        if fp_rows:
+            fp_keys = [row["fingerprint"] for row in fp_rows]
+            samples: dict[str, LogEvent] = {}
+            for ev in (
+                base.filter(fingerprint__in=fp_keys)
+                .only("fingerprint", "redacted_message", "severity", "service")
+                .order_by("fingerprint", "-observed_at")
+            ):
+                if ev.fingerprint not in samples:
+                    samples[ev.fingerprint] = ev
+            for row in fp_rows:
+                sample = samples.get(row["fingerprint"])
+                top_fingerprints.append(
+                    {
+                        "fingerprint": row["fingerprint"],
+                        "count": row["count"],
+                        "sample_message": (sample.redacted_message[:180] if sample else ""),
+                        "severity": sample.severity if sample else "",
+                        "service": sample.service if sample else "",
+                    }
+                )
+
+        return Response(
+            {
+                "total_events": total,
+                "severities": severities,
+                "services": services,
+                "sources": sources,
+                "top_fingerprints": top_fingerprints,
+            }
+        )
+
+
+class EventContextView(OwnedIncidentView):
+    @extend_schema(
+        tags=["ingestion"],
+        request=None,
+        parameters=[
+            OpenApiParameter(
+                "window",
+                OpenApiTypes.INT,
+                required=False,
+                description="Number of surrounding log records before and after (1-25, default 10).",
+            )
+        ],
+        responses={200: EventContextResponseSerializer},
+    )
+    def get(self, request, incident_id, event_id):
+        incident = self.incident(incident_id)
+        event = get_object_or_404(
+            LogEvent.objects.select_related("source"), id=event_id, incident=incident
+        )
+        raw_window = request.query_params.get("window", "10").strip()
+        try:
+            window = max(1, min(25, int(raw_window)))
+        except ValueError as exc:
+            raise ValidationError(
+                {"window": "Window must be an integer between 1 and 25."}
+            ) from exc
+
+        before_desc = list(
+            LogEvent.objects.filter(
+                incident=incident,
+                source_id=event.source_id,
+                line_start__lt=event.line_start,
+            ).order_by("-line_start", "-id")[:window]
+        )
+        before_desc.reverse()
+
+        after_asc = list(
+            LogEvent.objects.filter(
+                incident=incident,
+                source_id=event.source_id,
+                line_start__gt=event.line_start,
+            ).order_by("line_start", "id")[:window]
+        )
+
+        related_trace_count = (
+            LogEvent.objects.filter(incident=incident, trace_id=event.trace_id).count()
+            if event.trace_id
+            else 0
+        )
+        same_fingerprint_count = (
+            LogEvent.objects.filter(incident=incident, fingerprint=event.fingerprint).count()
+            if event.fingerprint
+            else 0
+        )
+
+        detail = _serialize_event(event)
+        detail["source_filename"] = event.source.filename
+        detail["source_sha256"] = event.source.sha256
+        detail["parser_version"] = event.parser_version
+
+        return Response(
+            {
+                "event": detail,
+                "before": [_serialize_event(item) for item in before_desc],
+                "after": [_serialize_event(item) for item in after_asc],
+                "window": window,
+                "related_trace_count": related_trace_count,
+                "same_fingerprint_count": same_fingerprint_count,
+            }
         )

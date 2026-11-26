@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 export type ProductIconName =
   | "overview"
   | "incidents"
+  | "workspaces"
   | "logs"
   | "investigations"
   | "analytics"
@@ -18,6 +19,7 @@ export type ProductIconName =
 const paths: Record<ProductIconName, ReactNode> = {
   overview: <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></>,
   incidents: <><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 8h8M8 12h8M8 16h5" /></>,
+  workspaces: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></>,
   logs: <><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5" /></>,
   investigations: <><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5M8 10h5" /></>,
   analytics: <><path d="M4 20V4M4 20h16M8 16v-4M13 16V7M18 16v-8" /></>,

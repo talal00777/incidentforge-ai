@@ -56,9 +56,10 @@ function CommandPaletteDialog({ onClose }: { onClose: () => void }) {
       const encoded = encodeURIComponent(activeIncidentId);
       const stages: [string, string, string][] = [
         ["Overview & metadata", `/incidents/${encoded}`, "details record edit status"],
-        ["Logs & sources", `/incidents/${encoded}/sources`, "upload evidence events search"],
+        ["War-room timeline & actions", `/incidents/${encoded}/war-room`, "notes mitigation handoff tasks"],
+        ["Interactive log explorer", `/incidents/${encoded}/sources`, "upload evidence events search regex drawer"],
         ["Analytics & anomaly timeline", `/incidents/${encoded}/analysis`, "charts buckets errors mad"],
-        ["Service relationships", `/incidents/${encoded}/relationships`, "traces transitions correlation"],
+        ["Service topology & traces", `/incidents/${encoded}/relationships`, "graph map transitions correlation"],
         ["Evidence snapshots", `/incidents/${encoded}/evidence-snapshots`, "redacted consent preview"],
         ["AI investigations", `/incidents/${encoded}/investigations`, "llm hypotheses generate review"],
         ["Postmortems & exports", `/incidents/${encoded}/reports`, "pdf json immutable version"],
@@ -99,6 +100,17 @@ function CommandPaletteDialog({ onClose }: { onClose: () => void }) {
         run: () => {
           onClose();
           router.push("/incidents");
+        },
+      },
+      {
+        id: "action:workspaces",
+        group: "Actions",
+        label: "Workspaces, RBAC & alert webhooks",
+        hint: "/workspaces",
+        keywords: "team members roles slack discord pagerduty webhook",
+        run: () => {
+          onClose();
+          router.push("/workspaces");
         },
       },
       {

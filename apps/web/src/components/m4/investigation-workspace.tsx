@@ -11,7 +11,6 @@ import { availableProviders, canInvestigate, firstModel, type ProviderOption } f
 import { distinctHypothesisChecks, hypothesisStatus, mergeSuggestedActions, readableInvestigationDate, type TimeDisplay } from "@/lib/investigation-presentation";
 import { InvestigationReview } from "./investigation-review";
 import { investigationPath, investigationReportPath, humanReviewPath } from "@/lib/investigation-routes";
-import { postmortemsPath } from "@/lib/postmortem-routes";
 import styles from "./investigation-workspace.module.css";
 
 type EvidenceEntry = {
@@ -282,36 +281,24 @@ export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }
   }
 
   return <div className={styles.root}>
-    <div className={styles.headerStack}>
-      <header className={styles.header}>
-        <div className={styles.masthead}>
-          <nav className={styles.breadcrumbs} aria-label="Investigation trail">
-            <Link href="/">Home</Link><span aria-hidden="true">/</span>
-            <Link href={`/incidents/${encodeURIComponent(incidentId)}`}>Incident</Link><span aria-hidden="true">/</span>
-            <span aria-current="page">{view === "manage" ? "Investigations" : view === "ai" ? "AI findings" : "Human review"}</span>
+    <header className="stage-toolbar">
+      <div className="stage-toolbar-left">
+        <h1 className="stage-title">{view === "manage" ? "AI investigations" : view === "ai" ? "AI findings" : "Human review"}</h1>
+        {reportId && (
+          <nav className="dash-filter-tabs" aria-label="Investigation views">
+            <Link className={view === "manage" ? "dash-filter-tab is-active" : "dash-filter-tab"} href={investigationPath(incidentId)} aria-current={view === "manage" ? "page" : undefined}>All runs</Link>
+            <Link className={view === "ai" ? "dash-filter-tab is-active" : "dash-filter-tab"} href={investigationReportPath(incidentId, reportId)} aria-current={view === "ai" ? "page" : undefined}>Findings</Link>
+            <Link className={view === "human" ? "dash-filter-tab is-active" : "dash-filter-tab"} href={humanReviewPath(incidentId, reportId)} aria-current={view === "human" ? "page" : undefined}>Review</Link>
           </nav>
-          <span className={styles.stageKicker}>Incident investigation workspace</span>
-          <h1>{view === "manage" ? "AI investigations" : view === "ai" ? "AI findings" : "Human review"}</h1>
-          <p className={styles.pageSubtitle}>{view === "manage" ? "Generate an investigation or continue from a saved result." : view === "ai" ? "Explore the findings and trace each claim to its source events." : "Evaluate AI hypotheses and record human conclusions."}</p>
+        )}
+      </div>
+      {view !== "human" && (
+        <div className="dash-filter-tabs" role="group" aria-label="Date and time display">
+          <button type="button" aria-pressed={timeDisplay === "local"} className={timeDisplay === "local" ? "dash-filter-tab is-active" : "dash-filter-tab"} onClick={() => setTimeDisplay("local")}>Local</button>
+          <button type="button" aria-pressed={timeDisplay === "utc"} className={timeDisplay === "utc" ? "dash-filter-tab is-active" : "dash-filter-tab"} onClick={() => setTimeDisplay("utc")}>UTC</button>
         </div>
-        <div className={styles.headerActions}>
-          {view !== "human" && <div className={styles.timeToggle} role="group" aria-label="Date and time display">
-            <button type="button" aria-pressed={timeDisplay === "local"} onClick={() => setTimeDisplay("local")}>Local</button>
-            <button type="button" aria-pressed={timeDisplay === "utc"} onClick={() => setTimeDisplay("utc")}>UTC</button>
-          </div>}
-          <nav className={styles.pageNav} aria-label="Related pages">
-            <Link href={`/incidents/${encodeURIComponent(incidentId)}/evidence-snapshots`}>View evidence</Link>
-            <Link href={postmortemsPath(incidentId)}>Postmortems</Link>
-            <Link href={`/incidents/${encodeURIComponent(incidentId)}`}>Incident overview</Link>
-          </nav>
-        </div>
-      </header>
-      <nav className={styles.workspaceTabs} aria-label="Investigation workflow">
-        <Link href={investigationPath(incidentId)} aria-current={view === "manage" ? "page" : undefined}>Investigations</Link>
-        {reportId && <Link href={investigationReportPath(incidentId, reportId)} aria-current={view === "ai" ? "page" : undefined}>AI findings</Link>}
-        {reportId && <Link href={humanReviewPath(incidentId, reportId)} aria-current={view === "human" ? "page" : undefined}>Human review</Link>}
-      </nav>
-    </div>
+      )}
+    </header>
 
     {error && <p className={styles.error} role="alert">{error}</p>}
     {loading ? <p className={styles.empty} role="status">Loading investigations…</p> : <>
@@ -345,25 +332,30 @@ export function InvestigationWorkspace({ incidentId, reportId, view = "manage" }
                 </select>
               </label>
             </div>
-            <div className={styles.inputRow}>
-              <label>Temperature
-                <select value={temperature} onChange={(event) => { setTemperature(event.target.value); setConsented(false); }} disabled={working}>
-                  <option value="0">0.0</option><option value="0.2">0.2</option><option value="0.7">0.7</option>
-                </select>
-              </label>
-              <label>Output tokens
-                <select value={maxTokens} onChange={(event) => { setMaxTokens(event.target.value); setConsented(false); }} disabled={working}>
-                  <option value="512">512</option><option value="1024">1024</option><option value="2048">2048</option><option value="4096">4096</option>
-                </select>
-              </label>
-            </div>
-            <label>Prompt profile
-              <select value={profile} onChange={(event) => { setProfile(event.target.value as PromptProfile); setConsented(false); }} disabled={working}>
-                <option value="decomposed_verified">Evidence-first + verification</option>
-                <option value="few_shot">Few-shot examples</option>
-                <option value="zero_shot">Zero-shot baseline</option>
-              </select>
-            </label>
+            <details className="stage-advanced">
+              <summary>Model parameters · temp {temperature} · {maxTokens} tokens</summary>
+              <div className="stage-advanced-body">
+                <div className={styles.inputRow}>
+                  <label>Temperature
+                    <select value={temperature} onChange={(event) => { setTemperature(event.target.value); setConsented(false); }} disabled={working}>
+                      <option value="0">0.0</option><option value="0.2">0.2</option><option value="0.7">0.7</option>
+                    </select>
+                  </label>
+                  <label>Output tokens
+                    <select value={maxTokens} onChange={(event) => { setMaxTokens(event.target.value); setConsented(false); }} disabled={working}>
+                      <option value="512">512</option><option value="1024">1024</option><option value="2048">2048</option><option value="4096">4096</option>
+                    </select>
+                  </label>
+                </div>
+                <label>Prompt profile
+                  <select value={profile} onChange={(event) => { setProfile(event.target.value as PromptProfile); setConsented(false); }} disabled={working}>
+                    <option value="decomposed_verified">Evidence-first + verification</option>
+                    <option value="few_shot">Few-shot examples</option>
+                    <option value="zero_shot">Zero-shot baseline</option>
+                  </select>
+                </label>
+              </div>
+            </details>
             {snapshot && snapshot.id === snapshotId && <div className={styles.snapshotPreview}>
               <strong>{snapshot.event_count} selected events</strong>
               <span>{(snapshot.payload_bytes / 1024).toFixed(1)} KB · Redacted evidence</span>

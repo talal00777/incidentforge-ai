@@ -44,6 +44,7 @@ class EventRecordSerializer(serializers.Serializer):
     timestamp_quality = serializers.CharField()
     severity = serializers.CharField(allow_blank=True)
     service = serializers.CharField(allow_blank=True)
+    trace_id = serializers.CharField(allow_blank=True)
     message = serializers.CharField()
     fingerprint = serializers.CharField()
 
@@ -53,3 +54,45 @@ class PaginatedEventsSerializer(serializers.Serializer):
     next = serializers.URLField(allow_null=True)
     previous = serializers.URLField(allow_null=True)
     results = EventRecordSerializer(many=True)
+
+
+class EventContextDetailSerializer(EventRecordSerializer):
+    source_filename = serializers.CharField()
+    source_sha256 = serializers.CharField()
+    parser_version = serializers.CharField()
+
+
+class EventContextResponseSerializer(serializers.Serializer):
+    event = EventContextDetailSerializer()
+    before = EventRecordSerializer(many=True)
+    after = EventRecordSerializer(many=True)
+    window = serializers.IntegerField()
+    related_trace_count = serializers.IntegerField()
+    same_fingerprint_count = serializers.IntegerField()
+
+
+class FacetCountSerializer(serializers.Serializer):
+    value = serializers.CharField()
+    count = serializers.IntegerField()
+
+
+class SourceFacetSerializer(serializers.Serializer):
+    id = serializers.UUIDField()
+    filename = serializers.CharField()
+    count = serializers.IntegerField()
+
+
+class FingerprintFacetSerializer(serializers.Serializer):
+    fingerprint = serializers.CharField()
+    count = serializers.IntegerField()
+    sample_message = serializers.CharField()
+    severity = serializers.CharField(allow_blank=True)
+    service = serializers.CharField(allow_blank=True)
+
+
+class EventFacetsResponseSerializer(serializers.Serializer):
+    total_events = serializers.IntegerField()
+    severities = FacetCountSerializer(many=True)
+    services = FacetCountSerializer(many=True)
+    sources = SourceFacetSerializer(many=True)
+    top_fingerprints = FingerprintFacetSerializer(many=True)

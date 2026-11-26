@@ -1,4 +1,3 @@
-from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -6,8 +5,8 @@ from rest_framework.views import APIView
 
 from analytics.engine import EventFact, analyze
 from analytics.serializers import AnalysisSerializer
-from incidents.models import Incident
 from ingestion.models import LogEvent
+from workspaces.permissions import get_accessible_incident_or_404
 
 
 class IncidentAnalysisView(APIView):
@@ -21,9 +20,7 @@ class IncidentAnalysisView(APIView):
         responses={200: AnalysisSerializer},
     )
     def get(self, request, incident_id):
-        incident = get_object_or_404(
-            Incident, pk=incident_id, owner=request.user, deleted_at__isnull=True
-        )
+        incident = get_accessible_incident_or_404(request.user, incident_id)
         raw_minutes = request.query_params.get("bucket_minutes", "5")
         if raw_minutes not in {"1", "5", "15", "60"}:
             return Response({"detail": "Invalid time bucket"}, status=400)

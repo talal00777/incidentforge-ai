@@ -1,12 +1,12 @@
 """Authenticated, incident-scoped postmortem version API."""
 
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from incidents.models import Incident
 from investigations.models import InvestigationReport, PostmortemVersion
 from investigations.postmortem_serializers import (
     PostmortemCreateSerializer,
@@ -18,14 +18,16 @@ from investigations.postmortem_service import (
     create_postmortem,
     verified_content,
 )
+from workspaces.permissions import get_accessible_incident_or_404
+from workspaces.webhooks import dispatch_workspace_webhooks
 
 
 class ScopedPostmortemView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def owned_incident(self, request, incident_id):
-        return get_object_or_404(
-            Incident, id=incident_id, owner=request.user, deleted_at__isnull=True
+    def owned_incident(self, request, incident_id, *, require_write: bool = False):
+        return get_accessible_incident_or_404(
+            request.user, incident_id, require_write=require_write
         )
 
 
@@ -46,7 +48,7 @@ class PostmortemListCreateView(ScopedPostmortemView):
         tags=["reports"],
     )
     def post(self, request, incident_id):
-        incident = self.owned_incident(request, incident_id)
+        incident = self.owned_incident(request, incident_id, require_write=True)
         serializer = PostmortemCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         values = serializer.validated_data
@@ -64,6 +66,10 @@ class PostmortemListCreateView(ScopedPostmortemView):
             )
         except PostmortemConflict as exc:
             return Response({"code": exc.code, "detail": exc.message}, status=409)
+        if created:
+            transaction.on_commit(
+                lambda: dispatch_workspace_webhooks(incident, "postmortem.finalized")
+            )
         return Response(PostmortemDetailSerializer(version).data, status=201 if created else 200)
 
 

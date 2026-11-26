@@ -9,6 +9,8 @@ export type EvidenceEvent = {
   timestamp_quality: string;
   severity: string;
   service?: string;
+  trace_id?: string;
+  fingerprint?: string;
   message: string;
 };
 

@@ -64,34 +64,26 @@ export function AnalysisPanel({ incidentId }: { incidentId: string }) {
 
   return (
     <div className={styles.root} aria-busy={loading}>
-      <header className={styles.pageHeader}>
-        <div className={styles.headingBlock}>
-          <h1 className={styles.pageTitle}>Incident analysis</h1>
-        </div>
-        <div className={styles.headerActions}>
-          <div className={styles.controlSet}>
-            <label className={styles.intervalLabel} htmlFor="analysis-bucket">
-              <span>Interval</span>
-              <select
-                id="analysis-bucket"
-                className={styles.intervalSelect}
-                value={bucket}
-                onChange={(event) => { setLoading(true); setBucket(event.target.value); }}
-              >
-                <option value="1">1 minute</option>
-                <option value="5">5 minutes</option>
-                <option value="15">15 minutes</option>
-                <option value="60">1 hour</option>
-              </select>
-            </label>
-            <div className={styles.zoneToggle} role="group" aria-label="Chart timezone">
-              <button type="button" aria-pressed={zone === "utc"} className={zone === "utc" ? styles.zoneSelected : ""} onClick={() => setZone("utc")}>UTC</button>
-              <button type="button" aria-pressed={zone === "local"} className={zone === "local" ? styles.zoneSelected : ""} onClick={() => setZone("local")}>Local</button>
-            </div>
+      <header className="stage-toolbar">
+        <h1 className="stage-title">Incident analysis</h1>
+        <div className="stage-toolbar-controls">
+          <label className="stage-inline-field" htmlFor="analysis-bucket">
+            <span>Bucket</span>
+            <select
+              id="analysis-bucket"
+              value={bucket}
+              onChange={(event) => { setLoading(true); setBucket(event.target.value); }}
+            >
+              <option value="1">1m</option>
+              <option value="5">5m</option>
+              <option value="15">15m</option>
+              <option value="60">1h</option>
+            </select>
+          </label>
+          <div className="dash-filter-tabs" role="group" aria-label="Chart timezone">
+            <button type="button" aria-pressed={zone === "utc"} className={zone === "utc" ? "dash-filter-tab is-active" : "dash-filter-tab"} onClick={() => setZone("utc")}>UTC</button>
+            <button type="button" aria-pressed={zone === "local"} className={zone === "local" ? "dash-filter-tab is-active" : "dash-filter-tab"} onClick={() => setZone("local")}>Local</button>
           </div>
-          <Link className={styles.backLink} href={`/incidents/${encodeURIComponent(incidentId)}/sources`}>
-            <span aria-hidden="true">←</span><span>Evidence &amp; sources</span>
-          </Link>
         </div>
       </header>
 

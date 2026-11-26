@@ -7,6 +7,7 @@ describe("workspace navigation", () => {
     expect(enabled).toEqual([
       { label: "Overview", icon: "overview", href: "/" },
       { label: "Incidents", icon: "incidents", href: "/incidents" },
+      { label: "Workspaces", icon: "workspaces", href: "/workspaces" },
       { label: "Profile", icon: "settings", href: "/profile" },
     ]);
   });

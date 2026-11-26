@@ -2,6 +2,7 @@ import Link from "next/link";
 
 export type IncidentStage =
   | "overview"
+  | "war-room"
   | "sources"
   | "analysis"
   | "relationships"
@@ -17,11 +18,12 @@ type StageDefinition = Readonly<{
 
 const STAGES: readonly StageDefinition[] = [
   { key: "overview", label: "Overview", suffix: "" },
-  { key: "sources", label: "Evidence & sources", suffix: "/sources" },
+  { key: "war-room", label: "War room", suffix: "/war-room" },
+  { key: "sources", label: "Logs", suffix: "/sources" },
   { key: "analysis", label: "Analysis", suffix: "/analysis" },
-  { key: "relationships", label: "Relationships", suffix: "/relationships" },
+  { key: "relationships", label: "Topology", suffix: "/relationships" },
   { key: "snapshots", label: "Snapshots", suffix: "/evidence-snapshots" },
-  { key: "investigations", label: "AI investigations", suffix: "/investigations" },
+  { key: "investigations", label: "AI", suffix: "/investigations" },
   { key: "reports", label: "Postmortems", suffix: "/reports" },
 ];
 

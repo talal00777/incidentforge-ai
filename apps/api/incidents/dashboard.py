@@ -9,6 +9,7 @@ from evidence.models import EvidenceSnapshot
 from incidents.models import Incident, IncidentAuditEvent
 from ingestion.models import LogEvent, LogSource
 from investigations.models import InvestigationReport, PostmortemVersion
+from workspaces.permissions import accessible_incidents_queryset
 
 ERROR_SEVERITIES = ("ERROR", "FATAL", "CRITICAL")
 SEVERITY_ORDER = (
@@ -31,8 +32,8 @@ def _count_subquery(model, filter_kwargs=None):
 
 
 def build_dashboard_summary(user) -> dict:
-    """Compute live operational telemetry strictly scoped to user's active incidents."""
-    owned = Incident.objects.filter(owner=user, deleted_at__isnull=True)
+    """Compute live operational telemetry strictly scoped to user's accessible incidents."""
+    owned = accessible_incidents_queryset(user)
 
     counts_agg = owned.aggregate(
         total=Count("id"),
